@@ -213,6 +213,14 @@ const AssetDetails = () => {
                   </h3>
                   <span className="text-xs text-slate-500">{assetTransactions.length} txs</span>
                 </div>
+                {/* Transaction History Header */}
+                <div className="grid grid-cols-[auto_1fr_1fr_1fr] gap-2 px-4 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  <div>Type</div>
+                  <div>Date</div>
+                  <div className="text-right">Amount</div>
+                  <div className="text-right">Price</div>
+                </div>
+
                 <div className="flex-1 space-y-2">
                   {assetTransactions.length === 0 ? (
                     <div className="text-center text-slate-500 text-sm py-8">No transactions yet.</div>
@@ -221,25 +229,30 @@ const AssetDetails = () => {
                       const isExpanded = expandedTxIds.includes(tx.id);
                       return (
                         <div key={tx.id} className={`journal-list-item ${isExpanded ? 'expanded' : ''}`}>
-                          <div className="list-item-header" onClick={() => toggleTxExpand(tx.id)}>
-                            <div className="header-left">
-                              <div className="asset-badge">
-                                <span className={`type ${tx.type}`}>{tx.type.toUpperCase()}</span>
-                              </div>
-                              <span className="date">
-                                <Calendar size={14} />
-                                {new Date(tx.date).toLocaleDateString()}
+                          <div
+                            className="grid grid-cols-[auto_1fr_1fr_1fr] gap-2 items-center p-3 cursor-pointer hover:bg-white/5 transition-colors"
+                            onClick={() => toggleTxExpand(tx.id)}
+                          >
+                            {/* Type */}
+                            <div>
+                              <span className={`type ${tx.type} text-[10px] px-1.5 py-0.5 rounded font-bold uppercase`}>
+                                {tx.type === 'buy' ? 'BUY' : 'SELL'}
                               </span>
                             </div>
 
-                            <div className="header-right">
-                              <div className="financials-compact">
-                                <span className="amount">{tx.amount}</span>
-                                <span className="price">@ ${tx.price.toLocaleString()}</span>
-                              </div>
-                              <button className="btn-icon toggle-btn">
-                                <ArrowRight size={16} className={`chevron ${isExpanded ? 'rotated' : ''}`} />
-                              </button>
+                            {/* Date */}
+                            <div className="text-[11px] text-slate-400 flex items-center gap-1">
+                              {new Date(tx.date).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric', year: '2-digit' })}
+                            </div>
+
+                            {/* Amount */}
+                            <div className="text-right text-xs font-mono text-slate-300 truncate">
+                              {parseFloat(tx.amount).toLocaleString()}
+                            </div>
+
+                            {/* Price */}
+                            <div className="text-right text-xs font-mono text-slate-300 truncate">
+                              ${parseFloat(tx.price).toLocaleString()}
                             </div>
                           </div>
 
