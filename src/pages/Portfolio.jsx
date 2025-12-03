@@ -17,8 +17,6 @@ const Portfolio = () => {
     const { user } = useAuth();
     const { transactions, bulkAddTransactions, addTransaction } = useTransactions();
     const { getPrice, loading: pricesLoading, error, lastUpdate } = usePrices();
-    const [showUnifiedImport, setShowUnifiedImport] = useState(false);
-    const [showAddTransaction, setShowAddTransaction] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
     const [totalBalance, setTotalBalance] = useState(0);
@@ -83,12 +81,12 @@ const Portfolio = () => {
 
     const handleImport = (transactions) => {
         bulkAddTransactions(transactions);
-        setShowUnifiedImport(false);
+        setIsImportModalOpen(false);
     };
 
     const handleManualAdd = (transaction) => {
         // TransactionForm handles the actual adding via context, we just close the modal
-        setShowUnifiedImport(false);
+        setIsImportModalOpen(false);
     };
 
     // Prepare prices object for AI Overview
@@ -105,7 +103,7 @@ const Portfolio = () => {
                     <h1>Portfolio Dashboard</h1>
                     <p className="text-secondary">Track your crypto performance and AI insights.</p>
                 </div>
-                <button className="btn-wallet-import" onClick={() => setShowUnifiedImport(true)}>
+                <button className="btn-wallet-import" onClick={() => setIsImportModalOpen(true)}>
                     <Wallet size={18} />
                     Import Portfolio
                 </button>
