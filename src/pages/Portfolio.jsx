@@ -5,7 +5,7 @@ import { usePrices } from '../context/PriceContext';
 import { calculatePortfolioPnL } from '../utils/pnlCalculator';
 import AssetList from '../components/AssetList';
 import PortfolioHistoryChart from '../components/PortfolioHistoryChart';
-import UnifiedImportModal from '../components/UnifiedImportModal';
+import WalletImportModal from '../components/WalletImportModal';
 import TransactionForm from '../components/TransactionForm';
 
 import { generatePortfolioOverview, cacheOverview, getCachedOverview } from '../services/analysisService';
@@ -19,6 +19,8 @@ const Portfolio = () => {
     const { getPrice, loading: pricesLoading, error, lastUpdate } = usePrices();
     const [showUnifiedImport, setShowUnifiedImport] = useState(false);
     const [showAddTransaction, setShowAddTransaction] = useState(false);
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
     const [totalBalance, setTotalBalance] = useState(0);
     const [dailyPnL, setDailyPnL] = useState(0);
     const [realizedPnL, setRealizedPnL] = useState(0);
