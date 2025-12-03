@@ -117,20 +117,10 @@ const TADiagnosis = ({ symbol, currentPrice, iconUrl, autoRun = false }) => {
     return (
         <div className="ta-card p-0 overflow-hidden flex flex-col gap-0">
             {/* 1. Header Section */}
-            {/* 1. Header Section */}
-            <div className="p-4 border-b border-gray-700/50 flex justify-between items-start bg-gray-800/30">
-                <div className="flex items-center gap-3">
-                    {iconUrl ? (
-                        <img src={iconUrl} alt={symbol} className="w-10 h-10 rounded-full" />
-                    ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-gray-400 font-bold">
-                            {symbol[0]}
-                        </div>
-                    )}
-                </div>
+            <div className="p-2 border-b border-gray-700/50 flex justify-end items-center bg-gray-800/30">
                 <div className="flex flex-col items-end gap-2">
-                    <button onClick={() => setResult(null)} className="text-gray-500 hover:text-white transition-colors">
-                        <X size={20} />
+                    <button onClick={() => setResult(null)} className="text-gray-500 hover:text-white transition-colors p-1">
+                        <X size={18} />
                     </button>
                 </div>
             </div>
@@ -186,7 +176,7 @@ const TADiagnosis = ({ symbol, currentPrice, iconUrl, autoRun = false }) => {
             </div>
 
             {/* 3. Indicators Section (Horizontal Cards) */}
-            <div className="px-4 pb-2 grid grid-cols-2 gap-3">
+            <div className="px-4 pb-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="bg-gray-800/40 border border-gray-700/50 rounded-lg p-3 flex items-center justify-between">
                     <span className="text-xs text-gray-400 font-bold uppercase">RSI (1H)</span>
                     <div className="flex items-center gap-2">
