@@ -312,57 +312,42 @@ const AssetList = ({ onImport }) => {
           const totalPnL = currentValue - asset.totalCost;
           const pnlPercent = asset.totalCost > 0 ? (totalPnL / asset.totalCost) * 100 : 0;
           const isPositive = asset.change24h >= 0;
+          const isPnLPositive = totalPnL >= 0;
 
           return (
             <div
               key={asset.symbol}
-              className="asset-card"
+              className="asset-card-compact"
               onClick={() => navigate(`/asset/${asset.symbol}`)}
             >
-              <div className="card-top">
-                <div className="asset-wrapper">
-                  {getIcon(asset.symbol) && (
-                    <img src={getIcon(asset.symbol)} alt={asset.symbol} className="token-icon" />
-                  )}
-                  <div className="asset-info">
-                    <span className="asset-symbol">{asset.symbol}</span>
-                  </div>
-                </div>
-                <div className="price-info">
-                  <span className="current-price">${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  <span className={`change-pill ${isPositive ? 'positive' : 'negative'}`}>
-                    {isPositive ? '+' : ''}{asset.change24h.toFixed(1)}%
-                  </span>
-                </div>
-              </div>
-
-              <div className="card-middle">
-                <div className="stat-col">
-                  <span className="label">Holdings</span>
-                  <span className="value">{asset.holdings.toLocaleString(undefined, { maximumFractionDigits: 4 })}</span>
-                </div>
-                <div className="stat-col right">
-                  <span className="label">Value</span>
-                  <span className="value">${currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                </div>
-              </div>
-
-              <div className="card-bottom">
-                <div className="stat-col">
-                  <span className="label">PnL</span>
-                  <span className={`value ${totalPnL >= 0 ? 'text-success' : 'text-danger'}`}>
-                    {totalPnL >= 0 ? '+' : ''}${totalPnL.toLocaleString(undefined, { maximumFractionDigits: 0 })} ({pnlPercent.toFixed(2)}%)
-                  </span>
-                </div>
-                {attentionLevels[asset.symbol] && (
-                  <div className="attention-indicator">
-                    <span className={`attention-badge ${attentionLevels[asset.symbol].color}`}>
-                      {attentionLevels[asset.symbol].level === 'extreme' && <AlertCircle size={12} />}
-                      {attentionLevels[asset.symbol].level === 'needed' && <Eye size={12} />}
-                      <span className="badge-text-mobile">{attentionLevels[asset.symbol].label}</span>
-                    </span>
-                  </div>
+              <div className="asset-icon-col">
+                {getIcon(asset.symbol) && (
+                  <img src={getIcon(asset.symbol)} alt={asset.symbol} className="token-icon-large" />
                 )}
+              </div>
+
+              <div className="asset-info-col">
+                <div className="info-top">
+                  <span className="asset-symbol-text">{asset.symbol}</span>
+                  <span className="asset-holdings-text">{asset.holdings.toLocaleString(undefined, { maximumFractionDigits: 4 })}</span>
+                </div>
+                <div className="info-bottom">
+                  <span className="asset-price-text">${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+              </div>
+
+              <div className="asset-stats-col">
+                <div className="stats-top">
+                  <span className="asset-value-text">${currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+                <div className="stats-bottom">
+                  <span className={`pnl-text ${isPnLPositive ? 'text-success' : 'text-danger'}`}>
+                    {isPnLPositive ? '+' : ''}{totalPnL.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </span>
+                  <span className={`change-text ${isPositive ? 'text-success' : 'text-danger'}`}>
+                    ({isPositive ? '+' : ''}{asset.change24h.toFixed(1)}%)
+                  </span>
+                </div>
               </div>
             </div>
           );
@@ -760,44 +745,99 @@ const AssetList = ({ onImport }) => {
         .mobile-asset-list {
           display: none;
           flex-direction: column;
-          gap: 12px;
-          padding: 12px;
+          gap: 0; /* Remove gap for list look */
         }
 
-        .asset-card {
-          background-color: var(--bg-tertiary);
-          border-radius: var(--radius-md);
-          padding: 16px;
+        .asset-card-compact {
+          background-color: var(--bg-secondary);
+          padding: 16px 12px;
           display: flex;
-          flex-direction: column;
-          gap: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .card-top {
-          display: flex;
-          justify-content: space-between;
           align-items: center;
+          gap: 12px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .price-info {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
+        .asset-card-compact:last-child {
+            border-bottom: none;
         }
 
-        .current-price {
-          font-weight: 600;
-          font-size: 1rem;
+        .asset-icon-col {
+            flex-shrink: 0;
         }
 
-        .change-pill {
-          font-size: 0.75rem;
-          padding: 2px 6px;
-          border-radius: 4px;
-          font-weight: 500;
+        .token-icon-large {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
         }
-        .change-pill.positive { background: rgba(16, 185, 129, 0.1); color: var(--accent-success); }
+
+        .asset-info-col {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1; /* Takes available space */
+        }
+
+        .info-top {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .asset-symbol-text {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .asset-holdings-text {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .info-bottom {
+            display: flex;
+        }
+
+        .asset-price-text {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .asset-stats-col {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .stats-top {
+            display: flex;
+        }
+
+        .asset-value-text {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .stats-bottom {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+        }
+
+        .pnl-text {
+            font-weight: 500;
+        }
+
+        .change-text {
+            font-weight: 500;
+        }
+
+        .text-success { color: var(--accent-success); }
+        .text-danger { color: var(--accent-danger); }
         .change-pill.negative { background: rgba(239, 68, 68, 0.1); color: var(--accent-danger); }
 
         .card-middle {

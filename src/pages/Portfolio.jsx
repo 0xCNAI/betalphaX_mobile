@@ -14,11 +14,12 @@ import PortfolioAIOverview from '../components/PortfolioAIOverview';
 import { useAuth } from '../context/AuthContext';
 
 const Portfolio = () => {
-    const { user } = useAuth();
+    const { user, signOut } = useAuth();
     const { transactions, bulkAddTransactions, addTransaction } = useTransactions();
     const { getPrice, loading: pricesLoading, error, lastUpdate } = usePrices();
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
+    const [showAIInsights, setShowAIInsights] = useState(false);
     const [totalBalance, setTotalBalance] = useState(0);
     const [dailyPnL, setDailyPnL] = useState(0);
     const [realizedPnL, setRealizedPnL] = useState(0);
@@ -96,69 +97,49 @@ const Portfolio = () => {
         if (p) currentPricesForAI[tx.asset] = p;
     });
 
+    if (showAIInsights) {
+        return (
+            <div className="portfolio-page">
+                <div className="page-header">
+                    <button className="btn-icon" onClick={() => setShowAIInsights(false)}>
+                        <X size={24} />
+                    </button>
+                    <h2 style={{ fontSize: '1.2rem', margin: 0 }}>AI Insights</h2>
+                    <div style={{ width: 24 }}></div>
+                </div>
+                <PortfolioAIOverview transactions={transactions} prices={currentPricesForAI} user={user} />
+            </div>
+        );
+    }
+
     return (
         <div className="portfolio-page">
-            <div className="page-header">
-                <div>
-                    <h1>Portfolio Dashboard</h1>
-                    <p className="text-secondary">Track your crypto performance and AI insights.</p>
-                </div>
-                <button className="btn-wallet-import" onClick={() => setIsImportModalOpen(true)}>
-                    <Wallet size={18} />
-                    Import Portfolio
+            <div className="page-header-compact">
+                <button className="btn-text-action" onClick={signOut}>
+                    Sign Out
+                </button>
+                <button className="btn-icon-action" onClick={() => setIsImportModalOpen(true)}>
+                    <Upload size={20} />
                 </button>
             </div>
 
             {/* Top Section: Split View */}
-            <div className="top-grid">
+            <div className="top-grid-compact">
 
                 {/* Left: Value & History */}
-                <div className="dashboard-card value-history-card">
-                    <div className="balance-card total-balance">
-                        <div className="balance-header">
-                            <div className="icon-wrapper">
-                                <Wallet size={24} />
-                            </div>
-                            <h3>Total Balance</h3>
-
-                            {/* P&L Display - Moved to top-right */}
-                            <div className="pnl-summary-topright">
-                                <div className="pnl-item">
-                                    <span className="pnl-label">Realized P&L</span>
-                                    <span className="pnl-value" style={{
-                                        color: realizedPnL > 0 ? 'var(--accent-success)' : realizedPnL < 0 ? 'var(--accent-danger)' : 'var(--text-secondary)'
-                                    }}>
-                                        {realizedPnL >= 0 ? '+' : ''}${realizedPnL.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </span>
-                                </div>
-                                <div className="pnl-item">
-                                    <span className="pnl-label">Unrealized P&L</span>
-                                    <span className="pnl-value" style={{
-                                        color: unrealizedPnL > 0 ? 'var(--accent-success)' : unrealizedPnL < 0 ? 'var(--accent-danger)' : 'var(--text-secondary)'
-                                    }}>
-                                        {unrealizedPnL >= 0 ? '+' : ''}${unrealizedPnL.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </span>
-                                </div>
-                                <div className="pnl-item">
-                                    <span className="pnl-label">Total P&L</span>
-                                    <span className="pnl-value" style={{
-                                        color: totalPnL > 0 ? 'var(--accent-success)' : totalPnL < 0 ? 'var(--accent-danger)' : 'var(--text-secondary)'
-                                    }}>
-                                        {totalPnL >= 0 ? '+' : ''}${totalPnL.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </span>
-                                </div>
-                            </div>
+                <div className="dashboard-card-compact">
+                    <div className="balance-card-compact">
+                        <div className="balance-header-compact">
+                            <h3 className="text-secondary text-sm uppercase tracking-wider">Total Balance</h3>
                         </div>
 
-
-                        <div className="balance-content">
-                            <div className="main-balance">
-                                <span className="currency-symbol">$</span>
-                                <span className="amount">{totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        <div className="balance-content-compact">
+                            <div className="main-balance-compact">
+                                <span className="currency-symbol-compact">$</span>
+                                <span className="amount-compact">{totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                             </div>
 
-                            {/* Daily Change - Moved next to Total Balance */}
-                            <div className="daily-change-inline">
+                            <div className="daily-change-compact">
                                 <span className={`stat-change ${dailyPnL >= 0 ? 'positive' : 'negative'}`}>
                                     {dailyPnL >= 0 ? '+' : ''}{dailyPnL.toLocaleString(undefined, { style: 'currency', currency: 'USD' })} (24h)
                                 </span>
@@ -166,13 +147,13 @@ const Portfolio = () => {
                         </div>
                     </div>
 
-                    <div className="mini-chart-container">
-                        <PortfolioHistoryChart compact={true} />
+                    <div className="ai-insight-entry">
+                        <button className="btn-ai-insights" onClick={() => setShowAIInsights(true)}>
+                            <Sparkles size={16} className="text-accent-primary" />
+                            <span>View AI Insights</span>
+                        </button>
                     </div>
                 </div>
-
-                {/* Right: AI Portfolio Overview */}
-                <PortfolioAIOverview transactions={transactions} prices={currentPricesForAI} user={user} />
             </div>
 
             {/* Middle: Add Transaction Button */}
@@ -218,6 +199,119 @@ const Portfolio = () => {
           display: flex;
           flex-direction: column;
           gap: var(--spacing-lg);
+          padding-bottom: 80px; /* Space for bottom tab bar */
+        }
+
+        .page-header-compact {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: var(--spacing-sm);
+          padding: 0 var(--spacing-sm);
+        }
+
+        .btn-text-action {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 8px 0;
+        }
+
+        .btn-icon-action {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .top-grid-compact {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .dashboard-card-compact {
+            /* Removed card background for cleaner look on mobile, or keep it minimal */
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .balance-card-compact {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: var(--spacing-md) 0;
+        }
+
+        .balance-header-compact h3 {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin: 0;
+            opacity: 0.8;
+        }
+
+        .balance-content-compact {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .main-balance-compact {
+            display: flex;
+            align-items: baseline;
+            gap: 2px;
+        }
+
+        .currency-symbol-compact {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .amount-compact {
+            font-size: 2.25rem; /* Reduced from 3rem */
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        .daily-change-compact {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .ai-insight-entry {
+            display: flex;
+            justify-content: center;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .btn-ai-insights {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 20px;
+            color: var(--accent-primary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-ai-insights:active {
+            transform: scale(0.98);
+            background: rgba(99, 102, 241, 0.2);
         }
 
         .page-header {
