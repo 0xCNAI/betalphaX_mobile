@@ -5,6 +5,7 @@
 
 import { getCoinMetadata } from './coinGeckoApi';
 import { formatDistanceToNow } from 'date-fns';
+import { analyzeTweetSignal } from './geminiService';
 
 const TWITTER_API_BASE = '/api/twitter';
 // API Key is now handled by the backend proxy
@@ -331,11 +332,22 @@ export async function getPortfolioFeeds(assets) {
             const tweets = await searchCryptoTweets(asset, 10, twitterHandle);
 
             // Score tweets immediately
-            return tweets.map(tweet => ({
+            const scoredTweets = tweets.map(tweet => ({
                 ...tweet,
                 asset, // Tag with asset for grouping
                 score: calculateTweetScore(tweet, twitterHandle)
             }));
+
+            // Analyze top 3 tweets per asset with AI to save tokens/latency
+            // We only analyze the highest potential impact tweets
+            const topTweets = scoredTweets.sort((a, b) => b.score - a.score).slice(0, 3);
+
+            const analyzedTweets = await Promise.all(topTweets.map(async (tweet) => {
+                const analysis = await analyzeTweetSignal(tweet.text, asset);
+                return { ...tweet, ...analysis };
+            }));
+
+            return analyzedTweets;
         });
 
         // Use allSettled to prevent one failure from breaking the entire feed
@@ -613,5 +625,60 @@ export async function getNewsDashboard(symbol) {
     } catch (error) {
         console.error('[Twitter] Failed to fetch dashboard:', error);
         return null;
+    }
+}
+
+/**
+ * Fetch tweets from a specific user handle
+ * @param {string} username - Twitter handle (without @)
+ * @param {number} limit - Max tweets to return
+ * @returns {Promise<Array>}
+ */
+export async function getTweetsFromUser(username, limit = 10) {
+    const cleanUser = username.replace('@', '');
+    console.log(`[Twitter] Fetching tweets from user: ${cleanUser}`);
+
+    const query = `from:${cleanUser} -filter:retweets -filter:replies`;
+
+    try {
+        const url = `/api/twitter/twitter/tweet/advanced_search?query=${encodeURIComponent(query)}&type=Latest`;
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            console.warn('[Twitter] Failed to fetch user tweets, using mock');
+            return getMockTweets(cleanUser, limit); // Fallback to mock
+        }
+
+        const data = await response.json();
+
+        if (!data.tweets || data.tweets.length === 0) {
+            return [];
+        }
+
+        const tweets = data.tweets.slice(0, limit).map(tweet => ({
+            id: tweet.id,
+            text: tweet.text,
+            author: tweet.author?.userName || cleanUser,
+            authorName: tweet.author?.name || cleanUser,
+            authorVerified: tweet.author?.isVerified || false,
+            likes: tweet.likeCount || 0,
+            retweets: tweet.retweetCount || 0,
+            replies: tweet.replyCount || 0,
+            timestamp: tweet.createdAt,
+            link: tweet.url || `https://x.com/${cleanUser}/status/${tweet.id}`
+        }));
+
+        // Analyze user tweets
+        const analyzedTweets = await Promise.all(tweets.map(async (tweet) => {
+            const analysis = await analyzeTweetSignal(tweet.text, cleanUser);
+            return { ...tweet, ...analysis };
+        }));
+
+        return analyzedTweets;
+
+    } catch (error) {
+        console.error('[Twitter] Error fetching user tweets:', error);
+        return getMockTweets(cleanUser, limit);
     }
 }

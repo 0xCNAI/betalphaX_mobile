@@ -3,11 +3,6 @@ const GEMINI_API_KEY = 'AIzaSyD4GqUbFoSvb46M2lxhnRzCT_JulzcC9T4';
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 /**
- * Generates investment tags based on the provided note using Gemini API.
- * @param {string} note - The investment note/thesis.
- * @returns {Promise<string[]>} - A promise that resolves to an array of tag strings.
- */
-/**
  * Generic function to call Gemini API
  * @param {string} prompt - The prompt to send to Gemini
  * @returns {Promise<string>} - The generated text response
@@ -164,5 +159,49 @@ Do not include any other text.`;
     } catch (error) {
         console.error('Error classifying assets with Gemini:', error);
         return {};
+    }
+};
+
+/**
+ * Analyzes a tweet to determine its signal category, sentiment, and explanation.
+ * @param {string} text - Tweet content
+ * @param {string} asset - Related asset symbol
+ * @returns {Promise<Object>} - { category, sentiment, explanation, engagementScore }
+ */
+export const analyzeTweetSignal = async (text, asset) => {
+    if (!text) return null;
+
+    const prompt = `Analyze this crypto tweet for "${asset}" and classify it into one of these 3 categories:
+1. "Risk Alert" (Delisting, hack, bug, negative governance, large outflows, regulatory threat)
+2. "Opportunity" (Breakout, inflows, upgrade, partnership, strong KOL support, bullish chart)
+3. "Sentiment Shift" (Hype spike, unusual volume, general discussion)
+
+Also determine the sentiment (Positive, Negative, Neutral) and provide a 1-sentence explanation for a trader.
+
+Tweet: "${text}"
+
+Return strict JSON:
+{
+  "category": "Risk Alert" | "Opportunity" | "Sentiment Shift",
+  "sentiment": "Positive" | "Negative" | "Neutral",
+  "explanation": "Why this matters...",
+  "engagementScore": 0-100 (Estimate impact based on content urgency)
+}`;
+
+    try {
+        const generatedText = await generateGeminiContent(prompt);
+        if (!generatedText) return null;
+
+        const jsonString = generatedText.replace(/```json\n?|\n?```/g, '').trim();
+        return JSON.parse(jsonString);
+    } catch (error) {
+        console.error('Error analyzing tweet signal:', error);
+        // Fallback
+        return {
+            category: 'Sentiment Shift',
+            sentiment: 'Neutral',
+            explanation: 'AI analysis failed, treat as general info.',
+            engagementScore: 50
+        };
     }
 };
