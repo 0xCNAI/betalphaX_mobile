@@ -169,6 +169,9 @@ const AssetDetails = () => {
         <div className="p-4 flex-1 min-h-0">
           {activeTab === 'chart' && (
             <div className="flex flex-col gap-4 animate-in fade-in duration-300">
+              <div className="card-auto relative min-h-[400px] pt-4">
+                <TradingViewChart symbol={tvSymbol || symbol} autosize />
+              </div>
               <div className="card-auto shrink-0">
                 <TADiagnosis
                   symbol={symbol}
@@ -176,9 +179,6 @@ const AssetDetails = () => {
                   iconUrl={getIcon && getIcon(symbol)}
                   autoRun={true}
                 />
-              </div>
-              <div className="card-auto relative min-h-[400px] pt-4">
-                <TradingViewChart symbol={tvSymbol || symbol} autosize />
               </div>
             </div>
           )}

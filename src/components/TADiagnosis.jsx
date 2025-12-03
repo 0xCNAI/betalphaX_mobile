@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { analyzeTechnicals } from '../services/technicalService';
-import { Activity, Sparkles, X, AlertCircle } from 'lucide-react';
+import { Sparkles, X, AlertCircle } from 'lucide-react';
 
 const TADiagnosis = ({ symbol, currentPrice, iconUrl, autoRun = false }) => {
     const [loading, setLoading] = useState(false);
@@ -39,18 +39,6 @@ const TADiagnosis = ({ symbol, currentPrice, iconUrl, autoRun = false }) => {
         } finally {
             setLoading(false);
         }
-    };
-
-    const getScoreColor = (score) => {
-        if (score >= 70) return 'text-emerald-400';
-        if (score <= 40) return 'text-rose-400';
-        return 'text-amber-400';
-    };
-
-    const getGaugeColor = (score) => {
-        if (score >= 70) return 'stroke-emerald-400';
-        if (score <= 40) return 'stroke-rose-400';
-        return 'stroke-amber-400';
     };
 
     if (!result && !loading) {
@@ -125,79 +113,7 @@ const TADiagnosis = ({ symbol, currentPrice, iconUrl, autoRun = false }) => {
                 </div>
             </div>
 
-            {/* 2. Verdict Section (Main Focus) */}
-            <div className="p-4 flex items-center justify-center gap-8 bg-gradient-to-b from-gray-800/20 to-transparent">
-                {/* Gauge */}
-                <div className="relative w-24 h-24">
-                    <svg className="w-full h-full transform -rotate-90">
-                        <circle
-                            cx="48"
-                            cy="48"
-                            r="42"
-                            stroke="currentColor"
-                            strokeWidth="6"
-                            fill="transparent"
-                            className="text-gray-700"
-                        />
-                        <circle
-                            cx="48"
-                            cy="48"
-                            r="42"
-                            stroke="currentColor"
-                            strokeWidth="6"
-                            fill="transparent"
-                            strokeDasharray={263.89}
-                            strokeDashoffset={263.89 - (263.89 * result.score) / 100}
-                            className={`${getGaugeColor(result.score)} transition-all duration-1000 ease-out`}
-                            strokeLinecap="round"
-                        />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <span className={`text-2xl font-bold ${getScoreColor(result.score)}`}>
-                            {result.score}
-                        </span>
-                    </div>
-                </div>
-
-                {/* Verdict Text */}
-                <div className="flex flex-col">
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs text-gray-500 font-bold uppercase tracking-wider">Verdict</span>
-                        {result.dataSource && (
-                            <span className="text-[10px] text-gray-600 font-mono">
-                                via {result.dataSource}
-                            </span>
-                        )}
-                    </div>
-                    <h1 className={`text-3xl font-black tracking-tight ${getScoreColor(result.score)}`}>
-                        {result.action.toUpperCase()}
-                    </h1>
-                </div>
-            </div>
-
-            {/* 3. Indicators Section (Horizontal Cards) */}
-            <div className="px-4 pb-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="bg-gray-800/40 border border-gray-700/50 rounded-lg p-3 flex items-center justify-between">
-                    <span className="text-xs text-gray-400 font-bold uppercase">RSI (1H)</span>
-                    <div className="flex items-center gap-2">
-                        <span className={`text-lg font-mono font-bold ${result.indicators.rsi > 70 ? 'text-rose-400' : result.indicators.rsi < 30 ? 'text-emerald-400' : 'text-white'}`}>
-                            {result.indicators.rsi?.toFixed(1)}
-                        </span>
-                        <span className="text-xs text-gray-500">—</span>
-                        <span className="text-xs text-gray-300 font-medium">
-                            {result.indicators.rsi > 70 ? 'Overbought' : result.indicators.rsi < 30 ? 'Oversold' : 'Neutral'}
-                        </span>
-                    </div>
-                </div>
-                <div className="bg-gray-800/40 border border-gray-700/50 rounded-lg p-3 flex items-center justify-between">
-                    <span className="text-xs text-gray-400 font-bold uppercase">MACD</span>
-                    <span className={`text-sm font-bold ${result.indicators.macd > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                        {result.indicators.macd > 0 ? 'BULL TREND' : 'BEAR TREND'}
-                    </span>
-                </div>
-            </div>
-
-            {/* 4. Trading Setup (Tables) */}
+            {/* 2. Trading Setup (Tables) */}
             <div className="p-4 space-y-4">
                 {/* Short Term */}
                 <div>
