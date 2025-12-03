@@ -60,7 +60,67 @@
     margin-bottom: 2rem;
 }
 
-/* ... existing styles ... */
+.summary-card {
+    background: rgba(30, 41, 59, 0.6);
+    border-radius: 12px;
+    padding: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: transform 0.2s;
+}
+
+.summary-card:hover {
+    transform: translateY(-2px);
+    background: rgba(30, 41, 59, 0.8);
+}
+
+.summary-card .icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.summary-card.risk .icon {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.summary-card.opp .icon {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+}
+
+.summary-card.sentiment .icon {
+    background: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
+}
+
+.summary-card.asset .icon {
+    background: rgba(168, 85, 247, 0.2);
+    color: #a855f7;
+}
+
+.summary-card .data {
+    display: flex;
+    flex-direction: column;
+}
+
+.summary-card .value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.summary-card .label {
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
 
 /* --- Controls Bar --- */
 .controls-bar {
@@ -72,29 +132,30 @@
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.05);
     flex-wrap: nowrap;
-    /* Force side-by-side */
     gap: 0.5rem;
-    /* Reduce gap to fit */
     margin-bottom: 1.5rem;
 }
 
 .asset-selector-wrapper {
     position: relative;
-    flex: 1;
-    /* Allow it to take available space */
+    flex: 1 1 50%;
+    /* Force 50% width */
+    min-width: 0;
+    /* Prevent overflow */
 }
 
 .asset-selector-wrapper button {
     width: 100%;
-    /* Make button fill the wrapper */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .controls-bar>button {
-    flex: 1;
-    /* Make Generate button take equal space if desired, or just fit */
+    flex: 1 1 50%;
+    /* Force 50% width */
+    min-width: 0;
+    /* Prevent overflow */
     white-space: nowrap;
 }
 
@@ -268,12 +329,14 @@
     margin: 0;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
 .text-content.expanded {
     -webkit-line-clamp: unset;
+    line-clamp: unset;
 }
 
 .show-more {

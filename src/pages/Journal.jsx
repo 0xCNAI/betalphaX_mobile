@@ -124,7 +124,7 @@ const Journal = () => {
           {/* Header Row */}
           <div className="entries-header-row" style={{
             display: 'grid',
-            gridTemplateColumns: '1.2fr 1fr 1fr 40px',
+            gridTemplateColumns: '1.4fr 1fr 0.8fr 30px', // Adjusted for better spacing
             padding: '0 16px 8px 16px',
             color: 'var(--text-secondary)',
             fontSize: '0.75rem',
@@ -145,7 +145,7 @@ const Journal = () => {
                 <div key={tx.id} className={`journal-list-item ${isExpanded ? 'expanded' : ''}`}>
                   <div className="list-item-header" onClick={() => toggleExpand(tx.id)} style={{
                     display: 'grid',
-                    gridTemplateColumns: '1.2fr 1fr 1fr 40px',
+                    gridTemplateColumns: '1.4fr 1fr 0.8fr 30px', // Match header
                     alignItems: 'center',
                     padding: '12px 16px'
                   }}>
