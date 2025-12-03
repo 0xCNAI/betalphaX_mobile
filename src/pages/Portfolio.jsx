@@ -116,11 +116,11 @@ const Portfolio = () => {
     return (
         <div className="portfolio-page">
             <div className="page-header-compact">
-                <button className="btn-text-action" onClick={signOut}>
-                    Sign Out
-                </button>
-                <button className="btn-icon-action" onClick={() => setShowUnifiedImport(true)}>
-                    <Upload size={20} />
+                {/* Empty left side since Sign Out moved */}
+                <div style={{ width: 24 }}></div>
+                <button className="btn-import-action" onClick={() => setShowUnifiedImport(true)}>
+                    <Upload size={18} />
+                    <span>Import</span>
                 </button>
             </div>
 
@@ -153,15 +153,15 @@ const Portfolio = () => {
                         <PortfolioHistoryChart compact={true} height={180} />
                     </div>
 
-                    {/* Action Buttons Row */}
+                    {/* Action Buttons Row - Swapped Order */}
                     <div className="action-buttons-row">
-                        <button className="btn-action-compact primary" onClick={() => setShowAddTransaction(true)}>
-                            <Plus size={18} />
-                            <span>Add Transaction</span>
-                        </button>
                         <button className="btn-action-compact secondary" onClick={() => setShowAIInsights(true)}>
                             <Sparkles size={18} />
                             <span>AI Insights</span>
+                        </button>
+                        <button className="btn-action-compact primary" onClick={() => setShowAddTransaction(true)}>
+                            <Plus size={18} />
+                            <span>Add Transaction</span>
                         </button>
                     </div>
                 </div>
@@ -170,6 +170,13 @@ const Portfolio = () => {
             {/* Bottom: Asset List */}
             <div className="content-section">
                 <AssetList />
+            </div>
+
+            {/* Sign Out Button - Moved to Bottom */}
+            <div className="footer-actions">
+                <button className="btn-sign-out-danger" onClick={signOut}>
+                    Sign Out
+                </button>
             </div>
 
             {/* Modals */}
@@ -199,8 +206,8 @@ const Portfolio = () => {
         .portfolio-page {
           display: flex;
           flex-direction: column;
-          gap: var(--spacing-md); /* Reduced gap */
-          padding-bottom: 80px; /* Space for bottom tab bar */
+          gap: var(--spacing-md);
+          padding-bottom: 80px;
         }
 
         .page-header-compact {
@@ -211,25 +218,18 @@ const Portfolio = () => {
           padding: 0 var(--spacing-sm);
         }
 
-        .btn-text-action {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            font-weight: 500;
-            padding: 8px 0;
-        }
-
-        .btn-icon-action {
+        .btn-import-action {
+            display: flex;
+            align-items: center;
+            gap: 6px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: var(--text-primary);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
         }
 
         .top-grid-compact {
@@ -239,7 +239,6 @@ const Portfolio = () => {
         }
 
         .dashboard-card-compact {
-            /* Removed card background for cleaner look on mobile, or keep it minimal */
             display: flex;
             flex-direction: column;
             gap: var(--spacing-md);
@@ -279,7 +278,7 @@ const Portfolio = () => {
         }
 
         .amount-compact {
-            font-size: 2.25rem; /* Reduced from 3rem */
+            font-size: 2.25rem;
             font-weight: 700;
             color: var(--text-primary);
             letter-spacing: -0.5px;
@@ -329,29 +328,27 @@ const Portfolio = () => {
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .ai-insight-entry {
+        .footer-actions {
+            padding: var(--spacing-lg) var(--spacing-sm);
             display: flex;
             justify-content: center;
-            margin-bottom: var(--spacing-sm);
         }
 
-        .btn-ai-insights {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 20px;
-            background: rgba(99, 102, 241, 0.1);
-            border: 1px solid rgba(99, 102, 241, 0.3);
-            border-radius: 20px;
-            color: var(--accent-primary);
-            font-size: 0.9rem;
+        .btn-sign-out-danger {
+            width: 100%;
+            padding: 12px;
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--accent-danger);
+            border: 1px solid var(--accent-danger);
+            border-radius: var(--radius-md);
             font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
             transition: all 0.2s;
         }
 
-        .btn-ai-insights:active {
-            transform: scale(0.98);
-            background: rgba(99, 102, 241, 0.2);
+        .btn-sign-out-danger:active {
+            background-color: rgba(239, 68, 68, 0.2);
         }
 
         .page-header {
@@ -370,7 +367,7 @@ const Portfolio = () => {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: var(--spacing-lg);
-            height: 320px; /* Fixed height for alignment */
+            height: 320px;
         }
 
         .dashboard-card {
@@ -406,9 +403,9 @@ const Portfolio = () => {
         .mini-chart-container {
             flex: 1;
             margin-top: var(--spacing-md);
-            min-height: 100px; /* Ensure minimum visibility */
+            min-height: 100px;
             width: 100%;
-            position: relative; /* For absolute positioning of chart if needed */
+            position: relative;
             overflow: hidden;
         }
 
@@ -469,7 +466,7 @@ const Portfolio = () => {
             margin-top: var(--spacing-sm);
             display: flex;
             align-items: baseline;
-            gap: var(--spacing-sm); /* Reduced from lg to sm for tighter spacing */
+            gap: var(--spacing-sm);
         }
 
         .main-balance {
@@ -497,7 +494,7 @@ const Portfolio = () => {
         .daily-change-inline {
             display: flex;
             align-items: baseline;
-            margin-left: 0; /* Removed extra margin for tighter spacing */
+            margin-left: 0;
         }
 
         .daily-change-inline .stat-change {
