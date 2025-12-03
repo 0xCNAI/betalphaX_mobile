@@ -173,6 +173,7 @@ const ImportPortfolioModal = ({ onClose, onImport, isEmbedded = false }) => {
                         {importRows.map((row, index) => (
                             <div key={index} className="import-row">
                                 <div className="import-col-symbol">
+                                    <span className="mobile-label">Symbol</span>
                                     <input
                                         type="text"
                                         value={row.symbol}
@@ -182,6 +183,7 @@ const ImportPortfolioModal = ({ onClose, onImport, isEmbedded = false }) => {
                                     />
                                 </div>
                                 <div className="import-col-amount">
+                                    <span className="mobile-label">Amount</span>
                                     <input
                                         type="number"
                                         value={row.amount}
@@ -192,6 +194,7 @@ const ImportPortfolioModal = ({ onClose, onImport, isEmbedded = false }) => {
                                     />
                                 </div>
                                 <div className="import-col-price">
+                                    <span className="mobile-label">Price ($)</span>
                                     <div className="price-input-group">
                                         <input
                                             type="number"
@@ -207,6 +210,7 @@ const ImportPortfolioModal = ({ onClose, onImport, isEmbedded = false }) => {
                                     {row.error && <span className="error-text">{row.error}</span>}
                                 </div>
                                 <div className="import-col-date">
+                                    <span className="mobile-label">Date</span>
                                     <input
                                         type="date"
                                         value={row.date}
@@ -318,6 +322,14 @@ const ImportPortfolioModal = ({ onClose, onImport, isEmbedded = false }) => {
             flex-direction: column;
           }
 
+          .mobile-label {
+            display: none;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-weight: 600;
+          }
+
           .price-input-group {
             position: relative;
           }
@@ -410,6 +422,45 @@ const ImportPortfolioModal = ({ onClose, onImport, isEmbedded = false }) => {
           @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
+          }
+
+          @media (max-width: 768px) {
+            .import-table-header {
+                display: none;
+            }
+
+            .import-row {
+                display: flex;
+                flex-direction: column;
+                gap: var(--spacing-md);
+                background-color: rgba(255, 255, 255, 0.03);
+                border: 1px solid var(--bg-tertiary);
+                border-radius: var(--radius-md);
+                padding: var(--spacing-md);
+                position: relative;
+            }
+
+            .import-col-symbol,
+            .import-col-amount,
+            .import-col-price,
+            .import-col-date {
+                width: 100%;
+            }
+
+            .import-col-actions {
+                position: absolute;
+                top: var(--spacing-sm);
+                right: var(--spacing-sm);
+            }
+
+            .mobile-label {
+                display: block;
+            }
+
+            .btn-icon-small {
+                background-color: rgba(239, 68, 68, 0.1);
+                color: var(--accent-danger);
+            }
           }
         `}</style>
         </div>

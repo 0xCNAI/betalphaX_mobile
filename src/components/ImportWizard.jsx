@@ -196,7 +196,7 @@ const ImportWizard = ({ onClose, onImport, isEmbedded = false }) => {
             <div className="wizard-body">
                 {step === 1 && (
                     <div className="step-input">
-                        <p className="step-desc">Enter an EVM address to scan your portfolio. Assets will be automatically grouped.</p>
+                        <p className="step-desc">Enter an EVM address to scan your portfolio.</p>
 
                         <div className="input-group">
                             <label>Wallet Address</label>
@@ -211,7 +211,7 @@ const ImportWizard = ({ onClose, onImport, isEmbedded = false }) => {
                             </div>
                         </div>
 
-                        <div className="input-group">
+                        <div className="input-group threshold-group">
                             <div className="label-row">
                                 <label>Minimum Value Threshold</label>
                                 <span className="threshold-value">${threshold}</span>
@@ -928,6 +928,26 @@ const ImportWizard = ({ onClose, onImport, isEmbedded = false }) => {
                 box-shadow: none;
                 display: flex;
                 flex-direction: column;
+            }
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+
+            @media (max-width: 600px) {
+                .label-row {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 4px;
+                }
+                .threshold-value {
+                    align-self: flex-end;
+                    font-size: 1.1rem;
+                }
+                .step-desc {
+                    font-size: 0.9rem;
+                    margin-bottom: var(--spacing-md);
+                }
             }
         `}</style>
     );

@@ -22,7 +22,7 @@ const UnifiedImportModal = ({ onClose, onImport, onManualAdd }) => {
                         onClick={() => setActiveTab('wallet')}
                     >
                         <Wallet size={18} />
-                        Import with Address
+                        Wallet
                     </button>
                     <button
                         className={`tab-btn ${activeTab === 'manual' ? 'active' : ''}`}
