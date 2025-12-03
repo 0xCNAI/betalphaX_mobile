@@ -138,10 +138,6 @@ const Journal = () => {
                         <span className="symbol">{tx.asset}</span>
                         <span className={`type ${tx.type}`}>{tx.type.toUpperCase()}</span>
                       </div>
-                      <span className="date">
-                        <Calendar size={14} />
-                        {new Date(tx.date).toLocaleDateString()}
-                      </span>
                     </div>
 
                     <div className="header-right">
@@ -371,6 +367,7 @@ const Journal = () => {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: var(--spacing-md);
+            width: 100%;
         }
 
         .dimension-card {
@@ -378,6 +375,7 @@ const Journal = () => {
             padding: var(--spacing-md);
             border-radius: var(--radius-md);
             border: 1px solid var(--bg-tertiary);
+            min-width: 0; /* Prevent content from overflowing */
         }
 
         .dimension-header {

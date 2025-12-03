@@ -46,16 +46,6 @@ const Feeds = () => {
             });
 
             // 2. Automatically add to the LATEST transaction for this asset
-            // const { updateTransaction } = useTransactions(); // Removed invalid hook call
-            // Note: We need to ensure updateTransaction is available. 
-            // Since we can't destructure it inside the function if it wasn't destructured at the top,
-            // we need to update the component destructuring first.
-            // Let's assume we will update the top-level destructuring in a separate edit or rely on the user to do it?
-            // No, I must do it correctly. I will update the top level destructuring in this same file.
-
-            // Wait, I can't change the top level destructuring in this specific block replace.
-            // I will assume I will update line 10 as well.
-
             // Find latest transaction for this asset
             const assetTxs = transactions
                 .filter(t => t.asset === ticker)
