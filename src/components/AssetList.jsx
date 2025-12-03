@@ -18,7 +18,12 @@ const AssetList = ({ onImport }) => {
 
   // Aggregate transactions by asset
   // Sort transactions by date to ensure correct calculation order
-  const sortedTransactions = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+  // Use createdAt as tie-breaker for same-day transactions to ensure Buy -> Sell order if entered sequentially
+  const sortedTransactions = [...transactions].sort((a, b) => {
+    const dateDiff = new Date(a.date) - new Date(b.date);
+    if (dateDiff !== 0) return dateDiff;
+    return new Date(a.createdAt) - new Date(b.createdAt);
+  });
 
   const assetsMap = sortedTransactions.reduce((acc, tx) => {
     // Group by 'group' field if available, otherwise fallback to 'asset'
