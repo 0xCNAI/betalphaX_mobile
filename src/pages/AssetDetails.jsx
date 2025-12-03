@@ -13,6 +13,7 @@ import FundamentalWidget from '../components/FundamentalWidget';
 import TransactionForm from '../components/TransactionForm';
 import TradingViewChart from '../components/TradingViewChart';
 import TADiagnosis from '../components/TADiagnosis';
+import Modal from '../components/Modal';
 
 const AssetDetails = () => {
   const { symbol } = useParams();
@@ -410,34 +411,24 @@ const AssetDetails = () => {
 
         {/* Modals */}
         {editingTransaction && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-end sm:items-center z-[100] sm:p-4">
-            <div className="bg-slate-900 w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-xl sm:rounded-2xl overflow-y-auto border-slate-800 shadow-2xl relative animate-in slide-in-from-bottom-5 sm:zoom-in-95 duration-200">
-              <button className="absolute top-4 right-4 p-2 bg-slate-800 text-slate-400 hover:text-white rounded-full transition-colors z-10" onClick={() => setEditingTransaction(null)}>
-                <X size={20} />
-              </button>
-              <TransactionForm
-                onClose={() => setEditingTransaction(null)}
-                initialData={editingTransaction}
-                initialStep={initialStep}
-              />
-            </div>
-          </div>
+          <Modal isOpen={!!editingTransaction} onClose={() => setEditingTransaction(null)}>
+            <TransactionForm
+              onClose={() => setEditingTransaction(null)}
+              initialData={editingTransaction}
+              initialStep={initialStep}
+            />
+          </Modal>
         )}
 
         {isTransactionModalOpen && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-end sm:items-center z-[100] sm:p-4">
-            <div className="bg-slate-900 w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-xl sm:rounded-2xl overflow-y-auto border-slate-800 shadow-2xl relative animate-in slide-in-from-bottom-5 sm:zoom-in-95 duration-200">
-              <button className="absolute top-4 right-4 p-2 bg-slate-800 text-slate-400 hover:text-white rounded-full transition-colors z-10" onClick={() => setIsTransactionModalOpen(false)}>
-                <X size={20} />
-              </button>
-              <TransactionForm
-                onClose={() => setIsTransactionModalOpen(false)}
-                initialData={{ asset: symbol }}
-                initialStep={initialStep}
-                initialType={initialTransactionType}
-              />
-            </div>
-          </div>
+          <Modal isOpen={isTransactionModalOpen} onClose={() => setIsTransactionModalOpen(false)}>
+            <TransactionForm
+              onClose={() => setIsTransactionModalOpen(false)}
+              initialData={{ asset: symbol }}
+              initialStep={initialStep}
+              initialType={initialTransactionType}
+            />
+          </Modal>
         )}
 
       </div>
