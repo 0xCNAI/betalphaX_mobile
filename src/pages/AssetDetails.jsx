@@ -151,7 +151,7 @@ const AssetDetails = () => {
 
         {/* 2. Tabs */}
         <div className="flex border-b border-slate-800 bg-slate-900 sticky top-[105px] z-10 overflow-x-auto no-scrollbar">
-          {['chart', 'analysis', 'social', 'history'].map((tab) => (
+          {['chart', 'fundamental', 'social'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -180,41 +180,33 @@ const AssetDetails = () => {
                   autoRun={true}
                 />
               </div>
-            </div>
-          )}
 
-          {activeTab === 'analysis' && (
-            <div className="flex flex-col gap-4 animate-in fade-in duration-300">
-              <div className="flex flex-col gap-2">
-                <GuardianRiskCard risk={risk} compact />
-                <GuardianProfitCard profit={profit} compact />
-                {opportunity && opportunity.hasOpportunity && (
-                  <GuardianOpportunityCard opportunity={opportunity} compact />
-                )}
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                <button
+                  onClick={() => {
+                    setInitialTransactionType('buy');
+                    setInitialStep(1);
+                    setIsTransactionModalOpen(true);
+                  }}
+                  className="flex items-center justify-center gap-2 py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-emerald-900/20"
+                >
+                  <TrendingUp size={20} /> BUY
+                </button>
+                <button
+                  onClick={() => {
+                    setInitialTransactionType('sell');
+                    setInitialStep(1);
+                    setIsTransactionModalOpen(true);
+                  }}
+                  className="flex items-center justify-center gap-2 py-3 px-4 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-rose-900/20"
+                >
+                  <TrendingDown size={20} /> SELL
+                </button>
               </div>
-              <FundamentalWidget key={symbol} symbol={symbol} name={assetData.name} />
-            </div>
-          )}
 
-          {activeTab === 'social' && (
-            <div className="flex flex-col gap-4 animate-in fade-in duration-300">
-              <div className="card-auto flex flex-col">
-                <div className="p-3 border-b border-slate-800 bg-slate-900/50 -mx-4 -mt-4 mb-4 rounded-t-xl">
-                  <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                    <Sparkles size={14} className="text-indigo-400" /> Social Intelligence
-                  </h3>
-                </div>
-                <div className="flex-1">
-                  <SocialNotificationWidget symbol={symbol} user={user} compact={true} />
-                </div>
-              </div>
-              <ImportantEvents symbol={symbol} />
-            </div>
-          )}
-
-          {activeTab === 'history' && (
-            <div className="animate-in fade-in duration-300">
-              <div className="card-auto flex flex-col">
+              {/* Transaction History (Moved from History Tab) */}
+              <div className="card-auto flex flex-col mt-2">
                 <div className="p-3 border-b border-slate-800 flex justify-between items-center bg-slate-900/50 -mx-4 -mt-4 mb-4 rounded-t-xl">
                   <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
                     <History size={14} /> Transaction History
@@ -375,33 +367,33 @@ const AssetDetails = () => {
               </div>
             </div>
           )}
+
+          {activeTab === 'fundamental' && (
+            <div className="flex flex-col gap-4 animate-in fade-in duration-300">
+              <FundamentalWidget key={symbol} symbol={symbol} name={assetData.name} />
+            </div>
+          )}
+
+          {activeTab === 'social' && (
+            <div className="flex flex-col gap-4 animate-in fade-in duration-300">
+              <div className="card-auto flex flex-col">
+                <div className="p-3 border-b border-slate-800 bg-slate-900/50 -mx-4 -mt-4 mb-4 rounded-t-xl">
+                  <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                    <Sparkles size={14} className="text-indigo-400" /> Social Intelligence
+                  </h3>
+                </div>
+                <div className="flex-1">
+                  <SocialNotificationWidget symbol={symbol} user={user} compact={true} />
+                </div>
+              </div>
+              <ImportantEvents symbol={symbol} />
+            </div>
+          )}
+
+
         </div>
 
-        {/* Fixed Bottom Action Bar */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-slate-900/90 backdrop-blur-md border-t border-slate-800 z-50 pb-[env(safe-area-inset-bottom)]">
-          <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
-            <button
-              onClick={() => {
-                setInitialTransactionType('buy');
-                setInitialStep(1);
-                setIsTransactionModalOpen(true);
-              }}
-              className="flex items-center justify-center gap-2 py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-emerald-900/20"
-            >
-              <TrendingUp size={20} /> BUY
-            </button>
-            <button
-              onClick={() => {
-                setInitialTransactionType('sell');
-                setInitialStep(1);
-                setIsTransactionModalOpen(true);
-              }}
-              className="flex items-center justify-center gap-2 py-3 px-4 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-rose-900/20"
-            >
-              <TrendingDown size={20} /> SELL
-            </button>
-          </div>
-        </div>
+
 
         {/* Modals */}
         {editingTransaction && (

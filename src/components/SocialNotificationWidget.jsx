@@ -131,45 +131,63 @@ const SocialNotificationWidget = ({ symbol, user, compact = false }) => {
         return (
             <div className="flex flex-col h-full">
                 {/* Top: Management Section (Compact) */}
-                <div className="p-3 border-b border-slate-800 bg-slate-900/30">
-                    {/* Tracked & Add */}
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <span className="text-xs font-semibold text-slate-500 uppercase">Tracked:</span>
-                        {trackedHandles.map(handle => (
-                            <span key={handle} className="flex items-center bg-indigo-600/20 text-indigo-300 text-[10px] px-1.5 py-0.5 rounded border border-indigo-500/30">
-                                {handle}
-                                <button onClick={() => handleRemoveHandle(handle)} className="ml-1 hover:text-white"><X size={10} /></button>
-                            </span>
-                        ))}
-                        <div className="flex items-center gap-1 ml-auto">
-                            <input
-                                type="text"
-                                value={newHandleInput}
-                                onChange={(e) => setNewHandleInput(e.target.value)}
-                                placeholder="@add"
-                                className="w-20 p-1 rounded bg-slate-800 border border-slate-700 text-[10px] text-white focus:outline-none focus:border-indigo-500"
-                            />
-                            <button onClick={() => handleAddHandle(newHandleInput)} className="p-1 bg-indigo-600 hover:bg-indigo-500 rounded text-white"><Plus size={12} /></button>
+                <div className="p-3 border-b border-slate-800 bg-slate-900/30 space-y-3">
+                    {/* Tracked Accounts Row */}
+                    <div className="flex flex-col gap-2">
+                        <div className="flex justify-between items-center">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tracked Accounts</span>
+                            <span className="text-[10px] text-slate-600">{trackedHandles.length}/5</span>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                            {trackedHandles.map(handle => (
+                                <span key={handle} className="flex items-center bg-indigo-500/10 text-indigo-300 text-[11px] px-2 py-1 rounded-md border border-indigo-500/20">
+                                    {handle}
+                                    <button onClick={() => handleRemoveHandle(handle)} className="ml-1.5 text-indigo-400 hover:text-white transition-colors">
+                                        <X size={12} />
+                                    </button>
+                                </span>
+                            ))}
+
+                            {/* Add Input Inline */}
+                            <div className="flex items-center gap-1">
+                                <input
+                                    type="text"
+                                    value={newHandleInput}
+                                    onChange={(e) => setNewHandleInput(e.target.value)}
+                                    placeholder="@add"
+                                    className="w-16 bg-transparent border-b border-slate-700 text-[11px] text-white focus:outline-none focus:border-indigo-500 px-1 py-0.5 placeholder:text-slate-600"
+                                />
+                                <button
+                                    onClick={() => handleAddHandle(newHandleInput)}
+                                    disabled={!newHandleInput}
+                                    className="text-indigo-400 hover:text-indigo-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                                >
+                                    <Plus size={14} />
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Recommended */}
-                    <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-xs font-semibold text-slate-500 uppercase">Suggested:</span>
-                        {recommendedKOLs.slice(0, 3).map(kol => { // Limit to 3 to save space
-                            const isTracked = trackedHandles.includes(kol.handle) || trackedHandles.includes(`@${kol.handle}`);
-                            if (isTracked) return null;
-                            return (
-                                <button
-                                    key={kol.handle}
-                                    onClick={() => handleAddHandle(`@${kol.handle}`)}
-                                    className="text-[10px] px-1.5 py-0.5 rounded border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 transition-colors"
-                                >
-                                    + {kol.handle}
-                                </button>
-                            );
-                        })}
-                    </div>
+                    {/* Recommended Row */}
+                    {recommendedKOLs.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-800/50">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mr-1">Suggested:</span>
+                            {recommendedKOLs.slice(0, 3).map(kol => {
+                                const isTracked = trackedHandles.includes(kol.handle) || trackedHandles.includes(`@${kol.handle}`);
+                                if (isTracked) return null;
+                                return (
+                                    <button
+                                        key={kol.handle}
+                                        onClick={() => handleAddHandle(`@${kol.handle}`)}
+                                        className="text-[10px] px-2 py-0.5 rounded-full border border-emerald-500/20 text-emerald-400/80 hover:bg-emerald-500/10 hover:text-emerald-300 transition-colors"
+                                    >
+                                        + {kol.handle}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
 
                 {/* Bottom: Feed List */}
