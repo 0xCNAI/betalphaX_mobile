@@ -3828,6 +3828,54 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
           background-color: rgba(239, 68, 68, 0.1);
           border-color: var(--accent-danger);
         }
+
+        /* Mobile Layout Fixes */
+        .step-container {
+          display: flex;
+          flex-direction: column;
+          min-height: 100%;
+          position: relative;
+        }
+
+        .step-actions {
+          position: sticky;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background-color: var(--bg-secondary);
+          padding: var(--spacing-md) 0;
+          border-top: 1px solid var(--bg-tertiary);
+          margin-top: auto;
+          z-index: 20;
+          display: flex;
+          justify-content: space-between;
+          gap: var(--spacing-md);
+        }
+        
+        /* Ensure content isn't hidden behind sticky footer */
+        .step-container > *:last-child {
+           /* This targets the actions div itself, so we might need padding on the container instead */
+        }
+        
+        /* Add padding to the bottom of the container to ensure scrolling clears the sticky footer */
+        .step-container {
+            padding-bottom: var(--spacing-sm); 
+        }
+
+        /* Adjust modal content for mobile */
+        @media (max-width: 600px) {
+          .modal-content {
+            height: 100vh;
+            max-height: 100vh;
+            border-radius: 0;
+          }
+          
+          .step-actions {
+            padding: var(--spacing-md);
+            margin: 0 -1rem -1rem -1rem; /* Negative margin to stretch full width */
+            width: calc(100% + 2rem);
+          }
+        }
       `}</style>
     </div>
   );
