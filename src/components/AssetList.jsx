@@ -314,9 +314,8 @@ const AssetList = ({ onImport }) => {
         {/* Mobile Header Row */}
         <div className="mobile-list-header">
           <span className="col-header">Asset</span>
-          <span className="col-header right">Price</span>
-          <span className="col-header right">PnL</span>
-          <span className="col-header right">Value</span>
+          <span className="col-header right">Price 24h</span>
+          <span className="col-header right">Total PnL</span>
         </div>
 
         {assets.map((asset) => {
@@ -351,24 +350,20 @@ const AssetList = ({ onImport }) => {
                 </div>
               </div>
 
-              {/* Col 2: Price */}
+              {/* Col 2: Price 24h */}
               <div className="asset-price-col">
                 <span className="asset-price-text">${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-              </div>
-
-              {/* Col 3: PnL */}
-              <div className="asset-pnl-col">
-                <span className={`pnl-text ${isPnLPositive ? 'text-success' : 'text-danger'}`}>
-                  {isPnLPositive ? '+' : ''}{pnlPercent.toFixed(1)}%
-                </span>
-                <span className="pnl-value-small">
-                  {isPnLPositive ? '+' : ''}${totalPnL.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                <span className={`change-text-small ${isPositive ? 'text-success' : 'text-danger'}`}>
+                  {isPositive ? '+' : ''}{asset.change24h.toFixed(1)}%
                 </span>
               </div>
 
-              {/* Col 4: Value */}
+              {/* Col 3: Total PnL (Value + PnL) */}
               <div className="asset-value-col">
                 <span className="asset-value-text">${currentValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+                <span className={`pnl-value-sub ${isPnLPositive ? 'text-success' : 'text-danger'}`}>
+                  ({isPnLPositive ? '+' : ''}${totalPnL.toLocaleString(undefined, { maximumFractionDigits: 0 })})
+                </span>
               </div>
             </div>
           );
@@ -771,7 +766,7 @@ const AssetList = ({ onImport }) => {
 
         .mobile-list-header {
             display: grid;
-            grid-template-columns: 1.5fr 1fr 1fr 1fr; /* Matches card grid */
+            grid-template-columns: 1.2fr 1fr 1.2fr; /* 3 Columns */
             padding: 8px 12px;
             border-bottom: 1px solid var(--bg-tertiary);
             background-color: var(--bg-secondary);
@@ -787,9 +782,9 @@ const AssetList = ({ onImport }) => {
 
         .asset-card-compact {
           background-color: var(--bg-secondary);
-          padding: 10px 12px;
+          padding: 12px 12px;
           display: grid;
-          grid-template-columns: 1.5fr 1fr 1fr 1fr; /* 4 Columns */
+          grid-template-columns: 1.2fr 1fr 1.2fr; /* 3 Columns */
           align-items: center;
           gap: 8px;
           border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -803,7 +798,7 @@ const AssetList = ({ onImport }) => {
         .asset-main-col {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             overflow: hidden; /* Prevent overflow */
         }
 
@@ -812,8 +807,8 @@ const AssetList = ({ onImport }) => {
         }
 
         .token-icon-large {
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             display: block;
         }
@@ -832,7 +827,7 @@ const AssetList = ({ onImport }) => {
 
         .asset-symbol-text {
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: var(--text-primary);
             white-space: nowrap;
             overflow: hidden;
@@ -844,7 +839,7 @@ const AssetList = ({ onImport }) => {
         }
 
         .asset-holdings-text {
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             color: var(--text-secondary);
         }
 
@@ -852,45 +847,40 @@ const AssetList = ({ onImport }) => {
         .asset-price-col {
             text-align: right;
             display: flex;
-            align-items: center;
-            justify-content: flex-end;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: center;
         }
 
         .asset-price-text {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .change-text-small {
+            font-size: 0.75rem;
+            font-weight: 500;
         }
 
         /* Col 3 Styles */
-        .asset-pnl-col {
+        .asset-value-col {
+            text-align: right;
             display: flex;
             flex-direction: column;
             align-items: flex-end;
             justify-content: center;
         }
 
-        .pnl-text {
-            font-weight: 600;
-            font-size: 0.85rem;
-        }
-
-        .pnl-value-small {
-            font-size: 0.7rem;
-            color: var(--text-secondary);
-        }
-
-        /* Col 4 Styles */
-        .asset-value-col {
-            text-align: right;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-        }
-
         .asset-value-text {
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: var(--text-primary);
+        }
+
+        .pnl-value-sub {
+            font-size: 0.75rem;
+            font-weight: 500;
         }
 
         .text-success { color: var(--accent-success); }
