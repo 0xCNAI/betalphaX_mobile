@@ -5,7 +5,7 @@ import { usePrices } from '../context/PriceContext';
 import { calculatePortfolioPnL } from '../utils/pnlCalculator';
 import AssetList from '../components/AssetList';
 import PortfolioHistoryChart from '../components/PortfolioHistoryChart';
-import WalletImportModal from '../components/UnifiedImportModal';
+import UnifiedImportModal from '../components/UnifiedImportModal';
 import TransactionForm from '../components/TransactionForm';
 
 import { generatePortfolioOverview, cacheOverview, getCachedOverview } from '../services/analysisService';
@@ -297,6 +297,8 @@ const Portfolio = () => {
 
         .action-buttons-row {
             display: flex;
+            flex-direction: row; /* Enforce row */
+            flex-wrap: nowrap; /* Prevent wrapping */
             gap: 12px;
             padding: 0 var(--spacing-sm);
         }
