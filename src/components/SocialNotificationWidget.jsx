@@ -132,19 +132,18 @@ const SocialNotificationWidget = ({ symbol, user, compact = false }) => {
             <div className="flex flex-col h-full">
                 {/* Top: Management Section (Compact) */}
                 <div className="p-3 border-b border-slate-800 bg-slate-900/30 space-y-3">
-                    {/* Tracked Accounts Row */}
-                    <div className="flex flex-col gap-2">
+                    {/* Tracked Accounts Row (Ultra Compact) */}
+                    <div className="flex flex-col gap-1.5">
                         <div className="flex justify-between items-center">
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tracked Accounts</span>
-                            <span className="text-[10px] text-slate-600">{trackedHandles.length}/5</span>
+                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Tracked ({trackedHandles.length}/5)</span>
                         </div>
 
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-1.5">
                             {trackedHandles.map(handle => (
-                                <span key={handle} className="flex items-center bg-indigo-500/10 text-indigo-300 text-[11px] px-2 py-1 rounded-md border border-indigo-500/20">
+                                <span key={handle} className="flex items-center bg-indigo-500/10 text-indigo-300 text-[10px] px-1.5 py-0.5 rounded border border-indigo-500/20">
                                     {handle}
-                                    <button onClick={() => handleRemoveHandle(handle)} className="ml-1.5 text-indigo-400 hover:text-white transition-colors">
-                                        <X size={12} />
+                                    <button onClick={() => handleRemoveHandle(handle)} className="ml-1 text-indigo-400 hover:text-white transition-colors">
+                                        <X size={10} />
                                     </button>
                                 </span>
                             ))}
@@ -156,14 +155,14 @@ const SocialNotificationWidget = ({ symbol, user, compact = false }) => {
                                     value={newHandleInput}
                                     onChange={(e) => setNewHandleInput(e.target.value)}
                                     placeholder="@add"
-                                    className="w-16 bg-transparent border-b border-slate-700 text-[11px] text-white focus:outline-none focus:border-indigo-500 px-1 py-0.5 placeholder:text-slate-600"
+                                    className="w-14 bg-transparent border-b border-slate-700 text-[10px] text-white focus:outline-none focus:border-indigo-500 px-1 py-0 placeholder:text-slate-600"
                                 />
                                 <button
                                     onClick={() => handleAddHandle(newHandleInput)}
                                     disabled={!newHandleInput}
                                     className="text-indigo-400 hover:text-indigo-300 disabled:opacity-30 disabled:cursor-not-allowed"
                                 >
-                                    <Plus size={14} />
+                                    <Plus size={12} />
                                 </button>
                             </div>
                         </div>
