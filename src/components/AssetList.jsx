@@ -333,25 +333,30 @@ const AssetList = ({ onImport }) => {
               className="asset-card-compact"
               onClick={() => navigate(`/asset/${asset.symbol}`)}
             >
-              <div className="asset-icon-col">
-                {getIcon(asset.symbol) && (
-                  <img src={getIcon(asset.symbol)} alt={asset.symbol} className="token-icon-large" />
-                )}
+              {/* Col 1: Asset (Icon + Symbol + Holdings) */}
+              <div className="asset-main-col">
+                <div className="asset-icon-wrapper">
+                  {getIcon(asset.symbol) && (
+                    <img src={getIcon(asset.symbol)} alt={asset.symbol} className="token-icon-large" />
+                  )}
+                </div>
+
+                <div className="asset-info-wrapper">
+                  <div className="info-top">
+                    <span className="asset-symbol-text">{asset.symbol}</span>
+                  </div>
+                  <div className="info-bottom">
+                    <span className="asset-holdings-text">{asset.holdings.toLocaleString(undefined, { maximumFractionDigits: 4 })}</span>
+                  </div>
+                </div>
               </div>
 
-              <div className="asset-info-col">
-                <div className="info-top">
-                  <span className="asset-symbol-text">{asset.symbol}</span>
-                </div>
-                <div className="info-bottom">
-                  <span className="asset-holdings-text">{asset.holdings.toLocaleString(undefined, { maximumFractionDigits: 4 })}</span>
-                </div>
-              </div>
-
+              {/* Col 2: Price */}
               <div className="asset-price-col">
                 <span className="asset-price-text">${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
 
+              {/* Col 3: PnL */}
               <div className="asset-pnl-col">
                 <span className={`pnl-text ${isPnLPositive ? 'text-success' : 'text-danger'}`}>
                   {isPnLPositive ? '+' : ''}{pnlPercent.toFixed(1)}%
@@ -361,6 +366,7 @@ const AssetList = ({ onImport }) => {
                 </span>
               </div>
 
+              {/* Col 4: Value */}
               <div className="asset-value-col">
                 <span className="asset-value-text">${currentValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
               </div>
@@ -484,11 +490,11 @@ const AssetList = ({ onImport }) => {
         .text-right {
           text-align: right;
         }
-        
+
         .text-center {
           text-align: center;
         }
-        
+
         .text-secondary {
           color: var(--text-secondary);
         }
@@ -511,13 +517,13 @@ const AssetList = ({ onImport }) => {
           justify-content: flex-end;
           gap: 4px;
         }
-        
+
         .pnl-info {
           display: flex;
           flex-direction: column;
           align-items: flex-end;
         }
-        
+
         .pnl-percent {
           font-size: 0.75rem;
           opacity: 0.8;
@@ -527,13 +533,13 @@ const AssetList = ({ onImport }) => {
             font-size: 0.7rem;
             color: var(--text-secondary);
         }
-        
+
         .attention-indicator {
           display: flex;
           justify-content: center;
           align-items: center;
         }
-        
+
         .attention-badge {
           display: inline-flex;
           align-items: center;
@@ -544,25 +550,25 @@ const AssetList = ({ onImport }) => {
           font-weight: 600;
           white-space: nowrap;
         }
-        
+
         .attention-badge.red {
           background-color: rgba(239, 68, 68, 0.15);
           color: var(--accent-danger);
           border: 1px solid var(--accent-danger);
         }
-        
+
         .attention-badge.yellow {
           background-color: rgba(245, 158, 11, 0.15);
           color: var(--accent-warning);
           border: 1px solid var(--accent-warning);
         }
-        
+
         .attention-badge.green {
           background-color: rgba(16, 185, 129, 0.15);
           color: var(--accent-success);
           border: 1px solid var(--accent-success);
         }
-        
+
         .badge-text {
           font-size: 0.7rem;
         }
@@ -765,7 +771,7 @@ const AssetList = ({ onImport }) => {
 
         .mobile-list-header {
             display: grid;
-            grid-template-columns: 1.5fr 1fr 1fr 1fr;
+            grid-template-columns: 1.5fr 1fr 1fr 1fr; /* Matches card grid */
             padding: 8px 12px;
             border-bottom: 1px solid var(--bg-tertiary);
             background-color: var(--bg-secondary);
@@ -781,9 +787,9 @@ const AssetList = ({ onImport }) => {
 
         .asset-card-compact {
           background-color: var(--bg-secondary);
-          padding: 10px 12px; /* Reduced padding */
+          padding: 10px 12px;
           display: grid;
-          grid-template-columns: 1.5fr 1fr 1fr 1fr;
+          grid-template-columns: 1.5fr 1fr 1fr 1fr; /* 4 Columns */
           align-items: center;
           gap: 8px;
           border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -792,24 +798,31 @@ const AssetList = ({ onImport }) => {
         .asset-card-compact:last-child {
             border-bottom: none;
         }
-        
-        /* Actually, let's keep icon but make it part of first col */
-        .asset-icon-col {
-            display: block;
-            margin-right: 8px;
-            float: left;
+
+        /* Col 1 Styles */
+        .asset-main-col {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow: hidden; /* Prevent overflow */
+        }
+
+        .asset-icon-wrapper {
+            flex-shrink: 0;
         }
 
         .token-icon-large {
-            width: 28px; /* Smaller icon */
+            width: 28px;
             height: 28px;
             border-radius: 50%;
+            display: block;
         }
 
-        .asset-info-col {
+        .asset-info-wrapper {
             display: flex;
             flex-direction: column;
             justify-content: center;
+            overflow: hidden;
         }
 
         .info-top {
@@ -821,6 +834,13 @@ const AssetList = ({ onImport }) => {
             font-weight: 700;
             font-size: 0.9rem;
             color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .info-bottom {
+            display: flex;
         }
 
         .asset-holdings-text {
@@ -828,6 +848,7 @@ const AssetList = ({ onImport }) => {
             color: var(--text-secondary);
         }
 
+        /* Col 2 Styles */
         .asset-price-col {
             text-align: right;
             display: flex;
@@ -840,6 +861,7 @@ const AssetList = ({ onImport }) => {
             color: var(--text-secondary);
         }
 
+        /* Col 3 Styles */
         .asset-pnl-col {
             display: flex;
             flex-direction: column;
@@ -852,6 +874,12 @@ const AssetList = ({ onImport }) => {
             font-size: 0.85rem;
         }
 
+        .pnl-value-small {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        /* Col 4 Styles */
         .asset-value-col {
             text-align: right;
             display: flex;
