@@ -117,6 +117,7 @@ const TADiagnosis = ({ symbol, currentPrice, iconUrl, autoRun = false }) => {
     return (
         <div className="ta-card p-0 overflow-hidden flex flex-col gap-0">
             {/* 1. Header Section */}
+            {/* 1. Header Section */}
             <div className="p-4 border-b border-gray-700/50 flex justify-between items-start bg-gray-800/30">
                 <div className="flex items-center gap-3">
                     {iconUrl ? (
@@ -126,24 +127,11 @@ const TADiagnosis = ({ symbol, currentPrice, iconUrl, autoRun = false }) => {
                             {symbol[0]}
                         </div>
                     )}
-                    <div>
-                        <h2 className="text-xl font-bold text-white leading-none flex items-center gap-2">
-                            {symbol} <span className="text-sm font-normal text-gray-500">/ USDT</span>
-                        </h2>
-                        <span className="text-[10px] text-indigo-400 font-medium tracking-wide uppercase mt-1 block">
-                            Pro Technical Analysis
-                        </span>
-                    </div>
                 </div>
                 <div className="flex flex-col items-end gap-2">
                     <button onClick={() => setResult(null)} className="text-gray-500 hover:text-white transition-colors">
                         <X size={20} />
                     </button>
-                    {result.dataSource && (
-                        <span className="text-[10px] text-gray-500 font-mono">
-                            via {result.dataSource}
-                        </span>
-                    )}
                 </div>
             </div>
 
@@ -183,7 +171,14 @@ const TADiagnosis = ({ symbol, currentPrice, iconUrl, autoRun = false }) => {
 
                 {/* Verdict Text */}
                 <div className="flex flex-col">
-                    <span className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Verdict</span>
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs text-gray-500 font-bold uppercase tracking-wider">Verdict</span>
+                        {result.dataSource && (
+                            <span className="text-[10px] text-gray-600 font-mono">
+                                via {result.dataSource}
+                            </span>
+                        )}
+                    </div>
                     <h1 className={`text-3xl font-black tracking-tight ${getScoreColor(result.score)}`}>
                         {result.action.toUpperCase()}
                     </h1>

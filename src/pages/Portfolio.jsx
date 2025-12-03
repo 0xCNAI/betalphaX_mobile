@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, TrendingUp, AlertTriangle, Target, Upload, Loader2, Shield, Activity, PieChart, Brain, Plus, X, Wallet } from 'lucide-react';
+import { Sparkles, TrendingUp, AlertTriangle, Target, Upload, Loader2, Shield, Activity, PieChart, Brain, Plus, X, Wallet, ArrowDown } from 'lucide-react';
 import { useTransactions } from '../context/TransactionContext';
 import { usePrices } from '../context/PriceContext';
 import { calculatePortfolioPnL } from '../utils/pnlCalculator';
@@ -119,7 +119,7 @@ const Portfolio = () => {
                 {/* Empty left side since Sign Out moved */}
                 <div style={{ width: 24 }}></div>
                 <button className="btn-import-action" onClick={() => setShowUnifiedImport(true)}>
-                    <Upload size={18} />
+                    <ArrowDown size={18} />
                     <span>Import</span>
                 </button>
             </div>
