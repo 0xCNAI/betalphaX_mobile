@@ -62,20 +62,7 @@ const Journal = () => {
 
   return (
     <div className="journal-container">
-      <div className="journal-header">
-        <div className="header-content">
-          <h2><BookOpen className="icon" /> AI Trading Journal</h2>
-          <p>Review your decisions and get AI-powered insights.</p>
-        </div>
-        <button
-          className="btn-primary"
-          onClick={generateReview}
-          disabled={isGenerating}
-        >
-          <Sparkles size={18} />
-          {isGenerating ? 'Analyzing...' : 'Generate Weekly Review'}
-        </button>
-      </div>
+
 
       {/* AI Portfolio Analysis Section (Moved from Portfolio) */}
       {overview && (
@@ -382,8 +369,8 @@ const Journal = () => {
 
         .health-dimensions-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: var(--spacing-lg);
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-md);
         }
 
         .dimension-card {

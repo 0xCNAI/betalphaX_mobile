@@ -252,9 +252,13 @@ const Feeds = () => {
             <div className="feeds-content">
                 {/* Left Segment: Trending on X */}
                 <section className="feed-segment twitter-trends">
-                    <div className="segment-header">
-                        <h2>🔥 Trending on X</h2>
-                        <span className="source-badge">Top Portfolio Tweets</span>
+                    <div className="segment-header flex items-center justify-between mb-4">
+                        <h2 className="text-base font-bold text-white flex items-center gap-2">
+                            🔥 Trending on X
+                        </h2>
+                        <span className="source-badge text-[10px] bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/20 whitespace-nowrap">
+                            Top Portfolio Tweets
+                        </span>
                     </div>
 
                     <div className="feed-list-container">
@@ -322,9 +326,13 @@ const Feeds = () => {
 
                 {/* Right Segment: Crypto News */}
                 <section className="feed-segment crypto-news">
-                    <div className="segment-header">
-                        <h2>📰 Crypto News</h2>
-                        <span className="source-badge">Aggregated</span>
+                    <div className="segment-header flex items-center justify-between mb-4">
+                        <h2 className="text-base font-bold text-white flex items-center gap-2">
+                            📰 Crypto News
+                        </h2>
+                        <span className="source-badge text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 whitespace-nowrap">
+                            Aggregated
+                        </span>
                     </div>
 
                     <div className="feed-list-container">
