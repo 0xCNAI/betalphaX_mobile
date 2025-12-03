@@ -1,0 +1,38 @@
+[dotenv@17.2.3] injecting env (4) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+--- 📰 News Dashboard Prototype (Local Test) 📰 ---
+Target Asset: $SOL
+Fetching real tweets from TwitterAPI.io...
+✅ Fetched 15 real tweets.
+
+Analyzing 15 tweets...
+Error generating dashboard (LLM Failed): [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent: [404 Not Found] models/gemini-pro is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+
+--- ⚠️ Fallback: Mock Dashboard Output ⚠️ ---
+Demonstrating expected structure based on input tweets:
+{
+  "symbol": "$FLUID",
+  "recent_discussion_summary": "Community sentiment is mixed. Users are excited about the Fluid V2 Mainnet launch and increased staking rewards (15% APY), but there are concerns about high gas fees in the beta and liquidity issues with Juplend integration. The team has regained some trust by refunding users from a previous exploit.",
+  "events": [
+    {
+      "title": "Fluid V2 Mainnet Launch",
+      "category": "Upgrade",
+      "date": "2025-12-15",
+      "is_completed": false,
+      "confidence": "High"
+    },
+    {
+      "title": "Governance Proposal Passed (Staking Rewards Increase)",
+      "category": "Governance",
+      "date": "2025-12-01",
+      "is_completed": true,
+      "confidence": "High"
+    },
+    {
+      "title": "Exploit Refund Completed",
+      "category": "Security",
+      "date": "2025-11-28",
+      "is_completed": true,
+      "confidence": "High"
+    }
+  ]
+}

@@ -1,0 +1,224 @@
+[Skip to main content](https://docs.twitterapi.io/api-reference/endpoint/tweet_advanced_search#content-area)
+[KaitoTwitterAPI home page](https://docs.twitterapi.io/)
+- [Support](https://t.me/kaitoeasyapivip)
+- [Start Now](https://twitterapi.io)
+- [Start Now](https://twitterapi.io)
+[Support](https://t.me/kaitoeasyapivip)
+[Start Now](https://twitterapi.io)
+[Start Now](https://twitterapi.io)
+
+##### Get Started
+- [Introduction](https://docs.twitterapi.io/introduction)
+- [Authentication](https://docs.twitterapi.io/authentication)
+[Introduction](https://docs.twitterapi.io/introduction)
+[Authentication](https://docs.twitterapi.io/authentication)
+
+##### User Endpoint
+- [GETBatch Get User Info By UserIds](https://docs.twitterapi.io/api-reference/endpoint/batch_get_user_by_userids)
+- [GETGet User Info](https://docs.twitterapi.io/api-reference/endpoint/get_user_by_username)
+- [GETGet User Last Tweets](https://docs.twitterapi.io/api-reference/endpoint/get_user_last_tweets)
+- [GETGet User Followers](https://docs.twitterapi.io/api-reference/endpoint/get_user_followers)
+- [GETGet User Followings](https://docs.twitterapi.io/api-reference/endpoint/get_user_followings)
+- [GETGet User Mentions](https://docs.twitterapi.io/api-reference/endpoint/get_user_mention)
+- [GETCheck Follow Relationship](https://docs.twitterapi.io/api-reference/endpoint/check_follow_relationship)
+- [GETSearch user by keyword](https://docs.twitterapi.io/api-reference/endpoint/search_user)
+- [GETGet User Verified Followers](https://docs.twitterapi.io/api-reference/endpoint/get_user_verified_followers)
+[GETBatch Get User Info By UserIds](https://docs.twitterapi.io/api-reference/endpoint/batch_get_user_by_userids)
+[GETGet User Info](https://docs.twitterapi.io/api-reference/endpoint/get_user_by_username)
+[GETGet User Last Tweets](https://docs.twitterapi.io/api-reference/endpoint/get_user_last_tweets)
+[GETGet User Followers](https://docs.twitterapi.io/api-reference/endpoint/get_user_followers)
+[GETGet User Followings](https://docs.twitterapi.io/api-reference/endpoint/get_user_followings)
+[GETGet User Mentions](https://docs.twitterapi.io/api-reference/endpoint/get_user_mention)
+[GETCheck Follow Relationship](https://docs.twitterapi.io/api-reference/endpoint/check_follow_relationship)
+[GETSearch user by keyword](https://docs.twitterapi.io/api-reference/endpoint/search_user)
+[GETGet User Verified Followers](https://docs.twitterapi.io/api-reference/endpoint/get_user_verified_followers)
+
+##### Tweet Endpoint
+- [GETGet Tweets by IDs](https://docs.twitterapi.io/api-reference/endpoint/get_tweet_by_ids)
+- [GETGet Tweet Replies](https://docs.twitterapi.io/api-reference/endpoint/get_tweet_reply)
+- [GETGet Tweet Quotations](https://docs.twitterapi.io/api-reference/endpoint/get_tweet_quote)
+- [GETGet Tweet Retweeters](https://docs.twitterapi.io/api-reference/endpoint/get_tweet_retweeter)
+- [GETGet Tweet Thread Context](https://docs.twitterapi.io/api-reference/endpoint/get_tweet_thread_context)
+- [GETGet Article](https://docs.twitterapi.io/api-reference/endpoint/get_article)
+- [GETAdvanced Search](https://docs.twitterapi.io/api-reference/endpoint/tweet_advanced_search)
+[GETGet Tweets by IDs](https://docs.twitterapi.io/api-reference/endpoint/get_tweet_by_ids)
+[GETGet Tweet Replies](https://docs.twitterapi.io/api-reference/endpoint/get_tweet_reply)
+[GETGet Tweet Quotations](https://docs.twitterapi.io/api-reference/endpoint/get_tweet_quote)
+[GETGet Tweet Retweeters](https://docs.twitterapi.io/api-reference/endpoint/get_tweet_retweeter)
+[GETGet Tweet Thread Context](https://docs.twitterapi.io/api-reference/endpoint/get_tweet_thread_context)
+[GETGet Article](https://docs.twitterapi.io/api-reference/endpoint/get_article)
+[GETAdvanced Search](https://docs.twitterapi.io/api-reference/endpoint/tweet_advanced_search)
+
+##### List Endpoint
+- [GETGet List Followers](https://docs.twitterapi.io/api-reference/endpoint/get_list_followers)
+- [GETGet List Members](https://docs.twitterapi.io/api-reference/endpoint/get_list_members)
+[GETGet List Followers](https://docs.twitterapi.io/api-reference/endpoint/get_list_followers)
+[GETGet List Members](https://docs.twitterapi.io/api-reference/endpoint/get_list_members)
+
+##### Communities Endpoint
+- [GETGet Community Info By Id](https://docs.twitterapi.io/api-reference/endpoint/get_community_by_id)
+- [GETGet Community Members](https://docs.twitterapi.io/api-reference/endpoint/get_community_members)
+
+- [GETGet Community Moderators](https://docs.twitterapi.io/api-reference/endpoint/get_community_moderators)
+- [GETGet Community Tweets](https://docs.twitterapi.io/api-reference/endpoint/get_community_tweets)
+- [GETSearch Tweets From All Community](https://docs.twitterapi.io/api-reference/endpoint/get_all_community_tweets)
+[GETGet Community Info By Id](https://docs.twitterapi.io/api-reference/endpoint/get_community_by_id)
+[GETGet Community Members](https://docs.twitterapi.io/api-reference/endpoint/get_community_members)
+[GETGet Community Moderators](https://docs.twitterapi.io/api-reference/endpoint/get_community_moderators)
+[GETGet Community Tweets](https://docs.twitterapi.io/api-reference/endpoint/get_community_tweets)
+[GETSearch Tweets From All Community](https://docs.twitterapi.io/api-reference/endpoint/get_all_community_tweets)
+
+##### Trend Endpoint
+- [GETGet Trends](https://docs.twitterapi.io/api-reference/endpoint/get_trends)
+[GETGet Trends](https://docs.twitterapi.io/api-reference/endpoint/get_trends)
+
+##### My Endpoint
+- [GETGet My Account Info](https://docs.twitterapi.io/api-reference/endpoint/get_my_info)
+[GETGet My Account Info](https://docs.twitterapi.io/api-reference/endpoint/get_my_info)
+
+##### Post & Action Endpoint V2
+- [POSTLog in](https://docs.twitterapi.io/api-reference/endpoint/user_login_v2)
+- [POSTUpload media](https://docs.twitterapi.io/api-reference/endpoint/upload_media_v2)
+- [POSTCreate tweet v2](https://docs.twitterapi.io/api-reference/endpoint/create_tweet_v2)
+- [GETGet History Messages By UserID](https://docs.twitterapi.io/api-reference/endpoint/get_dm_history_by_user_id)
+- [POSTSend DM V2](https://docs.twitterapi.io/api-reference/endpoint/send_dm_v2)
+- [POSTRetweet Tweet](https://docs.twitterapi.io/api-reference/endpoint/retweet_tweet_v2)
+- [POSTDlete Tweet](https://docs.twitterapi.io/api-reference/endpoint/delete_tweet_v2)
+- [POSTFollow User](https://docs.twitterapi.io/api-reference/endpoint/follow_user_v2)
+- [POSTUnfollow User](https://docs.twitterapi.io/api-reference/endpoint/unfollow_user_v2)
+- [POSTLike Tweet](https://docs.twitterapi.io/api-reference/endpoint/like_tweet_v2)
+- [POSTUnlike Tweet](https://docs.twitterapi.io/api-reference/endpoint/unlike_tweet_v2)
+- [POSTCreate Community V2](https://docs.twitterapi.io/api-reference/endpoint/create_community_v2)
+- [POSTDelete Community V2](https://docs.twitterapi.io/api-reference/endpoint/delete_community_v2)
+- [POSTJoin Community v2](https://docs.twitterapi.io/api-reference/endpoint/join_community_v2)
+- [POSTLeave Community V2](https://docs.twitterapi.io/api-reference/endpoint/leave_community_v2)
+[POSTLog in](https://docs.twitterapi.io/api-reference/endpoint/user_login_v2)
+[POSTUpload media](https://docs.twitterapi.io/api-reference/endpoint/upload_media_v2)
+[POSTCreate tweet v2](https://docs.twitterapi.io/api-reference/endpoint/create_tweet_v2)
+[GETGet History Messages By UserID](https://docs.twitterapi.io/api-reference/endpoint/get_dm_history_by_user_id)
+[POSTSend DM V2](https://docs.twitterapi.io/api-reference/endpoint/send_dm_v2)
+[POSTRetweet Tweet](https://docs.twitterapi.io/api-reference/endpoint/retweet_tweet_v2)
+[POSTDlete Tweet](https://docs.twitterapi.io/api-reference/endpoint/delete_tweet_v2)
+[POSTFollow User](https://docs.twitterapi.io/api-reference/endpoint/follow_user_v2)
+[POSTUnfollow User](https://docs.twitterapi.io/api-reference/endpoint/unfollow_user_v2)
+[POSTLike Tweet](https://docs.twitterapi.io/api-reference/endpoint/like_tweet_v2)
+[POSTUnlike Tweet](https://docs.twitterapi.io/api-reference/endpoint/unlike_tweet_v2)
+[POSTCreate Community V2](https://docs.twitterapi.io/api-reference/endpoint/create_community_v2)
+[POSTDelete Community V2](https://docs.twitterapi.io/api-reference/endpoint/delete_community_v2)
+[POSTJoin Community v2](https://docs.twitterapi.io/api-reference/endpoint/join_community_v2)
+[POSTLeave Community V2](https://docs.twitterapi.io/api-reference/endpoint/leave_community_v2)
+
+##### Webhook/Websocket Filter Rule
+- [POSTAdd Webhook/Websocket Tweet Filter Rule](https://docs.twitterapi.io/api-reference/endpoint/add_webhook_rule)
+- [GETGet ALL test Webhook/Websocket Tweet Filter Rules](https://docs.twitterapi.io/api-reference/endpoint/get_webhook_rules)
+- [POSTUpdate Webhook/Websocket Tweet Filter Rule](https://docs.twitterapi.io/api-reference/endpoint/update_webhook_rule)
+- [DELDelete Webhook/Websocket Tweet Filter Rule](https://docs.twitterapi.io/api-reference/endpoint/delete_webhook_rule)
+
+[POSTAdd Webhook/Websocket Tweet Filter Rule](https://docs.twitterapi.io/api-reference/endpoint/add_webhook_rule)
+[GETGet ALL test Webhook/Websocket Tweet Filter Rules](https://docs.twitterapi.io/api-reference/endpoint/get_webhook_rules)
+[POSTUpdate Webhook/Websocket Tweet Filter Rule](https://docs.twitterapi.io/api-reference/endpoint/update_webhook_rule)
+[DELDelete Webhook/Websocket Tweet Filter Rule](https://docs.twitterapi.io/api-reference/endpoint/delete_webhook_rule)
+
+##### Stream Endpoint
+- [POSTAdd  a twitter user to monitor his tweets](https://docs.twitterapi.io/api-reference/endpoint/add_user_to_monitor_tweet)
+- [POSTRemove a user from  monitor list](https://docs.twitterapi.io/api-reference/endpoint/remove_user_to_monitor_tweet)
+[POSTAdd  a twitter user to monitor his tweets](https://docs.twitterapi.io/api-reference/endpoint/add_user_to_monitor_tweet)
+[POSTRemove a user from  monitor list](https://docs.twitterapi.io/api-reference/endpoint/remove_user_to_monitor_tweet)
+
+##### Login Endpoint--deprecated
+- [POSTLogin Step 1: by email or username](https://docs.twitterapi.io/api-reference/endpoint/login_by_email_or_username)
+- [POSTLogin Step 2: by 2fa code](https://docs.twitterapi.io/api-reference/endpoint/login_by_2fa)
+[POSTLogin Step 1: by email or username](https://docs.twitterapi.io/api-reference/endpoint/login_by_email_or_username)
+[POSTLogin Step 2: by 2fa code](https://docs.twitterapi.io/api-reference/endpoint/login_by_2fa)
+
+##### Tweet Action Endpoint--deprecated
+- [POSTUpload Image](https://docs.twitterapi.io/api-reference/endpoint/upload_tweet_image)
+- [POSTPost/reply/quote a tweet](https://docs.twitterapi.io/api-reference/endpoint/create_tweet)
+- [POSTLike a tweet](https://docs.twitterapi.io/api-reference/endpoint/like_tweet)
+- [POSTReweet a tweet](https://docs.twitterapi.io/api-reference/endpoint/retweet_tweet)
+[POSTUpload Image](https://docs.twitterapi.io/api-reference/endpoint/upload_tweet_image)
+[POSTPost/reply/quote a tweet](https://docs.twitterapi.io/api-reference/endpoint/create_tweet)
+[POSTLike a tweet](https://docs.twitterapi.io/api-reference/endpoint/like_tweet)
+[POSTReweet a tweet](https://docs.twitterapi.io/api-reference/endpoint/retweet_tweet)
+cURL
+
+```
+curl --request GET \ --url https://api.twitterapi.io/twitter/tweet/advanced_search \ --header 'X-API-Key: <api-key>'
+```
+
+
+```
+curl --request GET \ --url https://api.twitterapi.io/twitter/tweet/advanced_search \ --header 'X-API-Key: <api-key>'
+```
+
+
+```
+{ "tweets": [ { "type": "tweet", "id": "<string>", "url": "<string>", "text": "<string>", "source": "<string>", "retweetCount": 123, "replyCount": 123, "likeCount": 123, "quoteCount": 123, "viewCount": 123, "createdAt": "<string>", "lang": "<string>", "bookmarkCount": 123, "isReply": true, "inReplyToId": "<string>", "conversationId": "<string>", "displayTextRange": [ 123 ], "inReplyToUserId": "<string>", "inReplyToUsername": "<string>", "author": { "type": "user", "userName": "<string>", "url": "<string>", "id": "<string>", "name": "<string>", "isBlueVerified": true, "verifiedType": "<string>", "profilePicture": "<string>", "coverPicture": "<string>", "description": "<string>", "location": "<string>", "followers": 123, "following": 123, "canDm": true, "createdAt": "<string>", "favouritesCount": 123, "hasCustomTimelines": true, "isTranslator": true, "mediaCount": 123, "statusesCount": 123, "withheldInCountries": [ "<string>" ], "affiliatesHighlightedLabel": {}, "possiblySensitive": true, "pinnedTweetIds": [ "<string>" ], "isAutomated": true, "automatedBy": "<string>", "unavailable": true, "message": "<string>", "unavailableReason": "<string>", "profile_bio": { "description": "<string>", "entities": { "description": { "urls": [ { "display_url": "<string>", "expanded_url": "<string>", "indices": [ 123 ], "url": "<string>" } ] }, "url": { "urls": [ { "display_url": "<string>", "expanded_url": "<string>", "indices": [ 123 ], "url": "<string>" } ] } } } }, "entities": { "hashtags": [ { "indices": [ 123 ], "text": "<string>" } ], "urls": [ { "display_url": "<string>", "expanded_url": "<string>", "indices": [ 123 ], "url": "<string>" } ], "user_mentions": [ { "id_str": "<string>", "name": "<string>", "screen_name": "<string>" } ] }, "quoted_tweet": {}, "retweeted_tweet": {}, "isLimitedReply": true } ], "has_next_page": true, "next_cursor": "<string>" }
+```
+
+```
+{ "tweets": [ { "type": "tweet", "id": "<string>", "url": "<string>", "text": "<string>", "source": "<string>", "retweetCount": 123, "replyCount": 123, "likeCount": 123, "quoteCount": 123, "viewCount": 123, "createdAt": "<string>", "lang": "<string>", "bookmarkCount": 123, "isReply": true, "inReplyToId": "<string>", "conversationId": "<string>", "displayTextRange": [ 123 ], "inReplyToUserId": "<string>", "inReplyToUsername": "<string>", "author": { "type": "user", "userName": "<string>", "url": "<string>", "id": "<string>", "name": "<string>", "isBlueVerified": true, "verifiedType": "<string>", "profilePicture": "<string>", "coverPicture": "<string>", "description": "<string>", "location": "<string>", "followers": 123, "following": 123, "canDm": true, "createdAt": "<string>", "favouritesCount": 123, "hasCustomTimelines": true, "isTranslator": true, "mediaCount": 123, "statusesCount": 123, "withheldInCountries": [ "<string>" ], "affiliatesHighlightedLabel": {}, "possiblySensitive": true, "pinnedTweetIds": [ "<string>" ], "isAutomated": true, "automatedBy": "<string>", "unavailable": true, "message": "<string>", "unavailableReason": "<string>", "profile_bio": { "description": "<string>", "entities": { "description": { "urls": [ { "display_url": "<string>", "expanded_url": "<string>", "indices": [ 123 ], "url": "<string>" } ] }, "url": { "urls": [ { "display_url": "<string>", "expanded_url": "<string>", "indices": [ 123 ], "url": "<string>" } ] } } } }, "entities": { "hashtags": [ { "indices": [ 123 ], "text": "<string>" } ], "urls": [ { "display_url": "<string>", "expanded_url": "<string>", "indices": [ 123 ], "url": "<string>" } ], "user_mentions": [ { "id_str": "<string>", "name": "<string>", "screen_name": "<string>" } ] }, "quoted_tweet": {}, "retweeted_tweet": {}, "isLimitedReply": true } ], "has_next_page": true, "next_cursor": "<string>" }
+```
+
+# Advanced Search
+
+Advanced search for tweets.Each page returns up to 20 replies(Sometimes less than 20,because we will filter out ads or other not tweets). Use cursor for pagination.
+cURL
+
+```
+curl --request GET \ --url https://api.twitterapi.io/twitter/tweet/advanced_search \ --header 'X-API-Key: <api-key>'
+```
+
+
+```
+curl --request GET \ --url https://api.twitterapi.io/twitter/tweet/advanced_search \ --header 'X-API-Key: <api-key>'
+```
+
+
+```
+{ "tweets": [ { "type": "tweet", "id": "<string>", "url": "<string>", "text": "<string>", "source": "<string>", "retweetCount": 123, "replyCount": 123, "likeCount": 123, "quoteCount": 123, "viewCount": 123, "createdAt": "<string>", "lang": "<string>", "bookmarkCount": 123, "isReply": true, "inReplyToId": "<string>", "conversationId": "<string>", "displayTextRange": [ 123 ], "inReplyToUserId": "<string>", "inReplyToUsername": "<string>", "author": { "type": "user", "userName": "<string>", "url": "<string>", "id": "<string>", "name": "<string>", "isBlueVerified": true, "verifiedType": "<string>", "profilePicture": "<string>", "coverPicture": "<string>", "description": "<string>", "location": "<string>", "followers": 123, "following": 123, "canDm": true, "createdAt": "<string>", "favouritesCount": 123, "hasCustomTimelines": true, "isTranslator": true, "mediaCount": 123, "statusesCount": 123, "withheldInCountries": [ "<string>" ], "affiliatesHighlightedLabel": {}, "possiblySensitive": true, "pinnedTweetIds": [ "<string>" ], "isAutomated": true, "automatedBy": "<string>", "unavailable": true, "message": "<string>", "unavailableReason": "<string>", "profile_bio": { "description": "<string>", "entities": { "description": { "urls": [ { "display_url": "<string>", "expanded_url": "<string>", "indices": [ 123 ], "url": "<string>" } ] }, "url": { "urls": [ { "display_url": "<string>", "expanded_url": "<string>", "indices": [ 123 ], "url": "<string>" } ] } } } }, "entities": { "hashtags": [ { "indices": [ 123 ], "text": "<string>" } ], "urls": [ { "display_url": "<string>", "expanded_url": "<string>", "indices": [ 123 ], "url": "<string>" } ], "user_mentions": [ { "id_str": "<string>", "name": "<string>", "screen_name": "<string>" } ] }, "quoted_tweet": {}, "retweeted_tweet": {}, "isLimitedReply": true } ], "has_next_page": true, "next_cursor": "<string>" }
+```
+
+
+```
+{ "tweets": [ { "type": "tweet", "id": "<string>", "url": "<string>", "text": "<string>", "source": "<string>", "retweetCount": 123, "replyCount": 123, "likeCount": 123, "quoteCount": 123, "viewCount": 123, "createdAt": "<string>", "lang": "<string>", "bookmarkCount": 123, "isReply": true, "inReplyToId": "<string>", "conversationId": "<string>", "displayTextRange": [ 123 ], "inReplyToUserId": "<string>", "inReplyToUsername": "<string>", "author": { "type": "user", "userName": "<string>", "url": "<string>", "id": "<string>", "name": "<string>", "isBlueVerified": true, "verifiedType": "<string>", "profilePicture": "<string>", "coverPicture": "<string>", "description": "<string>", "location": "<string>", "followers": 123, "following": 123, "canDm": true, "createdAt": "<string>", "favouritesCount": 123, "hasCustomTimelines": true, "isTranslator": true, "mediaCount": 123, "statusesCount": 123, "withheldInCountries": [ "<string>" ], "affiliatesHighlightedLabel": {}, "possiblySensitive": true, "pinnedTweetIds": [ "<string>" ], "isAutomated": true, "automatedBy": "<string>", "unavailable": true, "message": "<string>", "unavailableReason": "<string>", "profile_bio": { "description": "<string>", "entities": { "description": { "urls": [ { "display_url": "<string>", "expanded_url": "<string>", "indices": [ 123 ], "url": "<string>" } ] }, "url": { "urls": [ { "display_url": "<string>", "expanded_url": "<string>", "indices": [ 123 ], "url": "<string>" } ] } } } }, "entities": { "hashtags": [ { "indices": [ 123 ], "text": "<string>" } ], "urls": [ { "display_url": "<string>", "expanded_url": "<string>", "indices": [ 123 ], "url": "<string>" } ], "user_mentions": [ { "id_str": "<string>", "name": "<string>", "screen_name": "<string>" } ] }, "quoted_tweet": {}, "retweeted_tweet": {}, "isLimitedReply": true } ], "has_next_page": true, "next_cursor": "<string>" }
+```
+
+
+#### Authorizations
+[​](https://docs.twitterapi.io/api-reference/endpoint/tweet_advanced_search#authorization-x-api-key)
+
+#### Query Parameters
+[​](https://docs.twitterapi.io/api-reference/endpoint/tweet_advanced_search#parameter-query)
+
+# Advanced Search
+
+The query to search for.eg. "AI" OR "Twitter" from:elonmusk since:2021-12-31_23:59:59_UTC . Get more examples from [https://github.com/igorbrigadir/twitter-advanced-search](https://github.com/igorbrigadir/twitter-advanced-search)
+[​](https://docs.twitterapi.io/api-reference/endpoint/tweet_advanced_search#parameter-query-type)
+The query type to search for.eg. "Latest" OR "Top"
+
+```
+Latest
+```
+
+
+```
+Top
+```
+
+[​](https://docs.twitterapi.io/api-reference/endpoint/tweet_advanced_search#parameter-cursor)
+The cursor to paginate through the results. First page is "".
+
+#### Response
+Tweets response
+[​](https://docs.twitterapi.io/api-reference/endpoint/tweet_advanced_search#response-tweets)
+Array of tweets
+Show child attributes
+[​](https://docs.twitterapi.io/api-reference/endpoint/tweet_advanced_search#response-has-next-page)
+Indicates if there are more results available
+[​](https://docs.twitterapi.io/api-reference/endpoint/tweet_advanced_search#response-next-cursor)
+Cursor for fetching the next page of results
+[Get Article](https://docs.twitterapi.io/api-reference/endpoint/get_article)
+[Get List Followers](https://docs.twitterapi.io/api-reference/endpoint/get_list_followers)
+[telegram](https://t.me/kaitoeasyapivip)
+[Powered by Mintlify](https://www.mintlify.com?utm_campaign=poweredBy&utm_medium=referral&utm_source=kaikaikai)
