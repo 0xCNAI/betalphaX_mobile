@@ -5,7 +5,7 @@ import { usePrices } from '../context/PriceContext';
 import { calculatePortfolioPnL } from '../utils/pnlCalculator';
 import AssetList from '../components/AssetList';
 import PortfolioHistoryChart from '../components/PortfolioHistoryChart';
-import WalletImportModal from '../components/WalletImportModal';
+import WalletImportModal from '../components/UnifiedImportModal';
 import TransactionForm from '../components/TransactionForm';
 
 import { generatePortfolioOverview, cacheOverview, getCachedOverview } from '../services/analysisService';
