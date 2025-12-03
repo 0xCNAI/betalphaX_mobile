@@ -107,7 +107,7 @@ const AssetList = ({ onImport }) => {
         )}
       </div>
 
-      <div className="table-container">
+      <div className="table-container desktop-only">
         <table className="asset-table">
           <thead>
             <tr>
@@ -153,7 +153,6 @@ const AssetList = ({ onImport }) => {
                         )}
                         <div className="asset-info">
                           <span className="asset-symbol">{asset.symbol}</span>
-                          {/* <span className="name">{asset.name}</span> */}
                         </div>
                       </div>
                     </td>
@@ -195,6 +194,7 @@ const AssetList = ({ onImport }) => {
                   {isExpanded && hasBreakdown && (
                     <tr className="breakdown-row">
                       <td colSpan="8">
+                        {/* Desktop Breakdown (Same as before) */}
                         <div className="breakdown-container">
                           <div className="breakdown-header-row">
                             <h4>On-Chain Holdings Breakdown</h4>
@@ -302,6 +302,71 @@ const AssetList = ({ onImport }) => {
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="mobile-asset-list mobile-only">
+        {assets.map((asset) => {
+          const currentPrice = asset.price || 0;
+          const currentValue = asset.holdings * currentPrice;
+          const totalPnL = currentValue - asset.totalCost;
+          const pnlPercent = asset.totalCost > 0 ? (totalPnL / asset.totalCost) * 100 : 0;
+          const isPositive = asset.change24h >= 0;
+
+          return (
+            <div
+              key={asset.symbol}
+              className="asset-card"
+              onClick={() => navigate(`/asset/${asset.symbol}`)}
+            >
+              <div className="card-top">
+                <div className="asset-wrapper">
+                  {getIcon(asset.symbol) && (
+                    <img src={getIcon(asset.symbol)} alt={asset.symbol} className="token-icon" />
+                  )}
+                  <div className="asset-info">
+                    <span className="asset-symbol">{asset.symbol}</span>
+                  </div>
+                </div>
+                <div className="price-info">
+                  <span className="current-price">${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span className={`change-pill ${isPositive ? 'positive' : 'negative'}`}>
+                    {isPositive ? '+' : ''}{asset.change24h.toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+
+              <div className="card-middle">
+                <div className="stat-col">
+                  <span className="label">Holdings</span>
+                  <span className="value">{asset.holdings.toLocaleString(undefined, { maximumFractionDigits: 4 })}</span>
+                </div>
+                <div className="stat-col right">
+                  <span className="label">Value</span>
+                  <span className="value">${currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+              </div>
+
+              <div className="card-bottom">
+                <div className="stat-col">
+                  <span className="label">PnL</span>
+                  <span className={`value ${totalPnL >= 0 ? 'text-success' : 'text-danger'}`}>
+                    {totalPnL >= 0 ? '+' : ''}${totalPnL.toLocaleString(undefined, { maximumFractionDigits: 0 })} ({pnlPercent.toFixed(2)}%)
+                  </span>
+                </div>
+                {attentionLevels[asset.symbol] && (
+                  <div className="attention-indicator">
+                    <span className={`attention-badge ${attentionLevels[asset.symbol].color}`}>
+                      {attentionLevels[asset.symbol].level === 'extreme' && <AlertCircle size={12} />}
+                      {attentionLevels[asset.symbol].level === 'needed' && <Eye size={12} />}
+                      <span className="badge-text-mobile">{attentionLevels[asset.symbol].label}</span>
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       <Modal
@@ -690,7 +755,92 @@ const AssetList = ({ onImport }) => {
             padding: 2px 6px;
             border-radius: 4px;
         }
+
+        /* Mobile Card Styles */
+        .mobile-asset-list {
+          display: none;
+          flex-direction: column;
+          gap: 12px;
+          padding: 12px;
+        }
+
+        .asset-card {
+          background-color: var(--bg-tertiary);
+          border-radius: var(--radius-md);
+          padding: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .card-top {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .price-info {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+        }
+
+        .current-price {
+          font-weight: 600;
+          font-size: 1rem;
+        }
+
+        .change-pill {
+          font-size: 0.75rem;
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-weight: 500;
+        }
+        .change-pill.positive { background: rgba(16, 185, 129, 0.1); color: var(--accent-success); }
+        .change-pill.negative { background: rgba(239, 68, 68, 0.1); color: var(--accent-danger); }
+
+        .card-middle {
+          display: flex;
+          justify-content: space-between;
+          padding: 8px 0;
+          border-top: 1px solid rgba(255,255,255,0.05);
+          border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .stat-col {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+        .stat-col.right { align-items: flex-end; }
+
+        .stat-col .label { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; }
+        .stat-col .value { font-size: 0.9rem; font-weight: 500; }
+
+        .card-bottom {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .badge-text-mobile {
+          font-size: 0.7rem;
+        }
+
+        @media (max-width: 768px) {
+          .desktop-only { display: none; }
+          .mobile-only { display: flex; }
+          .section-header { padding: 12px; }
+          .asset-list-container { border-radius: 0; border-left: none; border-right: none; }
+        }
       `}</style>
+    </div>
+  );
+};
+
+export default AssetList;
+`}</style>
     </div>
   );
 };

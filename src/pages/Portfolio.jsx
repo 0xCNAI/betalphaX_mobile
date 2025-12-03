@@ -176,10 +176,32 @@ const Portfolio = () => {
             </div>
 
             {/* Middle: Add Transaction Button */}
-            <button className="btn-add-transaction-large" onClick={() => setShowAddTransaction(true)}>
+            <button className="btn-add-transaction-large" onClick={() => setIsTransactionModalOpen(true)}>
                 <Plus size={24} />
                 Add New Transaction
             </button>
+
+            {isImportModalOpen && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-end sm:items-center z-50 sm:p-4">
+                    <div className="bg-slate-900 w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-xl sm:rounded-2xl overflow-y-auto border-slate-800 shadow-2xl relative animate-in slide-in-from-bottom-5 sm:zoom-in-95 duration-200">
+                        <button className="absolute top-4 right-4 p-2 bg-slate-800 text-slate-400 hover:text-white rounded-full transition-colors z-10" onClick={() => setIsImportModalOpen(false)}>
+                            <X size={20} />
+                        </button>
+                        <WalletImportModal onClose={() => setIsImportModalOpen(false)} />
+                    </div>
+                </div>
+            )}
+
+            {isTransactionModalOpen && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-end sm:items-center z-50 sm:p-4">
+                    <div className="bg-slate-900 w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-xl sm:rounded-2xl overflow-y-auto border-slate-800 shadow-2xl relative animate-in slide-in-from-bottom-5 sm:zoom-in-95 duration-200">
+                        <button className="absolute top-4 right-4 p-2 bg-slate-800 text-slate-400 hover:text-white rounded-full transition-colors z-10" onClick={() => setIsTransactionModalOpen(false)}>
+                            <X size={20} />
+                        </button>
+                        <TransactionForm onClose={() => setIsTransactionModalOpen(false)} />
+                    </div>
+                </div>
+            )}
 
             {/* Bottom: Asset List */}
             <div className="content-section">
@@ -189,25 +211,7 @@ const Portfolio = () => {
 
 
             {/* Modals */}
-            {showUnifiedImport && (
-                <UnifiedImportModal
-                    onClose={() => setShowUnifiedImport(false)}
-                    onImport={handleImport}
-                    onManualAdd={handleManualAdd}
-                />
-            )}
-
-            {showAddTransaction && (
-                <div className="modal-overlay" onClick={() => setShowAddTransaction(false)}>
-                    <div className="modal-content transaction-modal" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h2>Add Transaction</h2>
-                            <button onClick={() => setShowAddTransaction(false)} className="modal-close"><X size={24} /></button>
-                        </div>
-                        <TransactionForm onClose={() => setShowAddTransaction(false)} />
-                    </div>
-                </div>
-            )}
+            {/* Original UnifiedImportModal and TransactionForm modals removed as per instruction */}
 
             <style>{`
         .portfolio-page {
@@ -525,11 +529,39 @@ const Portfolio = () => {
 
         @media (max-width: 768px) {
             .top-grid {
-                grid-template-columns: 1fr;
+                display: flex;
+                flex-direction: column;
                 height: auto;
+                gap: var(--spacing-md);
             }
             .dashboard-card {
-                height: 300px;
+                height: auto;
+                min-height: 280px;
+            }
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-md);
+            }
+            .btn-wallet-import {
+                width: 100%;
+                justify-content: center;
+            }
+            .pnl-summary-topright {
+                flex-direction: column;
+                gap: 4px;
+            }
+            .balance-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .daily-change-inline {
+                margin-left: 0;
+                margin-top: 4px;
+            }
+            .balance-content {
+                flex-direction: column;
+                align-items: flex-start;
             }
         }
         
