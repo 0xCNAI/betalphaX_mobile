@@ -17,8 +17,9 @@ const Portfolio = () => {
     const { user, signOut } = useAuth();
     const { transactions, bulkAddTransactions, addTransaction } = useTransactions();
     const { getPrice, loading: pricesLoading, error, lastUpdate } = usePrices();
-    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const [showUnifiedImport, setShowUnifiedImport] = useState(false);
     const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
+    const [showAddTransaction, setShowAddTransaction] = useState(false); // Added this to match usage
     const [showAIInsights, setShowAIInsights] = useState(false);
     const [totalBalance, setTotalBalance] = useState(0);
     const [dailyPnL, setDailyPnL] = useState(0);
@@ -82,12 +83,12 @@ const Portfolio = () => {
 
     const handleImport = (transactions) => {
         bulkAddTransactions(transactions);
-        setIsImportModalOpen(false);
+        setShowUnifiedImport(false);
     };
 
     const handleManualAdd = (transaction) => {
         // TransactionForm handles the actual adding via context, we just close the modal
-        setIsImportModalOpen(false);
+        setShowUnifiedImport(false);
     };
 
     // Prepare prices object for AI Overview
@@ -118,7 +119,7 @@ const Portfolio = () => {
                 <button className="btn-text-action" onClick={signOut}>
                     Sign Out
                 </button>
-                <button className="btn-icon-action" onClick={() => setIsImportModalOpen(true)}>
+                <button className="btn-icon-action" onClick={() => setShowUnifiedImport(true)}>
                     <Upload size={20} />
                 </button>
             </div>
