@@ -311,6 +311,14 @@ const AssetList = ({ onImport }) => {
 
       {/* Mobile Card View */}
       <div className="mobile-asset-list mobile-only">
+        {/* Mobile Header Row */}
+        <div className="mobile-list-header">
+          <span className="col-header">Asset</span>
+          <span className="col-header right">Price</span>
+          <span className="col-header right">PnL</span>
+          <span className="col-header right">Value</span>
+        </div>
+
         {assets.map((asset) => {
           const currentPrice = asset.price || 0;
           const currentValue = asset.holdings * currentPrice;
@@ -334,25 +342,27 @@ const AssetList = ({ onImport }) => {
               <div className="asset-info-col">
                 <div className="info-top">
                   <span className="asset-symbol-text">{asset.symbol}</span>
-                  <span className="asset-holdings-text">{asset.holdings.toLocaleString(undefined, { maximumFractionDigits: 4 })}</span>
                 </div>
                 <div className="info-bottom">
-                  <span className="asset-price-text">${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span className="asset-holdings-text">{asset.holdings.toLocaleString(undefined, { maximumFractionDigits: 4 })}</span>
                 </div>
               </div>
 
-              <div className="asset-stats-col">
-                <div className="stats-top">
-                  <span className="asset-value-text">${currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                </div>
-                <div className="stats-bottom">
-                  <span className={`pnl-text ${isPnLPositive ? 'text-success' : 'text-danger'}`}>
-                    {isPnLPositive ? '+' : ''}{totalPnL.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                  </span>
-                  <span className={`change-text ${isPositive ? 'text-success' : 'text-danger'}`}>
-                    ({isPositive ? '+' : ''}{asset.change24h.toFixed(1)}%)
-                  </span>
-                </div>
+              <div className="asset-price-col">
+                <span className="asset-price-text">${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
+
+              <div className="asset-pnl-col">
+                <span className={`pnl-text ${isPnLPositive ? 'text-success' : 'text-danger'}`}>
+                  {isPnLPositive ? '+' : ''}{pnlPercent.toFixed(1)}%
+                </span>
+                <span className="pnl-value-small">
+                  {isPnLPositive ? '+' : ''}${totalPnL.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </span>
+              </div>
+
+              <div className="asset-value-col">
+                <span className="asset-value-text">${currentValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
               </div>
             </div>
           );
@@ -514,7 +524,7 @@ const AssetList = ({ onImport }) => {
         }
 
         .pnl-value-small {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: var(--text-secondary);
         }
         
@@ -753,55 +763,76 @@ const AssetList = ({ onImport }) => {
           gap: 0; /* Remove gap for list look */
         }
 
+        .mobile-list-header {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr 1fr;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--bg-tertiary);
+            background-color: var(--bg-secondary);
+        }
+
+        .col-header {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .col-header.right { text-align: right; }
+
         .asset-card-compact {
           background-color: var(--bg-secondary);
-          padding: 16px 12px;
-          display: flex;
+          padding: 10px 12px; /* Reduced padding */
+          display: grid;
+          grid-template-columns: 1.5fr 1fr 1fr 1fr;
           align-items: center;
-          gap: 12px;
+          gap: 8px;
           border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .asset-card-compact:last-child {
             border-bottom: none;
         }
-
+        
+        /* Actually, let's keep icon but make it part of first col */
         .asset-icon-col {
-            flex-shrink: 0;
+            display: block;
+            margin-right: 8px;
+            float: left;
         }
 
         .token-icon-large {
-            width: 40px;
-            height: 40px;
+            width: 28px; /* Smaller icon */
+            height: 28px;
             border-radius: 50%;
         }
 
         .asset-info-col {
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            flex: 1; /* Takes available space */
+            justify-content: center;
         }
 
         .info-top {
             display: flex;
-            align-items: baseline;
-            gap: 6px;
+            align-items: center;
         }
 
         .asset-symbol-text {
             font-weight: 700;
-            font-size: 1rem;
+            font-size: 0.9rem;
             color: var(--text-primary);
         }
 
         .asset-holdings-text {
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             color: var(--text-secondary);
         }
 
-        .info-bottom {
+        .asset-price-col {
+            text-align: right;
             display: flex;
+            align-items: center;
+            justify-content: flex-end;
         }
 
         .asset-price-text {
@@ -809,36 +840,29 @@ const AssetList = ({ onImport }) => {
             color: var(--text-secondary);
         }
 
-        .asset-stats-col {
+        .asset-pnl-col {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
-            gap: 4px;
+            justify-content: center;
         }
 
-        .stats-top {
+        .pnl-text {
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .asset-value-col {
+            text-align: right;
             display: flex;
+            align-items: center;
+            justify-content: flex-end;
         }
 
         .asset-value-text {
             font-weight: 700;
-            font-size: 1rem;
+            font-size: 0.9rem;
             color: var(--text-primary);
-        }
-
-        .stats-bottom {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.85rem;
-        }
-
-        .pnl-text {
-            font-weight: 500;
-        }
-
-        .change-text {
-            font-weight: 500;
         }
 
         .text-success { color: var(--accent-success); }

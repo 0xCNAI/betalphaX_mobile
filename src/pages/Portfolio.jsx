@@ -147,58 +147,58 @@ const Portfolio = () => {
                         </div>
                     </div>
 
-                    <div className="ai-insight-entry">
-                        <button className="btn-ai-insights" onClick={() => setShowAIInsights(true)}>
-                            <Sparkles size={16} className="text-accent-primary" />
-                            <span>View AI Insights</span>
+                    {/* Chart Section */}
+                    <div className="chart-section-mobile">
+                        <PortfolioHistoryChart compact={true} height={180} />
+                    </div>
+
+                    {/* Action Buttons Row */}
+                    <div className="action-buttons-row">
+                        <button className="btn-action-compact primary" onClick={() => setShowAddTransaction(true)}>
+                            <Plus size={18} />
+                            <span>Add Transaction</span>
+                        </button>
+                        <button className="btn-action-compact secondary" onClick={() => setShowAIInsights(true)}>
+                            <Sparkles size={18} />
+                            <span>AI Insights</span>
                         </button>
                     </div>
                 </div>
             </div>
-
-            {/* Middle: Add Transaction Button */}
-            <button className="btn-add-transaction-large" onClick={() => setIsTransactionModalOpen(true)}>
-                <Plus size={24} />
-                Add New Transaction
-            </button>
-
-            {isImportModalOpen && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-end sm:items-center z-50 sm:p-4">
-                    <div className="bg-slate-900 w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-xl sm:rounded-2xl overflow-y-auto border-slate-800 shadow-2xl relative animate-in slide-in-from-bottom-5 sm:zoom-in-95 duration-200">
-                        <button className="absolute top-4 right-4 p-2 bg-slate-800 text-slate-400 hover:text-white rounded-full transition-colors z-10" onClick={() => setIsImportModalOpen(false)}>
-                            <X size={20} />
-                        </button>
-                        <WalletImportModal onClose={() => setIsImportModalOpen(false)} />
-                    </div>
-                </div>
-            )}
-
-            {isTransactionModalOpen && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-end sm:items-center z-50 sm:p-4">
-                    <div className="bg-slate-900 w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-xl sm:rounded-2xl overflow-y-auto border-slate-800 shadow-2xl relative animate-in slide-in-from-bottom-5 sm:zoom-in-95 duration-200">
-                        <button className="absolute top-4 right-4 p-2 bg-slate-800 text-slate-400 hover:text-white rounded-full transition-colors z-10" onClick={() => setIsTransactionModalOpen(false)}>
-                            <X size={20} />
-                        </button>
-                        <TransactionForm onClose={() => setIsTransactionModalOpen(false)} />
-                    </div>
-                </div>
-            )}
 
             {/* Bottom: Asset List */}
             <div className="content-section">
                 <AssetList />
             </div>
 
-
-
             {/* Modals */}
-            {/* Original UnifiedImportModal and TransactionForm modals removed as per instruction */}
+            {showUnifiedImport && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-end sm:items-center z-50 sm:p-4">
+                    <div className="bg-slate-900 w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-xl sm:rounded-2xl overflow-y-auto border-slate-800 shadow-2xl relative animate-in slide-in-from-bottom-5 sm:zoom-in-95 duration-200">
+                        <button className="absolute top-4 right-4 p-2 bg-slate-800 text-slate-400 hover:text-white rounded-full transition-colors z-10" onClick={() => setShowUnifiedImport(false)}>
+                            <X size={20} />
+                        </button>
+                        <UnifiedImportModal onClose={() => setShowUnifiedImport(false)} onImport={handleImport} onManualAdd={handleManualAdd} />
+                    </div>
+                </div>
+            )}
+
+            {showAddTransaction && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-end sm:items-center z-50 sm:p-4">
+                    <div className="bg-slate-900 w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-xl sm:rounded-2xl overflow-y-auto border-slate-800 shadow-2xl relative animate-in slide-in-from-bottom-5 sm:zoom-in-95 duration-200">
+                        <button className="absolute top-4 right-4 p-2 bg-slate-800 text-slate-400 hover:text-white rounded-full transition-colors z-10" onClick={() => setShowAddTransaction(false)}>
+                            <X size={20} />
+                        </button>
+                        <TransactionForm onClose={() => setShowAddTransaction(false)} />
+                    </div>
+                </div>
+            )}
 
             <style>{`
         .portfolio-page {
           display: flex;
           flex-direction: column;
-          gap: var(--spacing-lg);
+          gap: var(--spacing-md); /* Reduced gap */
           padding-bottom: 80px; /* Space for bottom tab bar */
         }
 
@@ -206,7 +206,7 @@ const Portfolio = () => {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: var(--spacing-sm);
+          margin-bottom: var(--spacing-xs);
           padding: 0 var(--spacing-sm);
         }
 
@@ -248,7 +248,7 @@ const Portfolio = () => {
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: var(--spacing-md) 0;
+            padding: var(--spacing-xs) 0;
         }
 
         .balance-header-compact h3 {
@@ -287,6 +287,45 @@ const Portfolio = () => {
         .daily-change-compact {
             font-size: 0.9rem;
             font-weight: 500;
+        }
+
+        .chart-section-mobile {
+            width: 100%;
+            height: 180px;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .action-buttons-row {
+            display: flex;
+            gap: 12px;
+            padding: 0 var(--spacing-sm);
+        }
+
+        .btn-action-compact {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-action-compact.primary {
+            background-color: var(--accent-primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+
+        .btn-action-compact.secondary {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .ai-insight-entry {
