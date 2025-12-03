@@ -9,9 +9,10 @@ import { getRecommendedKOLs } from './socialService';
  * @returns {Promise<Object>} - The AI Report JSON
  */
 export async function generatePortfolioReport(transactions, prices) {
+    let portfolioData = null;
     try {
         // 1. Aggregate Data
-        const portfolioData = aggregatePortfolioData(transactions, prices);
+        portfolioData = aggregatePortfolioData(transactions, prices);
 
         if (portfolioData.assets.length === 0) {
             return null;
@@ -31,6 +32,15 @@ export async function generatePortfolioReport(transactions, prices) {
 
     } catch (error) {
         console.error('Error generating portfolio report, using mock:', error);
+        // Ensure we have data for the mock
+        if (!portfolioData) {
+            try {
+                portfolioData = aggregatePortfolioData(transactions, prices);
+            } catch (e) {
+                console.error("Failed to aggregate data for mock:", e);
+                return null;
+            }
+        }
         return getMockPortfolioReport(portfolioData);
     }
 }
