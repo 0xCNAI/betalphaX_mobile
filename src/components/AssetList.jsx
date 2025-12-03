@@ -840,9 +840,3 @@ const AssetList = ({ onImport }) => {
 };
 
 export default AssetList;
-`}</style>
-    </div>
-  );
-};
-
-export default AssetList;
