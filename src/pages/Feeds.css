@@ -55,72 +55,12 @@
 /* --- Summary Block --- */
 .summary-block {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
     margin-bottom: 2rem;
 }
 
-.summary-card {
-    background: rgba(30, 41, 59, 0.6);
-    border-radius: 12px;
-    padding: 1.2rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    transition: transform 0.2s;
-}
-
-.summary-card:hover {
-    transform: translateY(-2px);
-    background: rgba(30, 41, 59, 0.8);
-}
-
-.summary-card .icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-}
-
-.summary-card.risk .icon {
-    background: rgba(239, 68, 68, 0.2);
-    color: #ef4444;
-}
-
-.summary-card.opp .icon {
-    background: rgba(34, 197, 94, 0.2);
-    color: #22c55e;
-}
-
-.summary-card.sentiment .icon {
-    background: rgba(59, 130, 246, 0.2);
-    color: #3b82f6;
-}
-
-.summary-card.asset .icon {
-    background: rgba(168, 85, 247, 0.2);
-    color: #a855f7;
-}
-
-.summary-card .data {
-    display: flex;
-    flex-direction: column;
-}
-
-.summary-card .value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #fff;
-}
-
-.summary-card .label {
-    font-size: 0.85rem;
-    color: #94a3b8;
-}
+/* ... existing styles ... */
 
 /* --- Controls Bar --- */
 .controls-bar {
@@ -131,9 +71,31 @@
     padding: 1rem;
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.05);
-    flex-wrap: wrap;
-    gap: 1rem;
+    flex-wrap: nowrap;
+    /* Force side-by-side */
+    gap: 0.5rem;
+    /* Reduce gap to fit */
     margin-bottom: 1.5rem;
+}
+
+.asset-selector-wrapper {
+    position: relative;
+    flex: 1;
+    /* Allow it to take available space */
+}
+
+.asset-selector-wrapper button {
+    width: 100%;
+    /* Make button fill the wrapper */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.controls-bar>button {
+    flex: 1;
+    /* Make Generate button take equal space if desired, or just fit */
+    white-space: nowrap;
 }
 
 .asset-selector-wrapper {

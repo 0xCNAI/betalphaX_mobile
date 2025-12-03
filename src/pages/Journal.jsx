@@ -120,34 +120,61 @@ const Journal = () => {
       <div className="journal-layout">
         <div className="feed-section">
           <h3>Recent Entries</h3>
+
+          {/* Header Row */}
+          <div className="entries-header-row" style={{
+            display: 'grid',
+            gridTemplateColumns: '1.2fr 1fr 1fr 40px',
+            padding: '0 16px 8px 16px',
+            color: 'var(--text-secondary)',
+            fontSize: '0.75rem',
+            textTransform: 'uppercase',
+            fontWeight: '600',
+            letterSpacing: '0.5px'
+          }}>
+            <span>Ticker</span>
+            <span>Amount</span>
+            <span>Price</span>
+            <span></span> {/* Spacer for chevron */}
+          </div>
+
           <div className="entries-list">
             {sortedTransactions.map((tx) => {
               const isExpanded = expandedIds.includes(tx.id);
               return (
                 <div key={tx.id} className={`journal-list-item ${isExpanded ? 'expanded' : ''}`}>
-                  <div className="list-item-header" onClick={() => toggleExpand(tx.id)}>
-                    <div className="header-left">
-                      <div className="asset-badge">
-                        {getIcon && getIcon(tx.asset) && (
-                          <img
-                            src={getIcon(tx.asset)}
-                            alt={tx.asset}
-                            style={{ width: '20px', height: '20px', borderRadius: '50%', marginRight: '6px' }}
-                          />
-                        )}
-                        <span className="symbol">{tx.asset}</span>
-                        <span className={`type ${tx.type}`}>{tx.type.toUpperCase()}</span>
-                      </div>
+                  <div className="list-item-header" onClick={() => toggleExpand(tx.id)} style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1.2fr 1fr 1fr 40px',
+                    alignItems: 'center',
+                    padding: '12px 16px'
+                  }}>
+                    {/* Column 1: Ticker & Type */}
+                    <div className="asset-badge" style={{ minWidth: 'auto' }}>
+                      {getIcon && getIcon(tx.asset) && (
+                        <img
+                          src={getIcon(tx.asset)}
+                          alt={tx.asset}
+                          style={{ width: '20px', height: '20px', borderRadius: '50%', marginRight: '6px' }}
+                        />
+                      )}
+                      <span className="symbol">{tx.asset}</span>
+                      <span className={`type ${tx.type}`} style={{ fontSize: '0.65rem', marginLeft: '4px' }}>{tx.type.toUpperCase()}</span>
                     </div>
 
-                    <div className="header-right">
-                      <div className="financials-compact">
-                        <span className="amount">{tx.amount} {tx.asset}</span>
-                        <span className="price">@ ${tx.price.toLocaleString()}</span>
-                      </div>
-                      <button className="btn-icon toggle-btn">
-                        <ArrowRight size={16} className={`chevron ${isExpanded ? 'rotated' : ''}`} />
-                      </button>
+                    {/* Column 2: Amount (No Ticker) */}
+                    <span className="amount" style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                      {parseFloat(tx.amount).toLocaleString()}
+                    </span>
+
+                    {/* Column 3: Price */}
+                    <span className="price" style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: '500' }}>
+                      @ ${tx.price ? tx.price.toLocaleString() : '0.00'}
+                    </span>
+
+                    {/* Column 4: Chevron */}
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <ArrowRight size={16} className={`chevron ${isExpanded ? 'rotated' : ''}`} style={{ color: 'var(--text-secondary)' }} />
                     </div>
                   </div>
 
