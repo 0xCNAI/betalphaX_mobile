@@ -327,11 +327,12 @@ const Journal = () => {
         </div>
       </div>
 
+      {/* Transaction Modal (Edit Mode) */}
       {editingTransaction && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <button className="modal-close-x" onClick={() => setEditingTransaction(null)}>
-              <X size={24} />
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-end sm:items-center z-[100] sm:p-4">
+          <div className="bg-slate-900 w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-xl sm:rounded-2xl overflow-y-auto border-slate-800 shadow-2xl relative animate-in slide-in-from-bottom-5 sm:zoom-in-95 duration-200">
+            <button className="absolute top-4 right-4 p-2 bg-slate-800 text-slate-400 hover:text-white rounded-full transition-colors z-10" onClick={() => setEditingTransaction(null)}>
+              <X size={20} />
             </button>
             <TransactionForm
               onClose={() => setEditingTransaction(null)}

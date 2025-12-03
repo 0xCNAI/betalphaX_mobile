@@ -3846,7 +3846,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
           padding: var(--spacing-md) 0;
           border-top: 1px solid var(--bg-tertiary);
           margin-top: auto;
-          z-index: 100; /* Increased z-index */
+          z-index: 1000; /* Super high z-index */
           display: flex;
           justify-content: space-between;
           gap: var(--spacing-md);
@@ -3858,15 +3858,15 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             height: 100vh;
             max-height: 100vh;
             border-radius: 0;
-            padding-bottom: 80px; /* Add padding to bottom of modal content to clear nav if needed, though sticky should handle it */
+            padding-bottom: 120px; /* Massive padding to ensure scroll clears everything */
           }
           
           .step-actions {
             padding: var(--spacing-md);
             margin: 0 -1rem -1rem -1rem; 
             width: calc(100% + 2rem);
-            bottom: 0; /* Keep at 0 relative to modal container */
-            padding-bottom: max(1rem, env(safe-area-inset-bottom)); /* Handle safe area */
+            bottom: 0; 
+            padding-bottom: max(1rem, env(safe-area-inset-bottom));
           }
         }
       `}</style>
