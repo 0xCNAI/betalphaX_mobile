@@ -5,7 +5,7 @@ import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAMMk37tmdFOXULC9BJPJmJ3rAyB20AYBg",
-    authDomain: window.location.hostname === "localhost" ? "betalphapick.firebaseapp.com" : window.location.hostname,
+    authDomain: "betalphapick.firebaseapp.com",
     projectId: "betalphapick",
     storageBucket: "betalphapick.firebasestorage.app",
     messagingSenderId: "1069329661064",
