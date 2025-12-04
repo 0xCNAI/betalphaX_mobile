@@ -1,6 +1,6 @@
 import { getCoinId, apiQueue } from './coinGeckoApi';
 
-const COINGECKO_API = '/api/coingecko';
+const COINGECKO_API = 'https://api.coingecko.com/api/v3';
 const DEFILLAMA_API = 'https://api.llama.fi';
 
 // Cache duration: 1 hour (reduced API calls to avoid 429 errors)

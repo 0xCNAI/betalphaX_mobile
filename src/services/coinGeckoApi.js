@@ -1,6 +1,6 @@
 // CoinGecko API Service
 import { TOP_COINS } from '../data/topCoins';
-const COINGECKO_API = '/api/coingecko';
+const COINGECKO_API = 'https://api.coingecko.com/api/v3';
 
 // Request Queue with Deduplication to prevent rate limits
 class RequestQueue {
