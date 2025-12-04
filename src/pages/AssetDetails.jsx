@@ -6,6 +6,7 @@ import { usePrices } from '../context/PriceContext';
 import { useAuth } from '../context/AuthContext';
 import { calculateAssetPnL } from '../utils/pnlCalculator';
 import { getBestTradingViewSymbol } from '../services/coinGeckoApi';
+import { summarizeTweet } from '../services/geminiService';
 import TradingGuardian, { useGuardianAnalysis, GuardianRiskCard, GuardianProfitCard, GuardianOpportunityCard } from '../components/TradingGuardian';
 import SocialNotificationWidget from '../components/SocialNotificationWidget';
 import ImportantEvents from '../components/ImportantEvents';
@@ -18,7 +19,7 @@ import Modal from '../components/Modal';
 const AssetDetails = () => {
   const { symbol } = useParams();
   const { user } = useAuth();
-  const { transactions } = useTransactions();
+  const { transactions, updateTransaction } = useTransactions();
   const { getPrice, getIcon } = usePrices();
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
@@ -397,7 +398,55 @@ const AssetDetails = () => {
                   </h3>
                 </div>
                 <div className="flex-1">
-                  <SocialNotificationWidget symbol={symbol} user={user} compact={true} />
+                  <SocialNotificationWidget
+                    symbol={symbol}
+                    user={user}
+                    compact={true}
+                    onAddToThesis={async (text, url) => {
+                      // 1. Generate AI Tag
+                      const rawTag = await summarizeTweet(text);
+                      const tag = rawTag.trim();
+
+                      // 2. Find Latest Transaction
+                      const sortedTxs = [...assetTransactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+                      const latestTx = sortedTxs[0];
+
+                      if (latestTx) {
+                        // Update Existing Transaction
+                        const newNote = `[Social Signal] ${text}`;
+                        const updatedNotes = latestTx.notes ? `${latestTx.notes}\n\n${newNote}` : newNote;
+
+                        // Merge Tags
+                        const currentTags = latestTx.tags || [];
+                        const newTags = currentTags.includes(tag) ? currentTags : [...currentTags, tag];
+
+                        // Merge Reason Links
+                        const currentLinks = latestTx.reasonLinks || {};
+                        const newLinks = { ...currentLinks, [tag]: url };
+
+                        await updateTransaction({
+                          ...latestTx,
+                          notes: updatedNotes,
+                          tags: newTags,
+                          reasonLinks: newLinks
+                        });
+                      } else {
+                        // Open Transaction Form with Pre-filled Data
+                        setInitialTransactionType('buy');
+                        setInitialStep(4);
+                        setEditingTransaction({
+                          asset: symbol,
+                          amount: '',
+                          price: currentPrice,
+                          date: new Date().toISOString().split('T')[0],
+                          investmentNotes: [`[Social Signal] ${text}`],
+                          tags: [tag],
+                          reasonLinks: { [tag]: url }
+                        });
+                        setIsTransactionModalOpen(true);
+                      }
+                    }}
+                  />
                 </div>
               </div>
               <ImportantEvents symbol={symbol} />

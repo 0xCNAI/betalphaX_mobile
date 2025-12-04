@@ -214,10 +214,10 @@ const SocialNotificationWidget = ({ symbol, user, compact = false, onAddToThesis
                                                 e.stopPropagation();
                                                 onAddToThesis(item.text || item.content, item.url);
                                             }}
-                                            className="absolute top-2 right-2 p-1.5 text-slate-400 hover:text-emerald-400 hover:bg-emerald-400/10 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                                            className="absolute bottom-2 right-2 p-1.5 text-slate-400 hover:text-emerald-400 bg-slate-900/80 rounded-full transition-colors border border-slate-700 shadow-sm"
                                             title="Add to Buy Thesis"
                                         >
-                                            <PlusCircle size={14} />
+                                            <PlusCircle size={16} />
                                         </button>
                                     )}
                                 </div>
