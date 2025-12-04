@@ -28,14 +28,16 @@ export const generateGeminiContent = async (prompt) => {
  * @returns {Promise<Object>} - { verdict: 'Undervalued'|'Overvalued'|'Fairly Valued', reasoning: string }
  */
 export const generateFundamentalAnalysis = async (data, socialSignals) => {
-    const prompt = `Analyze the fundamental data for ${data.symbol || 'this asset'} and provide a verdict.
-    Data: ${JSON.stringify(data)}
+    const prompt = `Analyze the fundamental data for ${data.symbol || 'this asset'} (${data.meta?.name || ''}).
+    
+    Data Provided: ${JSON.stringify(data)}
     Social Context: ${JSON.stringify(socialSignals)}
-    Project Description: ${data.valuation?.description || ''}
-
-    1. Summarize "WHAT IT DOES" in 1-2 concise sentences based on the description.
-    2. Determine if the asset is Undervalued, Overvalued, or Fairly Valued based on metrics like FDV/TVL, Revenue, and Growth.
-    3. Provide a concise reasoning (max 2 sentences).
+    
+    Task:
+    1. **Project Description**: If "Project Description" in Data is empty, generate a 1-2 sentence summary of "WHAT IT DOES" based on your knowledge of ${data.symbol || 'the asset'}.
+    2. **Verdict**: Determine if the asset is Undervalued, Overvalued, or Fairly Valued. 
+       - If numeric data (FDV, TVL, Revenue) is missing, use your general knowledge of the asset's current market status or return "Fairly Valued" with a note about missing data.
+    3. **Reasoning**: Provide a concise reasoning (max 2 sentences).
 
     Return strict JSON:
     {

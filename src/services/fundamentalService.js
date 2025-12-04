@@ -189,7 +189,18 @@ export async function getTokenFundamentals(ticker, tokenName, forceRefresh = fal
 
     } catch (error) {
         console.error('FundamentalService: Error fetching fundamentals', error);
-        return null;
+        // Return partial data so AI can still generate description/verdict
+        return {
+            valuation: null,
+            growth: null,
+            revenue: null,
+            benchmarks: null,
+            tags: [],
+            meta: {
+                name: tokenName || ticker,
+                coinId: null
+            }
+        };
     }
 }
 
