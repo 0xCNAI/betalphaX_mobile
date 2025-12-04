@@ -8,24 +8,13 @@ import { generateFundamentalAnalysis } from '../services/geminiService';
 const FundamentalWidget = ({ symbol, name }) => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [customTags, setCustomTags] = useState([]);
-    const [newTag, setNewTag] = useState('');
-    const [isAddingTag, setIsAddingTag] = useState(false);
     const [showFullSummary, setShowFullSummary] = useState(false);
 
     // AI Analysis State
     const [aiAnalysis, setAiAnalysis] = useState(null);
     const [analyzing, setAnalyzing] = useState(false);
 
-    // Load custom tags from local storage
-    useEffect(() => {
-        const savedTags = localStorage.getItem(`custom_tags_${symbol}`);
-        if (savedTags) {
-            setCustomTags(JSON.parse(savedTags));
-        } else {
-            setCustomTags([]);
-        }
-    }, [symbol]);
+
 
     useEffect(() => {
         let mounted = true;
@@ -45,12 +34,7 @@ const FundamentalWidget = ({ symbol, name }) => {
                 if (mounted && result) {
                     setData(result);
 
-                    // Initialize custom tags from API if no local tags exist yet
-                    const savedTags = localStorage.getItem(`custom_tags_${symbol}`);
-                    if (!savedTags && result?.tags) {
-                        setCustomTags(result.tags);
-                        localStorage.setItem(`custom_tags_${symbol}`, JSON.stringify(result.tags));
-                    }
+
 
                     // 2. Trigger AI Analysis
                     setAnalyzing(true);
@@ -88,22 +72,7 @@ const FundamentalWidget = ({ symbol, name }) => {
         return () => { mounted = false; };
     }, [symbol, name]);
 
-    const handleAddTag = (e) => {
-        e.preventDefault();
-        if (newTag.trim()) {
-            const updatedTags = [...customTags, newTag.trim()];
-            setCustomTags(updatedTags);
-            localStorage.setItem(`custom_tags_${symbol}`, JSON.stringify(updatedTags));
-            setNewTag('');
-            setIsAddingTag(false);
-        }
-    };
 
-    const handleRemoveTag = (tagToRemove) => {
-        const updatedTags = customTags.filter(t => t !== tagToRemove);
-        setCustomTags(updatedTags);
-        localStorage.setItem(`custom_tags_${symbol}`, JSON.stringify(updatedTags));
-    };
 
     // Always render the widget structure to prevent layout shifts
     if (loading && !data) {
@@ -181,52 +150,7 @@ const FundamentalWidget = ({ symbol, name }) => {
                     )}
                 </div>
 
-                {/* 2. Sector & Tags (Compact) */}
-                <div className="flex flex-col gap-2">
-                    <div className="flex justify-between items-center px-1">
-                        <div className="text-xs font-bold tracking-wide text-emerald-400 uppercase flex items-center gap-1">
-                            <Tag size={12} /> Sector & Tags
-                        </div>
-                        <button
-                            onClick={() => setIsAddingTag(!isAddingTag)}
-                            className="text-slate-500 hover:text-white transition-colors p-1"
-                        >
-                            <Plus size={14} />
-                        </button>
-                    </div>
-                    <div className="bg-slate-900/50 rounded-lg border border-slate-800 p-3 min-h-[40px]">
-                        <div className="flex flex-wrap gap-2">
-                            {customTags.length > 0 ? (
-                                customTags.map((tag, idx) => (
-                                    <span key={idx} className="group flex items-center gap-1 text-[11px] font-medium px-2 py-1 bg-slate-800 text-slate-300 rounded border border-slate-700">
-                                        {tag}
-                                        <button
-                                            onClick={() => handleRemoveTag(tag)}
-                                            className="text-slate-500 hover:text-rose-400 transition-colors ml-1"
-                                        >
-                                            <X size={10} />
-                                        </button>
-                                    </span>
-                                ))
-                            ) : (
-                                <span className="text-xs text-slate-600 italic">No tags added</span>
-                            )}
 
-                            {isAddingTag && (
-                                <form onSubmit={handleAddTag} className="inline-flex">
-                                    <input
-                                        type="text"
-                                        value={newTag}
-                                        onChange={(e) => setNewTag(e.target.value)}
-                                        placeholder="Add..."
-                                        className="w-20 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-[11px] text-white focus:outline-none focus:border-indigo-500"
-                                        autoFocus
-                                    />
-                                </form>
-                            )}
-                        </div>
-                    </div>
-                </div>
 
                 {/* 3. AI Insights & What It Does */}
                 <div className="flex flex-col gap-2">
@@ -255,8 +179,8 @@ const FundamentalWidget = ({ symbol, name }) => {
                                     <div className="flex items-center gap-2 mb-1">
                                         <h4 className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Verdict:</h4>
                                         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${aiAnalysis.verdict === 'Undervalued' ? 'bg-emerald-500/20 text-emerald-400' :
-                                                aiAnalysis.verdict === 'Overvalued' ? 'bg-rose-500/20 text-rose-400' :
-                                                    'bg-yellow-500/20 text-yellow-400'
+                                            aiAnalysis.verdict === 'Overvalued' ? 'bg-rose-500/20 text-rose-400' :
+                                                'bg-yellow-500/20 text-yellow-400'
                                             }`}>
                                             {aiAnalysis.verdict}
                                         </span>
