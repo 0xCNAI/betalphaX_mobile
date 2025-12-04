@@ -1,20 +1,30 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const GEMINI_API_KEY = 'AIzaSyD4GqUbFoSvb46M2lxhnRzCT_JulzcC9T4';
-
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
 /**
- * Generic function to call Gemini API
+ * Generic function to call Gemini API via Backend Proxy
  * @param {string} prompt - The prompt to send to Gemini
  * @returns {Promise<string>} - The generated text response
  */
 export const generateGeminiContent = async (prompt) => {
     try {
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        return response.text();
+        const response = await fetch('/api/gemini', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                prompt,
+                model: "gemini-2.0-flash"
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Gemini Proxy Error:', errorData);
+            throw new Error(errorData.error || 'Failed to fetch from Gemini Proxy');
+        }
+
+        const data = await response.json();
+        return data.text || '';
+
     } catch (error) {
         console.error('Error calling Gemini API:', error);
         throw error;
