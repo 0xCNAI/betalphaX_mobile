@@ -98,7 +98,8 @@ async function fetchBinanceOHLC(symbol, interval) {
         parseFloat(d[1]), // open
         parseFloat(d[2]), // high
         parseFloat(d[3]), // low
-        parseFloat(d[4])  // close
+        parseFloat(d[4]), // close
+        parseFloat(d[5])  // volume
     ]);
 }
 
@@ -147,7 +148,8 @@ async function fetchCryptoCompareOHLC(symbol, interval) {
         d.open,
         d.high,
         d.low,
-        d.close
+        d.close,
+        d.volumefrom // volume
     ]);
 }
 
@@ -246,6 +248,7 @@ async function fetchGeckoTerminalOHLC(symbol, interval, network, targetPrice = n
         parseFloat(d[1]), // open
         parseFloat(d[2]), // high
         parseFloat(d[3]), // low
-        parseFloat(d[4])  // close
+        parseFloat(d[4]), // close
+        parseFloat(d[5])  // volume
     ]);
 }

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Settings, Plus, X, User, ExternalLink, RefreshCw, List } from 'lucide-react';
+import { Bell, Settings, Plus, X, User, ExternalLink, RefreshCw, List, PlusCircle } from 'lucide-react';
 import { getRecommendedKOLs, getTrackedFeed } from '../services/socialService';
 import { getUserTrackingList, updateUserTrackingList } from '../services/userService';
 import { getCoinMetadata } from '../services/coinGeckoApi';
 import { formatDistanceToNow } from 'date-fns';
 
-const SocialNotificationWidget = ({ symbol, user, compact = false }) => {
+const SocialNotificationWidget = ({ symbol, user, compact = false, onAddToThesis }) => {
     // const [activeTab, setActiveTab] = useState('feed'); // Removed tabs
     const [feed, setFeed] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -41,20 +41,23 @@ const SocialNotificationWidget = ({ symbol, user, compact = false }) => {
         setLoading(true);
         setError(null);
         try {
-            // 0. Get Project Metadata (Twitter Handle)
+            // 0. Get Project Metadata (Twitter Handle & Name)
             const metadata = await getCoinMetadata(symbol);
             const projectHandle = metadata?.twitterHandle;
+            const tokenName = metadata?.name;
 
             // 1. Get User's Tracking List
             const userList = await getUserTrackingList(user.uid, symbol);
             setTrackedHandles(userList);
 
             // 2. Get Recommendations (Cold Start Data)
-            const recommendations = await getRecommendedKOLs(symbol, projectHandle);
+            // Pass tokenName for better search relevance
+            const recommendations = await getRecommendedKOLs(symbol, projectHandle, tokenName);
             setRecommendedKOLs(recommendations);
 
             // 3. Get Feed
-            const feedData = await getTrackedFeed(symbol, userList, projectHandle);
+            // Pass tokenName for better search relevance
+            const feedData = await getTrackedFeed(symbol, userList, projectHandle, tokenName);
             setFeed(feedData);
 
             // Update last viewed to now
@@ -196,13 +199,28 @@ const SocialNotificationWidget = ({ symbol, user, compact = false }) => {
                     ) : (
                         <div className="feed-rows">
                             {visibleFeed.map((item, index) => (
-                                <a key={index} href={item.url} target="_blank" rel="noopener noreferrer" className="feed-row compact group">
-                                    <div className="feed-row-header">
-                                        <span className="feed-author text-indigo-300 group-hover:text-indigo-200">{item.author}</span>
-                                        <span className="feed-time text-[10px]">{formatDistanceToNow(new Date(item.timestamp))} ago</span>
-                                    </div>
-                                    <TweetContent text={item.text || item.content} />
-                                </a>
+                                <div key={index} className="feed-row compact group relative">
+                                    <a href={item.url} target="_blank" rel="noopener noreferrer" className="block">
+                                        <div className="feed-row-header">
+                                            <span className="feed-author text-indigo-300 group-hover:text-indigo-200">{item.author}</span>
+                                            <span className="feed-time text-[10px]">{formatDistanceToNow(new Date(item.timestamp))} ago</span>
+                                        </div>
+                                        <TweetContent text={item.text || item.content} />
+                                    </a>
+                                    {onAddToThesis && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                onAddToThesis(item.text || item.content, item.url);
+                                            }}
+                                            className="absolute top-2 right-2 p-1.5 text-slate-400 hover:text-emerald-400 hover:bg-emerald-400/10 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                                            title="Add to Buy Thesis"
+                                        >
+                                            <PlusCircle size={14} />
+                                        </button>
+                                    )}
+                                </div>
                             ))}
 
                             {visibleCount < feed.length && (
@@ -370,6 +388,10 @@ const SocialNotificationWidget = ({ symbol, user, compact = false }) => {
                     color: var(--text-secondary);
                     line-height: 1.4;
                     margin: 0;
+                    white-space: pre-wrap;       /* Preserve newlines but wrap text */
+                    word-break: break-word;      /* Break long words if needed */
+                    overflow-wrap: break-word;   /* Standard property */
+                    max-width: 100%;             /* Ensure it doesn't exceed container */
                 }
             `}</style>
         </div>

@@ -3,6 +3,7 @@ import { useTransactions } from '../context/TransactionContext';
 import { useBuyThesis } from '../context/BuyThesisContext';
 import { getPortfolioFeeds, getTweetsFromUser } from '../services/twitterService';
 import { summarizeTweet } from '../services/geminiService';
+import { generatePortfolioOverview } from '../services/analysisService';
 import { Search, Plus, X, RefreshCw, Filter, UserPlus, Trash2, ChevronDown, ChevronUp, AlertTriangle, TrendingUp, Activity, HelpCircle } from 'lucide-react';
 import './Feeds.css';
 
@@ -24,6 +25,9 @@ const Feeds = () => {
     const [trackedKOLs, setTrackedKOLs] = useState([]);
     const [newKOL, setNewKOL] = useState('');
 
+    // Analysis State
+    const [portfolioOverview, setPortfolioOverview] = useState(null);
+
     // Shared State
     const [loading, setLoading] = useState(false);
     const [toastMsg, setToastMsg] = useState(null);
@@ -38,13 +42,22 @@ const Feeds = () => {
         // 1. Calculate available assets from holdings
         const holdingsMap = transactions.reduce((acc, tx) => {
             const symbol = tx.asset.toUpperCase();
-            if (!acc[symbol]) acc[symbol] = 0;
-            if (tx.type === 'buy') acc[symbol] += parseFloat(tx.amount || 0);
-            else if (tx.type === 'sell') acc[symbol] -= parseFloat(tx.amount || 0);
+            if (!acc[symbol]) acc[symbol] = { symbol, amount: 0, value: 0 };
+
+            const amount = parseFloat(tx.amount || 0);
+            const price = parseFloat(tx.price || 0); // Assuming price is stored in tx
+
+            if (tx.type === 'buy') {
+                acc[symbol].amount += amount;
+                acc[symbol].value += amount * price;
+            } else if (tx.type === 'sell') {
+                acc[symbol].amount -= amount;
+                acc[symbol].value -= amount * price;
+            }
             return acc;
         }, {});
 
-        const assets = Object.keys(holdingsMap).filter(s => holdingsMap[s] > 0);
+        const assets = Object.keys(holdingsMap).filter(s => holdingsMap[s].amount > 0);
         setAvailableAssets(assets);
 
         // 2. Initial Fetch for Holdings (Default BTC/ETH)
@@ -55,6 +68,15 @@ const Feeds = () => {
         if (savedKOLs) {
             setTrackedKOLs(JSON.parse(savedKOLs));
         }
+
+        // 4. Generate Portfolio Overview
+        const assetObjects = Object.values(holdingsMap).filter(a => a.amount > 0);
+        if (assetObjects.length > 0) {
+            generatePortfolioOverview(assetObjects).then(overview => {
+                setPortfolioOverview(overview);
+            });
+        }
+
     }, [transactions]);
 
     // --- Signal Prioritization Logic ---
@@ -103,6 +125,21 @@ const Feeds = () => {
     const handleGenerateSignals = () => {
         fetchHoldingsFeed(selectedAssets);
         setIsSelectingAssets(false);
+
+        // Also refresh overview
+        const holdingsMap = transactions.reduce((acc, tx) => {
+            const symbol = tx.asset.toUpperCase();
+            if (!acc[symbol]) acc[symbol] = { symbol, amount: 0, value: 0 };
+            if (tx.type === 'buy') acc[symbol].amount += parseFloat(tx.amount || 0);
+            else if (tx.type === 'sell') acc[symbol].amount -= parseFloat(tx.amount || 0);
+            return acc;
+        }, {});
+        const assetObjects = Object.values(holdingsMap).filter(a => a.amount > 0);
+        if (assetObjects.length > 0) {
+            generatePortfolioOverview(assetObjects).then(overview => {
+                setPortfolioOverview(overview);
+            });
+        }
     };
 
     const toggleAssetSelection = (asset) => {
@@ -121,7 +158,7 @@ const Feeds = () => {
     };
 
     // --- KOL Feed Logic ---
-    const fetchKOLFeed = async () => {
+    const fetchKOLFeed = async (force = false) => {
         if (trackedKOLs.length === 0) {
             setKolFeed([]);
             return;
@@ -207,6 +244,16 @@ const Feeds = () => {
 
     // --- Summary Metrics ---
     const summaryMetrics = useMemo(() => {
+        // Use portfolioOverview if available, otherwise fallback to feed analysis
+        if (portfolioOverview) {
+            return {
+                riskCount: portfolioOverview.riskAssets.length,
+                oppCount: portfolioOverview.opportunities.length,
+                sentimentLabel: portfolioOverview.sentiment.label || 'Neutral',
+                topAsset: '-' // We can calculate this or add it to overview
+            };
+        }
+
         const currentFeed = activeTab === 'holdings' ? holdingsFeed : kolFeed;
 
         const riskCount = currentFeed.filter(i => i.category === 'Risk Alert').length;
@@ -233,7 +280,7 @@ const Feeds = () => {
         const topAsset = Object.keys(assetCounts).reduce((a, b) => assetCounts[a] > assetCounts[b] ? a : b, '-');
 
         return { riskCount, oppCount, sentimentLabel, topAsset };
-    }, [holdingsFeed, kolFeed, activeTab]);
+    }, [holdingsFeed, kolFeed, activeTab, portfolioOverview]);
 
     // --- Daily Summary Generation (Expandable Panels) ---
     const summaryPanels = useMemo(() => {

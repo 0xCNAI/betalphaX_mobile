@@ -41,6 +41,37 @@ export const generateGeminiContent = async (prompt) => {
 };
 
 /**
+ * Generates a fundamental analysis verdict and reasoning.
+ * @param {Object} data - Fundamental data (valuation, growth, etc.)
+ * @param {Array} socialSignals - Recent social signals
+ * @returns {Promise<Object>} - { verdict: 'Undervalued'|'Overvalued'|'Fairly Valued', reasoning: string }
+ */
+export const generateFundamentalAnalysis = async (data, socialSignals) => {
+    const prompt = `Analyze the fundamental data for ${data.symbol || 'this asset'} and provide a verdict.
+    Data: ${JSON.stringify(data)}
+    Social Context: ${JSON.stringify(socialSignals)}
+
+    Determine if the asset is Undervalued, Overvalued, or Fairly Valued based on metrics like FDV/TVL, Revenue, and Growth.
+    Provide a concise reasoning (max 2 sentences).
+
+    Return strict JSON:
+    {
+        "verdict": "Undervalued" | "Overvalued" | "Fairly Valued",
+        "reasoning": "..."
+    }`;
+
+    try {
+        const generatedText = await generateGeminiContent(prompt);
+        if (!generatedText) return { verdict: 'Fairly Valued', reasoning: 'Analysis unavailable.' };
+        const jsonString = generatedText.replace(/```json\n?|\n?```/g, '').trim();
+        return JSON.parse(jsonString);
+    } catch (error) {
+        console.error('Error generating fundamental analysis:', error);
+        return { verdict: 'Fairly Valued', reasoning: 'Analysis failed.' };
+    }
+};
+
+/**
  * Generates investment tags based on the provided note using Gemini API.
  * @param {string} note - The investment note/thesis.
  * @returns {Promise<string[]>} - A promise that resolves to an array of tag strings.

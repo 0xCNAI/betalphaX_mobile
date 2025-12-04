@@ -37,8 +37,8 @@ const TOKEN_NAMES = {
  * @param {number} limit - Max tweets to return (default: 10)
  * @returns {Promise<Array>} - Array of tweet objects
  */
-export async function searchCryptoTweets(ticker, limit = 10) {
-    console.log(`[Twitter] searchCryptoTweets called for ${ticker}, limit: ${limit}`);
+export async function searchCryptoTweets(ticker, limit = 10, handle = null, forceRefresh = false) {
+    console.log(`[Twitter] searchCryptoTweets called for ${ticker}, limit: ${limit}, forceRefresh: ${forceRefresh}`);
 
     // Note: We no longer check for API_KEY here as it's handled by the backend
     // But we can check if we are in a "mock mode" if needed, or just proceed to try the API
@@ -51,26 +51,30 @@ export async function searchCryptoTweets(ticker, limit = 10) {
     const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 
     try {
-        const cached = localStorage.getItem(CACHE_KEY);
-        if (cached) {
-            const { timestamp, data } = JSON.parse(cached);
+        if (!forceRefresh) {
+            const cached = localStorage.getItem(CACHE_KEY);
+            if (cached) {
+                const { timestamp, data } = JSON.parse(cached);
 
-            // Check if cached data is mock data (mock IDs start with 'mock_')
-            const isMockData = data.length > 0 && data[0].id && data[0].id.toString().startsWith('mock_');
+                // Check if cached data is mock data (mock IDs start with 'mock_')
+                const isMockData = data.length > 0 && data[0].id && data[0].id.toString().startsWith('mock_');
 
-            // If we have cached mock data, we might want to refresh it with real data
-            if (isMockData) {
-                console.log(`[Twitter] 🔄 Found cached MOCK data. Refreshing with real data...`);
-            }
-            // Otherwise check timestamp
-            else if (Date.now() - timestamp < CACHE_DURATION) {
-                console.log(`[Twitter] 📦 Using cached tweets for ${upperTicker} (${data.length} tweets)`);
-                return data;
+                // If we have cached mock data, we might want to refresh it with real data
+                if (isMockData) {
+                    console.log(`[Twitter] 🔄 Found cached MOCK data. Refreshing with real data...`);
+                }
+                // Otherwise check timestamp
+                else if (Date.now() - timestamp < CACHE_DURATION) {
+                    console.log(`[Twitter] 📦 Using cached tweets for ${upperTicker} (${data.length} tweets)`);
+                    return data;
+                } else {
+                    console.log(`[Twitter] ⏰ Cache expired for ${upperTicker}, fetching fresh data`);
+                }
             } else {
-                console.log(`[Twitter] ⏰ Cache expired for ${upperTicker}, fetching fresh data`);
+                console.log(`[Twitter] 🆕 No cache found for ${upperTicker}, fetching fresh data`);
             }
         } else {
-            console.log(`[Twitter] 🆕 No cache found for ${upperTicker}, fetching fresh data`);
+            console.log(`[Twitter] 🔄 Force refresh requested for ${upperTicker}, bypassing cache`);
         }
     } catch (e) {
         console.warn('[Twitter] Cache read error', e);
@@ -303,24 +307,28 @@ function calculateTweetScore(tweet, officialHandle) {
  * @param {Array<string>} assets - List of asset symbols
  * @returns {Promise<Array>}
  */
-export async function getPortfolioFeeds(assets) {
+export async function getPortfolioFeeds(assets, forceRefresh = false) {
     if (!assets || assets.length === 0) return getMajorCryptoFeeds();
 
     // Increase limit to top 20 assets to ensure broader coverage
     const targetAssets = assets.slice(0, 20);
-    console.log(`[Twitter] Fetching feeds for portfolio: ${targetAssets.join(', ')}`);
+    console.log(`[Twitter] Fetching feeds for portfolio: ${targetAssets.join(', ')}, forceRefresh: ${forceRefresh}`);
 
     const CACHE_KEY = `portfolio_feeds_smart_${targetAssets.sort().join('_')}`;
     const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes
 
     try {
-        const cached = localStorage.getItem(CACHE_KEY);
-        if (cached) {
-            const { timestamp, data } = JSON.parse(cached);
-            if (Date.now() - timestamp < CACHE_DURATION) {
-                console.log('Using cached portfolio feeds');
-                return data;
+        if (!forceRefresh) {
+            const cached = localStorage.getItem(CACHE_KEY);
+            if (cached) {
+                const { timestamp, data } = JSON.parse(cached);
+                if (Date.now() - timestamp < CACHE_DURATION) {
+                    console.log('Using cached portfolio feeds');
+                    return data;
+                }
             }
+        } else {
+            console.log('[Twitter] Force refresh requested for portfolio feeds');
         }
     } catch (e) { }
 
@@ -329,7 +337,7 @@ export async function getPortfolioFeeds(assets) {
         // We fetch slightly more tweets per asset (10) to have a good pool for scoring
         const promises = targetAssets.map(async (asset) => {
             const { twitterHandle } = await getCoinMetadata(asset);
-            const tweets = await searchCryptoTweets(asset, 10, twitterHandle);
+            const tweets = await searchCryptoTweets(asset, 10, twitterHandle, forceRefresh);
 
             // Score tweets immediately
             const scoredTweets = tweets.map(tweet => ({

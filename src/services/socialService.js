@@ -42,9 +42,10 @@ const TOKEN_NAMES = {
  * Get Recommended KOLs (Cold Start / First Trigger Logic)
  * @param {string} symbol - Token symbol
  * @param {string} [projectHandle] - Official project Twitter handle (optional)
+ * @param {string} [passedTokenName] - Token name (optional, preferred over hardcoded map)
  * @returns {Promise<Array>} - Top 5 Authors and their tweets
  */
-export async function getRecommendedKOLs(symbol, projectHandle = null) {
+export async function getRecommendedKOLs(symbol, projectHandle = null, passedTokenName = null) {
     const upperSymbol = symbol.toUpperCase();
 
     // Use fallback handle if not provided
@@ -79,7 +80,7 @@ export async function getRecommendedKOLs(symbol, projectHandle = null) {
     try {
         // Query: ($SYMBOL OR @projectHandle OR "Token Name") lang:en -filter:retweets min_faves:5
         // Adding Token Name (e.g. "Zcash") significantly improves recall for coins where $ZEC is less used
-        const tokenName = TOKEN_NAMES[upperSymbol];
+        const tokenName = passedTokenName || TOKEN_NAMES[upperSymbol];
 
         let queryTerm = `($${upperSymbol})`;
         if (effectiveHandle && tokenName) {
@@ -99,7 +100,7 @@ export async function getRecommendedKOLs(symbol, projectHandle = null) {
         const sinceDate = date.toISOString().split('T')[0];
 
         const fullQuery = `${query} since:${sinceDate}`;
-        const url = `${TWITTER_API_BASE}/tweet/advanced_search?query=${encodeURIComponent(fullQuery)}&type=Top&limit=50`;
+        const url = `${TWITTER_API_BASE}/tweet/advanced_search?query=${encodeURIComponent(fullQuery)}&type=Top&limit=50&_t=${Date.now()}`;
 
         const response = await fetch(url);
         if (!response.ok) throw new Error('Twitter API failed');
@@ -191,8 +192,20 @@ export async function getRecommendedKOLs(symbol, projectHandle = null) {
             followers: a.followers,
             verified: a.verified,
             score: a.score,
-            // Keep their best tweet for display context
-            bestTweet: a.tweets.sort((t1, t2) => t2.likeCount - t1.likeCount)[0]
+            // Keep their best tweet for display context (Sanitized)
+            bestTweet: (() => {
+                const best = a.tweets.sort((t1, t2) => (t2.likeCount || 0) - (t1.likeCount || 0))[0];
+                if (!best) return null;
+                return {
+                    id: best.id,
+                    text: best.text,
+                    createdAt: best.createdAt,
+                    likeCount: best.likeCount || 0,
+                    retweetCount: best.retweetCount || 0,
+                    replyCount: best.replyCount || 0,
+                    url: best.url || `https://x.com/${a.handle}/status/${best.id}`
+                };
+            })()
         }));
 
         // 6. Save Global Cache with Version
@@ -222,7 +235,7 @@ export async function getRecommendedKOLs(symbol, projectHandle = null) {
  * @param {string} [projectHandle] - Official project Twitter handle (optional)
  * @returns {Promise<Array>} - Combined sorted feed of tweets
  */
-export async function getTrackedFeed(symbol, userTrackedHandles = [], projectHandle = null) {
+export async function getTrackedFeed(symbol, userTrackedHandles = [], projectHandle = null, tokenName = null) {
     const upperSymbol = symbol.toUpperCase();
 
     // 1. Fetch Global Data (Recommendation Pool)
@@ -248,7 +261,7 @@ export async function getTrackedFeed(symbol, userTrackedHandles = [], projectHan
 
     try {
         // This will use the new logic (and potentially trigger a fresh fetch if cache is old/wrong version)
-        globalKOLs = await getRecommendedKOLs(upperSymbol, projectHandle);
+        globalKOLs = await getRecommendedKOLs(upperSymbol, projectHandle, tokenName);
     } catch (e) {
         console.error('Error getting global KOLs:', e);
     }
@@ -275,16 +288,30 @@ export async function getTrackedFeed(symbol, userTrackedHandles = [], projectHan
     date.setDate(date.getDate() - 14);
     const sinceDate = date.toISOString().split('T')[0];
 
-    // Query: ($SYMBOL OR @projectHandle) (from:handle1 OR from:handle2 ...)
+    // Name Overrides for cleaner search
+    const NAME_OVERRIDES = {
+        'FLUID': 'Fluid',
+        'ZEC': 'Zcash',
+        'BTC': 'Bitcoin',
+        'ETH': 'Ethereum'
+    };
+
+    const effectiveName = NAME_OVERRIDES[upperSymbol] || tokenName;
+
+    // Query: ($SYMBOL OR @projectHandle OR "Token Name") (from:handle1 OR from:handle2 ...)
     let queryTerm = `($${upperSymbol})`;
-    if (projectHandle) {
+    if (projectHandle && effectiveName) {
+        queryTerm = `($${upperSymbol} OR @${projectHandle} OR "${effectiveName}")`;
+    } else if (projectHandle) {
         queryTerm = `($${upperSymbol} OR @${projectHandle})`;
+    } else if (effectiveName) {
+        queryTerm = `($${upperSymbol} OR "${effectiveName}")`;
     }
 
     const query = `${queryTerm} (${handlesQuery}) -filter:retweets -filter:replies since:${sinceDate}`;
 
     try {
-        const url = `${TWITTER_API_BASE}/tweet/advanced_search?query=${encodeURIComponent(query)}&type=Latest&limit=20`;
+        const url = `${TWITTER_API_BASE}/tweet/advanced_search?query=${encodeURIComponent(query)}&type=Latest&limit=20&_t=${Date.now()}`;
         const response = await fetch(url);
         if (!response.ok) throw new Error('Twitter API failed for feed');
 
