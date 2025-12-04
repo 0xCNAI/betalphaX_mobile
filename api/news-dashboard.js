@@ -1,32 +1,23 @@
 
-import OpenAI from 'openai';
-
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export const config = {
-    maxDuration: 60, // Increase timeout to 60s (Pro) or 10s (Hobby)
+    maxDuration: 60,
 };
 
 const TWITTER_API_KEY = process.env.TWITTER_API_KEY || 'new1_f96fb36ea3274017be61efe351c31c5c';
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+// Use the same key as in geminiService.js
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyD4GqUbFoSvb46M2lxhnRzCT_JulzcC9T4';
 
-const openai = new OpenAI({
-    apiKey: OPENAI_API_KEY || 'dummy', // Prevent crash on init, check later
-});
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 export default async function handler(req, res) {
-    // Vercel Serverless (Node.js) signature: (req, res)
-
-    if (!OPENAI_API_KEY) {
-        console.error('Missing OPENAI_API_KEY');
-        return res.status(500).json({ error: 'Configuration Error: Missing OPENAI_API_KEY on Vercel' });
-    }
-
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
     try {
-        // In Vercel Node.js functions, req.body is already parsed if Content-Type is application/json
         const { symbol } = req.body;
 
         if (!symbol) {
@@ -50,7 +41,6 @@ export default async function handler(req, res) {
         const fetchPromises = queries.map(async (queryObj) => {
             const url = `https://api.twitterapi.io/twitter/tweet/advanced_search?query=${encodeURIComponent(queryObj.q)}&type=Top`;
             try {
-                // Add 8s timeout per request to prevent hanging
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 8000);
 
@@ -93,7 +83,7 @@ export default async function handler(req, res) {
             return res.status(404).json({ error: 'No data found' });
         }
 
-        // 2. LLM Analysis
+        // 2. LLM Analysis with Gemini
         const prompt = `
 You are an Elite Crypto Analyst. Your goal is to generate a "Deep Dive News Dashboard" for ${symbol}.
 
@@ -148,16 +138,15 @@ Output Schema (JSON):
   ]
 }
 
-Return ONLY the JSON.
+Return ONLY the JSON string. Do not include markdown formatting like \`\`\`json.
 `;
 
-        const completion = await openai.chat.completions.create({
-            messages: [{ role: "system", content: prompt }],
-            model: "gpt-4o-mini",
-            response_format: { type: "json_object" }
-        });
+        const result = await model.generateContent(prompt);
+        const responseText = result.response.text();
 
-        const dashboardData = JSON.parse(completion.choices[0].message.content);
+        // Clean up markdown if present
+        const jsonString = responseText.replace(/```json\n?|\n?```/g, '').trim();
+        const dashboardData = JSON.parse(jsonString);
 
         return res.status(200).json(dashboardData);
 
