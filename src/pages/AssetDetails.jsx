@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, TrendingUp, TrendingDown, Calendar, Tag, Edit2, X, FileText, Sparkles, History, ChevronDown, ChevronRight, ChevronUp, Brain, Wallet } from 'lucide-react';
+import { ArrowLeft, ArrowRight, TrendingUp, TrendingDown, Calendar, Tag, Edit2, X, FileText, Sparkles, History, ChevronDown, ChevronRight, ChevronUp, Brain, Wallet, ExternalLink } from 'lucide-react';
 import { useTransactions } from '../context/TransactionContext';
 import { usePrices } from '../context/PriceContext';
 import { useAuth } from '../context/AuthContext';
@@ -264,23 +264,41 @@ const AssetDetails = () => {
                                 <h4><Brain size={14} /> Buy Thesis</h4>
                                 {(tx.tags && tx.tags.length > 0) || (tx.selectedReasons && tx.selectedReasons.length > 0) ? (
                                   <div className="tags-display" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
-                                    {(tx.tags && tx.tags.length > 0 ? tx.tags : tx.selectedReasons).map((tag, i) => (
-                                      <span
-                                        key={i}
-                                        className="tag-pill"
-                                        style={{
-                                          backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                                          color: 'var(--accent-primary)',
-                                          padding: '4px 10px',
-                                          borderRadius: '14px',
-                                          fontSize: '0.8rem',
-                                          fontWeight: '500',
-                                          border: '1px solid rgba(99, 102, 241, 0.3)'
-                                        }}
-                                      >
-                                        {tag}
-                                      </span>
-                                    ))}
+                                    {(tx.tags && tx.tags.length > 0 ? tx.tags : tx.selectedReasons).map((tag, i) => {
+                                      const link = tx.reasonLinks?.[tag] || tx.reasonLinks?.[tag.trim()];
+                                      const TagEl = link ? 'a' : 'span';
+                                      const tagProps = link ? {
+                                        href: link,
+                                        target: "_blank",
+                                        rel: "noopener noreferrer",
+                                        onClick: (e) => e.stopPropagation() // Prevent expanding row
+                                      } : {};
+
+                                      return (
+                                        <TagEl
+                                          key={i}
+                                          className="tag-pill"
+                                          {...tagProps}
+                                          style={{
+                                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                                            color: 'var(--accent-primary)',
+                                            padding: '4px 10px',
+                                            borderRadius: '14px',
+                                            fontSize: '0.8rem',
+                                            fontWeight: '500',
+                                            border: '1px solid rgba(99, 102, 241, 0.3)',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                            cursor: link ? 'pointer' : 'default',
+                                            textDecoration: 'none'
+                                          }}
+                                        >
+                                          {tag}
+                                          {link && <ExternalLink size={10} />}
+                                        </TagEl>
+                                      );
+                                    })}
                                   </div>
                                 ) : (
                                   <p className="text-secondary">No thesis documented</p>
