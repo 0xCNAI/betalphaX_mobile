@@ -50,12 +50,15 @@ export const generateFundamentalAnalysis = async (data, socialSignals) => {
     const prompt = `Analyze the fundamental data for ${data.symbol || 'this asset'} and provide a verdict.
     Data: ${JSON.stringify(data)}
     Social Context: ${JSON.stringify(socialSignals)}
+    Project Description: ${data.valuation?.description || ''}
 
-    Determine if the asset is Undervalued, Overvalued, or Fairly Valued based on metrics like FDV/TVL, Revenue, and Growth.
-    Provide a concise reasoning (max 2 sentences).
+    1. Summarize "WHAT IT DOES" in 1-2 concise sentences based on the description.
+    2. Determine if the asset is Undervalued, Overvalued, or Fairly Valued based on metrics like FDV/TVL, Revenue, and Growth.
+    3. Provide a concise reasoning (max 2 sentences).
 
     Return strict JSON:
     {
+        "projectDescription": "...",
         "verdict": "Undervalued" | "Overvalued" | "Fairly Valued",
         "reasoning": "..."
     }`;

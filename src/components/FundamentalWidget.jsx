@@ -228,7 +228,7 @@ const FundamentalWidget = ({ symbol, name }) => {
                     </div>
                 </div>
 
-                {/* 3. AI Insights */}
+                {/* 3. AI Insights & What It Does */}
                 <div className="flex flex-col gap-2">
                     <div className="text-xs font-bold tracking-wide text-purple-400 uppercase flex items-center gap-1 px-1">
                         <Sparkles size={12} /> AI Insights
@@ -239,24 +239,32 @@ const FundamentalWidget = ({ symbol, name }) => {
                                 <Sparkles size={12} className="animate-pulse" /> Analyzing Valuation & Growth...
                             </div>
                         ) : aiAnalysis ? (
-                            <div className="flex flex-col gap-2">
-                                <div className="flex items-center justify-between">
-                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${aiAnalysis.verdict === 'Undervalued' ? 'bg-emerald-500/20 text-emerald-400' :
-                                            aiAnalysis.verdict === 'Overvalued' ? 'bg-rose-500/20 text-rose-400' :
-                                                'bg-yellow-500/20 text-yellow-400'
-                                        }`}>
-                                        {aiAnalysis.verdict}
-                                    </span>
+                            <div className="flex flex-col gap-3">
+                                {/* What It Does */}
+                                {aiAnalysis.projectDescription && (
+                                    <div>
+                                        <h4 className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">What It Does</h4>
+                                        <p className="text-xs text-slate-300 leading-relaxed">
+                                            {aiAnalysis.projectDescription}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* Verdict */}
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <h4 className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Verdict:</h4>
+                                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${aiAnalysis.verdict === 'Undervalued' ? 'bg-emerald-500/20 text-emerald-400' :
+                                                aiAnalysis.verdict === 'Overvalued' ? 'bg-rose-500/20 text-rose-400' :
+                                                    'bg-yellow-500/20 text-yellow-400'
+                                            }`}>
+                                            {aiAnalysis.verdict}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-slate-300 italic leading-relaxed">
+                                        "{aiAnalysis.reasoning}"
+                                    </p>
                                 </div>
-                                <p className={`text-xs leading-relaxed text-slate-300 ${!showFullSummary ? 'line-clamp-3' : ''}`}>
-                                    {aiAnalysis.verdictReasoning}
-                                </p>
-                                <button
-                                    onClick={() => setShowFullSummary(!showFullSummary)}
-                                    className="text-[10px] text-indigo-400 hover:text-indigo-300 mt-1 font-bold uppercase tracking-wide self-start"
-                                >
-                                    {showFullSummary ? 'Show Less' : 'Show More'}
-                                </button>
                             </div>
                         ) : (
                             <p className="text-xs text-slate-500 italic">Analysis unavailable.</p>
