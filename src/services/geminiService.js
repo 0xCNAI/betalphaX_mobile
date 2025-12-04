@@ -1,6 +1,9 @@
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const GEMINI_API_KEY = 'AIzaSyD4GqUbFoSvb46M2lxhnRzCT_JulzcC9T4';
-const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 /**
  * Generic function to call Gemini API
@@ -9,31 +12,9 @@ const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-
  */
 export const generateGeminiContent = async (prompt) => {
     try {
-        const response = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: prompt
-                    }]
-                }]
-            })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error('Gemini API Error:', errorData);
-            throw new Error('Failed to fetch from Gemini');
-        }
-
-        const data = await response.json();
-        const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        return generatedText || '';
-
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return response.text();
     } catch (error) {
         console.error('Error calling Gemini API:', error);
         throw error;
