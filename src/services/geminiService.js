@@ -31,16 +31,27 @@ const processQueue = async () => {
     isProcessingQueue = false;
 };
 
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
 const executeGeminiCall = async (prompt) => {
+    if (!GEMINI_API_KEY) {
+        console.error('Missing VITE_GEMINI_API_KEY');
+        throw new Error('Missing API Key');
+    }
+
     try {
-        const response = await fetch('/api/gemini', {
+        const response = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                prompt,
-                model: "gemini-2.0-flash"
+                contents: [{
+                    parts: [{
+                        text: prompt
+                    }]
+                }]
             })
         });
 
@@ -50,12 +61,13 @@ const executeGeminiCall = async (prompt) => {
 
         if (!response.ok) {
             const errorData = await response.json();
-            console.error('Gemini Proxy Error:', errorData);
-            throw new Error(errorData.error || 'Failed to fetch from Gemini Proxy');
+            console.error('Gemini API Error:', errorData);
+            throw new Error(errorData.error?.message || 'Failed to fetch from Gemini');
         }
 
         const data = await response.json();
-        return data.text || '';
+        const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        return generatedText || '';
 
     } catch (error) {
         console.error('Error calling Gemini API:', error);
@@ -64,7 +76,7 @@ const executeGeminiCall = async (prompt) => {
 };
 
 /**
- * Generic function to call Gemini API via Backend Proxy
+ * Generic function to call Gemini API via Client-side Fetch
  * Includes Rate Limiting and Caching
  * @param {string} prompt - The prompt to send to Gemini
  * @returns {Promise<string>} - The generated text response
@@ -96,29 +108,55 @@ export const generateGeminiContent = async (prompt) => {
 };
 
 /**
- * Generates a fundamental analysis verdict and reasoning.
- * @param {Object} data - Fundamental data (valuation, growth, etc.)
- * @param {Array} socialSignals - Recent social signals
- * @returns {Promise<Object>} - { verdict: 'Undervalued'|'Overvalued'|'Fairly Valued', reasoning: string }
+ * Generate Fundamental Analysis using Gemini
+ * @param {string} symbol - Token symbol
+ * @param {Object} data - Fundamental data (valuation, growth, benchmarks)
+ * @param {Array} socialContext - Recent tweets/updates for context
+ * @returns {Promise<Object>} - Analysis JSON
  */
-export const generateFundamentalAnalysis = async (data, socialSignals) => {
-    const prompt = `Analyze the fundamental data for ${data.symbol || 'this asset'} (${data.meta?.name || ''}).
-    
-    Data Provided: ${JSON.stringify(data)}
-    Social Context: ${JSON.stringify(socialSignals)}
-    
-    Task:
-    1. **Project Description**: If "Project Description" in Data is empty, generate a 1-2 sentence summary of "WHAT IT DOES" based on your knowledge of ${data.symbol || 'the asset'}.
-    2. **Verdict**: Determine if the asset is Undervalued, Overvalued, or Fairly Valued. 
-       - If numeric data (FDV, TVL, Revenue) is missing, use your general knowledge of the asset's current market status or return "Fairly Valued" with a note about missing data.
-    3. **Reasoning**: Provide a concise reasoning (max 2 sentences).
+export const generateFundamentalAnalysis = async (symbol, data, socialContext = []) => {
+    const { valuation, growth, revenue, benchmarks, meta } = data;
+    const description = valuation?.description || '';
+    const name = meta?.name || symbol;
+    const coinId = meta?.coinId || '';
 
-    Return strict JSON:
-    {
-        "projectDescription": "...",
-        "verdict": "Undervalued" | "Overvalued" | "Fairly Valued",
-        "reasoning": "..."
-    }`;
+    // Format social context
+    const recentUpdates = socialContext
+        .slice(0, 5) // Top 5 relevant tweets
+        .map(t => `- "${t.text || t.content}" (Source: ${t.author})`)
+        .join('\n');
+
+    const prompt = `
+Analyze the fundamental data for ${name} (${symbol}) ${coinId ? `[ID: ${coinId}]` : ''} and provide a structured investment analysis.
+
+**Project Description:**
+${description ? description.substring(0, 500) + '...' : 'No description available.'}
+
+**Recent Social Updates (Context):**
+${recentUpdates || 'No recent updates available.'}
+
+**Data:**
+- Market Cap: $${valuation?.mcap?.toLocaleString() || 'N/A'}
+- FDV: $${valuation?.fdv?.toLocaleString() || 'N/A'}
+- TVL: $${growth?.tvl_current?.toLocaleString() || 'N/A'}
+- 30d TVL Change: ${growth?.tvl_30d_change_percent?.toFixed(2) || 'N/A'}%
+- Annualized Revenue: ${revenue?.annualized_revenue ? '$' + revenue.annualized_revenue.toLocaleString() : 'Not Available (Data missing)'}
+
+**Industry Benchmarks (Category: ${growth?.category || 'General'}):**
+- Median FDV/TVL: ${benchmarks?.medianFdvTvl?.toFixed(2) || 'N/A'}
+- Median FDV/Revenue: ${benchmarks?.medianFdvRev?.toFixed(2) || 'N/A'}
+
+**Your Task:**
+Provide a concise analysis in the following JSON format:
+{
+  "projectDescription": "1 sentence explaining what the project does. Use the description and recent updates to identify the latest protocol features.",
+  "verdict": "Undervalued" | "Overvalued" | "Fairly Valued",
+  "reasoning": "1 sentence justifying the verdict based on the data. Focus on TVL/FDV and growth."
+}
+
+Keep it professional, objective, and data-driven.
+Return strict JSON only.
+`;
 
     try {
         const generatedText = await generateGeminiContent(prompt);
