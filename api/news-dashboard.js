@@ -35,10 +35,8 @@ export default async function handler(req, res) {
     const sinceDate = oneMonthAgo.toISOString().split('T')[0];
 
     const queries = [
-      { type: 'Roadmap', q: `${symbol} (roadmap OR upgrade OR "v2" OR mainnet OR launch) min_faves:10 -filter:retweets` },
-      { type: 'RecentEvents', q: `${symbol} (live OR announced OR partnership OR listing OR exploit OR refund) since:${sinceDate} min_faves:5 -filter:retweets` },
-      { type: 'Discussions', q: `${symbol} (thought OR opinion OR thread OR analysis OR "bullish on" OR "bearish on") min_faves:5 -filter:retweets` },
-      { type: 'General', q: `${symbol} min_faves:50 -filter:retweets` }
+      { type: 'Events_Roadmap', q: `${symbol} (roadmap OR upgrade OR "v2" OR mainnet OR launch OR partnership OR listing) min_faves:10 -filter:retweets` },
+      { type: 'Discussions', q: `${symbol} (thought OR analysis OR "bullish on" OR "bearish on") min_faves:10 -filter:retweets` }
     ];
 
     const fetchPromises = queries.map(async (queryObj) => {
@@ -90,8 +88,8 @@ export default async function handler(req, res) {
     const prompt = `
 You are an Elite Crypto Analyst. Your goal is to generate a "Deep Dive News Dashboard" for ${symbol}.
 
-Input Data (${uniqueTweets.length} Tweets):
-${JSON.stringify(uniqueTweets.slice(0, 60), null, 2)}
+Input Data (${Math.min(uniqueTweets.length, 30)} Tweets):
+${JSON.stringify(uniqueTweets.slice(0, 30), null, 2)}
 
 Task:
 Synthesize the provided tweets into a high-precision report.
