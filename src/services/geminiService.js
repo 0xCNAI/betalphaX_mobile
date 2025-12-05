@@ -1,178 +1,258 @@
-/**
- * Generic function to call Gemini API via Backend Proxy
- * @param {string} prompt - The prompt to send to Gemini
- * @returns {Promise<string>} - The generated text response
- */
-// Simple in-memory cache
-const apiCache = new Map();
-const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
-
-// Rate Limiting Queue
-// Rate Limiting Queue
-const requestQueue = [];
-let isProcessingQueue = false;
-const RATE_LIMIT_DELAY = 5000; // 5 seconds between calls (Conservative for Free Tier)
-
-const processQueue = async () => {
-    if (isProcessingQueue || requestQueue.length === 0) return;
-    isProcessingQueue = true;
-
-    while (requestQueue.length > 0) {
-        const { prompt, resolve, reject } = requestQueue.shift();
-        try {
-            const result = await executeGeminiCall(prompt);
-            resolve(result);
-        } catch (error) {
-            reject(error);
-        }
-        // Wait before next request
-        await new Promise(r => setTimeout(r, RATE_LIMIT_DELAY));
-    }
-
-    isProcessingQueue = false;
-};
+import { RequestQueue } from '../utils/apiQueue';
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/';
 
-const executeGeminiCall = async (prompt, retries = 3) => {
-    if (!GEMINI_API_KEY) {
-        console.error('Missing VITE_GEMINI_API_KEY');
-        throw new Error('Missing API Key');
+// Model Definitions with Priorities and Limits
+const MODELS = [
+    {
+        id: 'gemini-2.5-flash-lite',
+        name: 'Gemini 2.5 Flash Lite',
+        rpm: 15,
+        priority: 1 // Highest priority (Free, High RPD)
+    },
+    {
+        id: 'gemini-2.5-flash',
+        name: 'Gemini 2.5 Flash',
+        rpm: 10,
+        priority: 2
+    },
+    {
+        id: 'gemini-2.0-flash',
+        name: 'Gemini 2.0 Flash',
+        rpm: 15,
+        priority: 3
+    },
+    {
+        id: 'gemini-2.0-flash-lite',
+        name: 'Gemini 2.0 Flash Lite',
+        rpm: 30,
+        priority: 4 // Last resort
     }
+];
 
-    try {
-        const response = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: prompt
-                    }]
-                }]
-            })
+// Manager to handle model selection, fallback, and rate limiting
+class GeminiModelManager {
+    constructor() {
+        this.currentModelIndex = 0;
+        this.queues = new Map(); // Map<modelId, RequestQueue>
+        this.exhaustedModels = new Set(); // Set<modelId>
+
+        // Initialize queues for each model
+        MODELS.forEach(model => {
+            // Calculate interval from RPM (e.g., 15 RPM = 4000ms interval)
+            // Add 10% buffer to be safe
+            const interval = Math.ceil((60000 / model.rpm) * 1.1);
+            this.queues.set(model.id, new RequestQueue(1, interval));
         });
 
-        if (response.status === 429) {
-            if (retries > 0) {
-                const waitTime = (4 - retries) * 2000; // 2s, 4s, 6s
-                console.warn(`Quota exceeded. Retrying in ${waitTime}ms...`);
-                await new Promise(r => setTimeout(r, waitTime));
-                return executeGeminiCall(prompt, retries - 1);
+        this.loadState();
+    }
+
+    loadState() {
+        try {
+            const saved = localStorage.getItem('gemini_model_state');
+            if (saved) {
+                const { exhausted, timestamp } = JSON.parse(saved);
+                // Reset exhausted state if it's a new day (UTC)
+                const savedDate = new Date(timestamp).toDateString();
+                const today = new Date().toDateString();
+
+                if (savedDate === today) {
+                    this.exhaustedModels = new Set(exhausted);
+                    // Advance current index to first non-exhausted model
+                    this.findNextAvailableModel();
+                } else {
+                    console.log('[GeminiManager] New day detected, resetting quotas.');
+                }
             }
-            throw new Error('Quota exceeded. Please try again later.');
+        } catch (e) {
+            console.error('Failed to load Gemini state:', e);
         }
+    }
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error('Gemini API Error:', errorData);
-            throw new Error(errorData.error?.message || 'Failed to fetch from Gemini');
+    saveState() {
+        try {
+            const state = {
+                exhausted: Array.from(this.exhaustedModels),
+                timestamp: Date.now()
+            };
+            localStorage.setItem('gemini_model_state', JSON.stringify(state));
+        } catch (e) { }
+    }
+
+    findNextAvailableModel() {
+        while (
+            this.currentModelIndex < MODELS.length &&
+            this.exhaustedModels.has(MODELS[this.currentModelIndex].id)
+        ) {
+            this.currentModelIndex++;
         }
+    }
 
-        const data = await response.json();
-        const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        return generatedText || '';
+    getCurrentModel() {
+        this.findNextAvailableModel();
+        if (this.currentModelIndex >= MODELS.length) {
+            return null; // All models exhausted
+        }
+        return MODELS[this.currentModelIndex];
+    }
 
-    } catch (error) {
-        console.error('Error calling Gemini API:', error);
-        throw error;
+    markCurrentAsExhausted() {
+        const model = this.getCurrentModel();
+        if (model) {
+            console.warn(`[GeminiManager] Model ${model.id} exhausted (429/503). Switching...`);
+            this.exhaustedModels.add(model.id);
+            this.saveState();
+            this.currentModelIndex++;
+        }
+    }
+
+    async executeRequest(taskFn) {
+        // Try models in sequence until one works or all fail
+        while (true) {
+            const model = this.getCurrentModel();
+            if (!model) {
+                console.error('[GeminiManager] All models exhausted or failing. Aborting.');
+                throw new Error('All Gemini models are currently exhausted or rate-limited. Please try again later.');
+            }
+
+            const queue = this.queues.get(model.id);
+
+            try {
+                // Execute request using the specific model's queue
+                return await queue.add(async () => {
+                    return await taskFn(model);
+                });
+            } catch (error) {
+                // Check for 429 (Too Many Requests) or 503 (Service Unavailable)
+                const isQuotaError = error.message.includes('429') || error.message.includes('503') || error.message.includes('Rate limit');
+
+                if (isQuotaError) {
+                    this.markCurrentAsExhausted();
+                    // Loop continues to try next model
+                    continue;
+                }
+
+                // If it's another error (e.g. 400 Bad Request), throw it immediately
+                throw error;
+            }
+        }
+    }
+}
+
+const geminiManager = new GeminiModelManager();
+
+// Simple in-memory cache backed by localStorage
+const CACHE_KEY_PREFIX = 'gemini_cache_';
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+const getFromCache = (key) => {
+    try {
+        const item = localStorage.getItem(CACHE_KEY_PREFIX + key);
+        if (!item) return null;
+
+        const parsed = JSON.parse(item);
+        if (Date.now() - parsed.timestamp > CACHE_TTL) {
+            localStorage.removeItem(CACHE_KEY_PREFIX + key);
+            return null;
+        }
+        return parsed.value;
+    } catch (e) {
+        return null;
     }
 };
 
+const saveToCache = (key, value) => {
+    try {
+        const item = {
+            value,
+            timestamp: Date.now()
+        };
+        localStorage.setItem(CACHE_KEY_PREFIX + key, JSON.stringify(item));
+    } catch (e) {
+        console.warn('Failed to save to Gemini cache (quota exceeded?)');
+    }
+};
+
+// Helper to generate a stable hash/key for a prompt
+const generateCacheKey = (prompt) => {
+    let hash = 0;
+    for (let i = 0; i < prompt.length; i++) {
+        const char = prompt.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash.toString();
+};
+
+
 /**
- * Generic function to call Gemini API via Client-side Fetch
- * Includes Rate Limiting and Caching
+ * Generates investment tags based on the provided note using Gemini API.
+ * @param {string} note - The investment note/thesis.
+ * @returns {Promise<string[]>} - A promise that resolves to an array of tag strings.
+ */
+/**
+ * Generic function to call Gemini API
  * @param {string} prompt - The prompt to send to Gemini
  * @returns {Promise<string>} - The generated text response
  */
 export const generateGeminiContent = async (prompt) => {
+    if (!prompt) return '';
+
     // 1. Check Cache
-    const cacheKey = prompt.trim();
-    if (apiCache.has(cacheKey)) {
-        const { timestamp, data } = apiCache.get(cacheKey);
-        if (Date.now() - timestamp < CACHE_TTL) {
-            return data;
-        }
-        apiCache.delete(cacheKey);
+    const cacheKey = generateCacheKey(prompt);
+    const cached = getFromCache(cacheKey);
+    if (cached) {
+        console.log('[Gemini] Serving from cache');
+        return cached;
     }
 
-    // 2. Add to Queue
-    return new Promise((resolve, reject) => {
-        requestQueue.push({
-            prompt,
-            resolve: (data) => {
-                // Cache successful results
-                apiCache.set(cacheKey, { timestamp: Date.now(), data });
-                resolve(data);
-            },
-            reject
-        });
-        processQueue();
-    });
-};
-
-/**
- * Generate Fundamental Analysis using Gemini
- * @param {string} symbol - Token symbol
- * @param {Object} data - Fundamental data (valuation, growth, benchmarks)
- * @param {Array} socialContext - Recent tweets/updates for context
- * @returns {Promise<Object>} - Analysis JSON
- */
-export const generateFundamentalAnalysis = async (symbol, data, socialContext = []) => {
-    const { valuation, growth, revenue, benchmarks, meta } = data;
-    const description = valuation?.description || '';
-    const name = meta?.name || symbol;
-    const coinId = meta?.coinId || '';
-
-    // Format social context
-    const recentUpdates = socialContext
-        .slice(0, 5) // Top 5 relevant tweets
-        .map(t => `- "${t.text || t.content}" (Source: ${t.author})`)
-        .join('\n');
-
-    const prompt = `
-Analyze the fundamental data for ${name} (${symbol}) ${coinId ? `[ID: ${coinId}]` : ''} and provide a structured investment analysis.
-
-**Project Description:**
-${description ? description.substring(0, 500) + '...' : 'No description available.'}
-
-**Recent Social Updates (Context):**
-${recentUpdates || 'No recent updates available.'}
-
-**Data:**
-- Market Cap: $${valuation?.mcap?.toLocaleString() || 'N/A'}
-- FDV: $${valuation?.fdv?.toLocaleString() || 'N/A'}
-- TVL: $${growth?.tvl_current?.toLocaleString() || 'N/A'}
-- 30d TVL Change: ${growth?.tvl_30d_change_percent?.toFixed(2) || 'N/A'}%
-- Annualized Revenue: ${revenue?.annualized_revenue ? '$' + revenue.annualized_revenue.toLocaleString() : 'Not Available (Data missing)'}
-
-**Industry Benchmarks (Category: ${growth?.category || 'General'}):**
-- Median FDV/TVL: ${benchmarks?.medianFdvTvl?.toFixed(2) || 'N/A'}
-- Median FDV/Revenue: ${benchmarks?.medianFdvRev?.toFixed(2) || 'N/A'}
-
-**Your Task:**
-Provide a concise analysis in the following JSON format:
-{
-  "projectDescription": "1 sentence explaining what the project does. Use the description and recent updates to identify the latest protocol features.",
-  "verdict": "Undervalued" | "Overvalued" | "Fairly Valued",
-  "reasoning": "1 sentence justifying the verdict based on the data. Focus on TVL/FDV and growth."
-}
-
-Keep it professional, objective, and data-driven.
-Return strict JSON only.
-`;
-
+    // 2. Execute via Manager (Cascade Logic)
     try {
-        const generatedText = await generateGeminiContent(prompt);
-        if (!generatedText) return { verdict: 'Fairly Valued', reasoning: 'Analysis unavailable.' };
-        const jsonString = generatedText.replace(/```json\n?|\n?```/g, '').trim();
-        return JSON.parse(jsonString);
+        const generatedText = await geminiManager.executeRequest(async (model) => {
+            console.log(`[Gemini] Calling API with model: ${model.name}...`);
+            const url = `${BASE_URL}${model.id}:generateContent?key=${GEMINI_API_KEY}`;
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: prompt
+                        }]
+                    }]
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error(`Gemini API Error (${model.id}):`, errorData);
+
+                // Throw specific error message to trigger fallback in manager
+                if (response.status === 429 || response.status === 503) {
+                    throw new Error(`${response.status} Rate limit exceeded`);
+                }
+                throw new Error(`Failed to fetch from Gemini: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        });
+
+        // 3. Save to Cache
+        if (generatedText) {
+            saveToCache(cacheKey, generatedText);
+        }
+
+        return generatedText;
+
     } catch (error) {
-        console.error('Error generating fundamental analysis:', error);
-        return { verdict: 'Fairly Valued', reasoning: 'Analysis failed.' };
+        console.error('Error calling Gemini API (All models failed):', error);
+        throw error;
     }
 };
 
@@ -339,5 +419,67 @@ Return strict JSON:
             explanation: 'AI analysis failed, treat as general info.',
             engagementScore: 50
         };
+    }
+};
+
+/**
+ * Generate Fundamental Analysis using Gemini
+ * @param {string} symbol - Token symbol
+ * @param {Object} data - Fundamental data (valuation, growth, benchmarks)
+ * @param {Array} socialContext - Recent tweets/updates for context
+ * @returns {Promise<Object>} - Analysis JSON
+ */
+export const generateFundamentalAnalysis = async (symbol, data, socialContext = []) => {
+    const { valuation, growth, revenue, benchmarks, meta } = data;
+    const description = valuation?.description || '';
+    const name = meta?.name || symbol;
+    const coinId = meta?.coinId || '';
+
+    // Format social context
+    const recentUpdates = socialContext
+        .slice(0, 5) // Top 5 relevant tweets
+        .map(t => `- "${t.text || t.content}" (Source: ${t.author})`)
+        .join('\n');
+
+    const prompt = `
+Analyze the fundamental data for ${name} (${symbol}) ${coinId ? `[ID: ${coinId}]` : ''} and provide a structured investment analysis.
+
+**Project Description:**
+${description ? description.substring(0, 500) + '...' : 'No description available.'}
+
+**Recent Social Updates (Context):**
+${recentUpdates || 'No recent updates available.'}
+
+**Data:**
+- Market Cap: $${valuation?.mcap?.toLocaleString() || 'N/A'}
+- FDV: $${valuation?.fdv?.toLocaleString() || 'N/A'}
+- TVL: $${growth?.tvl_current?.toLocaleString() || 'N/A'}
+- 30d TVL Change: ${growth?.tvl_30d_change_percent?.toFixed(2) || 'N/A'}%
+- Annualized Revenue: ${revenue?.annualized_revenue ? '$' + revenue.annualized_revenue.toLocaleString() : 'Not Available (Data missing)'}
+
+**Industry Benchmarks (Category: ${growth?.category || 'General'}):**
+- Median FDV/TVL: ${benchmarks?.medianFdvTvl?.toFixed(2) || 'N/A'}
+- Median FDV/Revenue: ${benchmarks?.medianFdvRev?.toFixed(2) || 'N/A'}
+
+**Your Task:**
+Provide a concise analysis in the following JSON format:
+{
+  "whatItDoes": "1 sentence explaining what the project does. Use the description and recent updates to identify the latest protocol features (e.g., if rebrand or new product launched).",
+  "verdict": "Undervalued" | "Overvalued" | "Fair",
+  "verdictReasoning": "1 sentence justifying the verdict based on the data. Focus on TVL/FDV and growth."
+}
+
+Keep it professional, objective, and data-driven.
+`;
+
+    try {
+        const generatedText = await generateGeminiContent(prompt);
+        if (!generatedText) return null;
+
+        const jsonString = generatedText.replace(/```json\n?|\n?```/g, '').trim();
+        return JSON.parse(jsonString);
+    } catch (error) {
+        console.error('Error generating fundamental analysis:', error);
+        return null;
     }
 };

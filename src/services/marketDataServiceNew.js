@@ -68,7 +68,12 @@ export async function fetchOHLC(symbol, interval = '1d', network = 'eth', target
 async function fetchBinanceOHLC(symbol, interval) {
     // Map standard intervals to Binance intervals if needed (they mostly match)
     // Binance: 1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M
-    const limit = 100;
+
+    // User requested limits: 1h -> 300, 4h -> 300, 1d -> 750
+    let limit = 100; // Default
+    if (interval === '1h' || interval === '4h') limit = 300;
+    if (interval === '1d') limit = 750;
+
     const pair = `${symbol}USDT`; // Assume USDT pair for simplicity
     const url = `${BINANCE_API}/klines?symbol=${pair}&interval=${interval}&limit=${limit}`;
 
@@ -91,7 +96,7 @@ async function fetchBinanceOHLC(symbol, interval) {
     const data = await response.json();
     console.log(`[Binance] Successfully fetched ${data.length} candles for ${pair}`);
 
-    // Transform Binance format to standard OHLC
+    // Transform Binance format to standard OHLCV
     // Binance returns: [timestamp, open, high, low, close, volume, ...]
     return data.map(d => [
         d[0],           // timestamp
@@ -109,18 +114,25 @@ async function fetchCryptoCompareOHLC(symbol, interval) {
     // Map intervals to CryptoCompare endpoints
     // CC supports: histominute, histohour, histoday
     let endpoint = 'histoday';
-    let limit = 30; // Default limit
+    let limit = 30; // Default
     let aggregate = 1;
 
-    if (interval === '1h' || interval === '4h') {
+    // User requested limits: 1h -> 300, 4h -> 300, 1d -> 750
+    if (interval === '1h') {
         endpoint = 'histohour';
-        limit = interval === '4h' ? 120 : 48; // Fetch enough history
-        if (interval === '4h') aggregate = 4;
+        limit = 300;
+    } else if (interval === '4h') {
+        endpoint = 'histohour';
+        limit = 300 * 4; // CC doesn't support 4h native, so we fetch 1h and might need to aggregate, but here we use aggregate param
+        // Actually CC aggregate=4 works with histohour.
+        // If we want 300 * 4h bars, we need limit=300 with aggregate=4
+        limit = 300;
+        aggregate = 4;
     } else if (interval === '1d') {
         endpoint = 'histoday';
-        limit = 30;
+        limit = 750;
     } else {
-        // Fallback for smaller intervals
+        // Fallback
         endpoint = 'histominute';
         limit = 60;
     }
@@ -141,7 +153,7 @@ async function fetchCryptoCompareOHLC(symbol, interval) {
 
     console.log(`[CryptoCompare] Successfully fetched ${data.length} candles for ${symbol}`);
 
-    // Transform CC format to standard OHLC
+    // Transform CC format to standard OHLCV
     // CC returns: { time, open, high, low, close, volumefrom, volumeto }
     return data.map(d => [
         d.time * 1000,  // Convert unix timestamp to ms
@@ -149,7 +161,7 @@ async function fetchCryptoCompareOHLC(symbol, interval) {
         d.high,
         d.low,
         d.close,
-        d.volumefrom // volume
+        d.volumeto // Use Volume To (USD) as standard volume
     ]);
 }
 
@@ -217,22 +229,28 @@ async function fetchGeckoTerminalOHLC(symbol, interval, network, targetPrice = n
     // aggregate: 1, 4, 15, etc.
     let timeframe = 'day';
     let aggregate = 1;
+    let limit = 100; // Default
 
+    // User requested limits: 1h -> 300, 4h -> 300, 1d -> 750
     if (interval === '15m') {
         timeframe = 'minute';
         aggregate = 15;
+        limit = 100; // Keep small for 15m
     } else if (interval === '1h') {
         timeframe = 'hour';
         aggregate = 1;
+        limit = 300;
     } else if (interval === '4h') {
         timeframe = 'hour';
         aggregate = 4;
+        limit = 300;
     } else if (interval === '1d') {
         timeframe = 'day';
         aggregate = 1;
+        limit = 750;
     }
 
-    const limit = 100;
+    // GT Max limit is 1000, so 750 is safe.
     const ohlcUrl = `${GT_API}/networks/${poolNetwork}/pools/${poolAddress}/ohlcv/${timeframe}?aggregate=${aggregate}&limit=${limit}`;
 
     const ohlcRes = await fetch(ohlcUrl);
@@ -241,7 +259,7 @@ async function fetchGeckoTerminalOHLC(symbol, interval, network, targetPrice = n
     const ohlcData = await ohlcRes.json();
     const ohlcArray = ohlcData.data?.attributes?.ohlcv_list || [];
 
-    // Transform GT format to standard OHLC
+    // Transform GT format to standard OHLCV
     // GT returns: [timestamp_unix, open, high, low, close, volume]
     return ohlcArray.map(d => [
         d[0] * 1000,    // Convert to milliseconds

@@ -1,106 +1,8 @@
 // CoinGecko API Service
 import { TOP_COINS } from '../data/topCoins';
-const COINGECKO_API = 'https://api.coingecko.com/api/v3';
+import { RequestQueue } from '../utils/apiQueue';
 
-// Request Queue with Deduplication to prevent rate limits
-class RequestQueue {
-    constructor(maxConcurrent = 1, intervalMs = 4000) {
-        this.queue = [];
-        this.processing = false;
-        this.maxConcurrent = maxConcurrent;
-        this.intervalMs = intervalMs;
-        this.backoffMultiplier = 1; // For exponential backoff
-        this.consecutiveErrors = 0;
-        this.inFlightRequests = new Map(); // For deduplication
-        this.circuitBreakerOpen = false; // Circuit breaker state
-        this.circuitBreakerTimeout = null;
-    }
-
-    add(fn, dedupeKey = null) {
-        // Circuit breaker: reject immediately if circuit is open
-        if (this.circuitBreakerOpen) {
-            console.warn('[RequestQueue] Circuit breaker is OPEN - rejecting request');
-            return Promise.reject(new Error('Circuit breaker open - too many consecutive errors'));
-        }
-
-        // Request deduplication: if same request is in-flight, return existing Promise
-        if (dedupeKey && this.inFlightRequests.has(dedupeKey)) {
-            console.log(`[RequestQueue] Deduplicating request: ${dedupeKey}`);
-            return this.inFlightRequests.get(dedupeKey);
-        }
-
-        const promise = new Promise((resolve, reject) => {
-            this.queue.push({ fn, resolve, reject, dedupeKey });
-            this.process();
-        });
-
-        // Track in-flight request for deduplication
-        if (dedupeKey) {
-            this.inFlightRequests.set(dedupeKey, promise);
-            // Clean up after promise settles
-            promise.finally(() => {
-                this.inFlightRequests.delete(dedupeKey);
-            });
-        }
-
-        return promise;
-    }
-
-    async process() {
-        if (this.processing || this.queue.length === 0) {
-            return;
-        }
-
-        this.processing = true;
-        const { fn, resolve, reject, dedupeKey } = this.queue.shift();
-
-        try {
-            const result = await fn();
-            // Success - reset backoff
-            this.consecutiveErrors = 0;
-            this.backoffMultiplier = 1;
-            resolve(result);
-        } catch (error) {
-            // Check if it's a 429 error
-            if (error.message && error.message.includes('429')) {
-                this.consecutiveErrors++;
-                // Exponential backoff: 1x, 2x, 4x, 8x (max)
-                this.backoffMultiplier = Math.min(Math.pow(2, this.consecutiveErrors - 1), 8);
-                console.warn(`[RequestQueue] 429 error detected. Backoff multiplier: ${this.backoffMultiplier}x`);
-
-                // Circuit breaker: open circuit after 5 consecutive 429 errors
-                if (this.consecutiveErrors >= 5) {
-                    this.openCircuitBreaker();
-                }
-            }
-            reject(error);
-        } finally {
-            this.processing = false;
-            // Apply backoff multiplier to interval
-            const actualInterval = this.intervalMs * this.backoffMultiplier;
-            setTimeout(() => this.process(), actualInterval);
-        }
-    }
-
-    openCircuitBreaker() {
-        console.error('[RequestQueue] 🔴 CIRCUIT BREAKER OPENED - Pausing all requests for 30 seconds');
-        this.circuitBreakerOpen = true;
-
-        // Clear any existing timeout
-        if (this.circuitBreakerTimeout) {
-            clearTimeout(this.circuitBreakerTimeout);
-        }
-
-        // Close circuit breaker after 30 seconds
-        this.circuitBreakerTimeout = setTimeout(() => {
-            console.log('[RequestQueue] 🟢 CIRCUIT BREAKER CLOSED - Resuming requests');
-            this.circuitBreakerOpen = false;
-            this.consecutiveErrors = 0;
-            this.backoffMultiplier = 1;
-            this.process(); // Resume processing
-        }, 30000);
-    }
-}
+const COINGECKO_API = '/api/coingecko';
 
 // Export shared queue for other services
 export const apiQueue = new RequestQueue(1, 4000); // 1 request every 4 seconds (with exponential backoff on 429)
@@ -284,8 +186,15 @@ export async function searchCoins(query, limit = 10) {
             const data = await response.json();
             console.log('CoinGecko raw search response:', data);
 
+            // Sort by market cap rank (ascending), null ranks last
+            const sortedCoins = data.coins.sort((a, b) => {
+                const rankA = a.market_cap_rank || 999999;
+                const rankB = b.market_cap_rank || 999999;
+                return rankA - rankB;
+            });
+
             // Return top matches with icon data
-            return data.coins.slice(0, limit).map(coin => ({
+            return sortedCoins.slice(0, limit).map(coin => ({
                 id: coin.id,
                 name: coin.name,
                 symbol: coin.symbol.toUpperCase(),
@@ -619,8 +528,9 @@ export async function getCoinMetadata(ticker) {
 
         const data = await response.json();
         const twitterHandle = data.links?.twitter_screen_name || null;
+        const name = data.name || null;
 
-        const result = { twitterHandle };
+        const result = { twitterHandle, name };
 
         // Cache result (permanent cache as handles rarely change)
         localStorage.setItem(CACHE_KEY, JSON.stringify(result));

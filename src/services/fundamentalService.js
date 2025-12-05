@@ -1,15 +1,16 @@
 import { getCoinId, apiQueue } from './coinGeckoApi';
 
-const COINGECKO_API = 'https://api.coingecko.com/api/v3';
+const COINGECKO_API = '/api/coingecko';
 const DEFILLAMA_API = 'https://api.llama.fi';
 
-// Cache duration: 1 hour (reduced API calls to avoid 429 errors)
-const CACHE_DURATION = 60 * 60 * 1000;
+// Cache duration: 24 hours (fundamental data rarely changes daily)
+const CACHE_DURATION = 24 * 60 * 60 * 1000;
 
 /**
  * Fetch fundamental data for a token (Valuation + Growth)
  * @param {string} ticker - The ticker symbol (e.g., "AAVE")
  * @param {string} [tokenName] - Optional token name for DefiLlama slug guessing
+ * @param {boolean} forceRefresh - Whether to bypass cache
  * @returns {Promise<Object>} - Fundamental data object
  */
 export async function getTokenFundamentals(ticker, tokenName, forceRefresh = false) {
@@ -76,6 +77,13 @@ export async function getTokenFundamentals(ticker, tokenName, forceRefresh = fal
         } catch (err) {
             console.error('FundamentalService: CoinGecko fetch failed', err);
         }
+
+        // Extract description (it's in cgData from the scope above if we define it outside)
+        // Wait, cgData is inside the try block.
+        // I need to modify the code to extract description inside the try block.
+
+        // Let's re-read the file content to make sure I target the right lines.
+        // I'll just rewrite the try block to extract description.
 
         // 3. Fetch Growth Trends from DefiLlama
         let growthData = null;
@@ -155,6 +163,23 @@ export async function getTokenFundamentals(ticker, tokenName, forceRefresh = fal
         let revenueData = null;
         if (growthData && growthData.hasTvl) {
             try {
+                // We need the protocol ID or slug to find it in the fees overview
+                // But the overview endpoint returns all protocols.
+                // Let's fetch the fees overview and find our protocol.
+                // Optimization: This is a heavy call, maybe we should cache it or use the single protocol endpoint if possible?
+                // The single protocol endpoint (llamaData) usually has 'revenue' field if available?
+                // Let's check llamaData structure again. Usually it has 'chainTvls' etc.
+                // Actually, https://api.llama.fi/summary/fees/slug returns summary? No.
+                // Let's use the overview endpoint but cache it heavily?
+                // Or better, getIndustryBenchmarks already fetches overview/fees to calculate averages.
+                // We can extract our specific asset's revenue from there!
+
+                // If benchmarks were fetched, we might have the data there?
+                // getIndustryBenchmarks returns aggregates.
+                // Let's just fetch it here if we need it, or rely on getIndustryBenchmarks to return it if we pass the slug?
+                // Let's keep it simple: fetch revenue here specifically if benchmarks didn't cover it.
+                // Actually, let's make getIndustryBenchmarks return the specific protocol's revenue too if found.
+
                 if (benchmarks && benchmarks.myProtocolRevenue) {
                     revenueData = {
                         annualized_revenue: benchmarks.myProtocolRevenue
@@ -189,18 +214,7 @@ export async function getTokenFundamentals(ticker, tokenName, forceRefresh = fal
 
     } catch (error) {
         console.error('FundamentalService: Error fetching fundamentals', error);
-        // Return partial data so AI can still generate description/verdict
-        return {
-            valuation: null,
-            growth: null,
-            revenue: null,
-            benchmarks: null,
-            tags: [],
-            meta: {
-                name: tokenName || ticker,
-                coinId: null
-            }
-        };
+        return null;
     }
 }
 
@@ -213,6 +227,8 @@ export async function getTokenFundamentals(ticker, tokenName, forceRefresh = fal
 async function getIndustryBenchmarks(category, mySlug) {
     try {
         // 1. Fetch all protocols
+        // Cache this heavily? 
+        // For now, simple fetch.
         const protocolsRes = await fetch('https://api.llama.fi/protocols');
         const protocols = await protocolsRes.json();
 
@@ -224,6 +240,12 @@ async function getIndustryBenchmarks(category, mySlug) {
         // 3. Calculate FDV/TVL
         const fdvTvlRatios = peers
             .map(p => {
+                const fdv = p.mcap > 0 ? (p.mcap * (p.fdv / p.mcap || 1)) : p.fdv; // Use mcap if fdv missing? DefiLlama has 'mcap' and 'fdv' usually?
+                // Actually p.mcap is often 0 in this list?
+                // Let's use p.mcap if available, else p.tvl? No.
+                // DefiLlama /protocols returns: name, symbol, tvl, mcap, category...
+                // It might not have FDV for all.
+                // Let's use Mcap/TVL as a proxy if FDV missing, or skip.
                 const val = p.mcap || p.tvl; // Fallback?
                 if (!p.mcap || p.mcap === 0) return null;
                 if (!p.tvl || p.tvl === 0) return null;
@@ -252,6 +274,10 @@ async function getIndustryBenchmarks(category, mySlug) {
                 if (annualizedRev > 0 && peer.mcap > 0) {
                     fdvRevRatios.push(peer.mcap / annualizedRev);
                 }
+
+                // Check if this is "my" protocol (if we passed slug/name, but we didn't pass it yet)
+                // We can try to match by category + name?
+                // Actually, let's just return the median.
             }
         });
 

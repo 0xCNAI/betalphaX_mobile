@@ -123,9 +123,31 @@ function generateMockNews(ticker, count = 5) {
  * Get news headlines for a specific asset
  * @param {string} ticker - Asset symbol (e.g., BTC)
  * @param {number} count - Number of headlines to return
+ * @param {boolean} forceRefresh - Whether to bypass cache and fetch fresh data
  * @returns {Promise<Array<Object>>} - Array of news objects with headline, source, link
  */
-export const getNewsForAsset = async (ticker, count = 5) => {
+export const getNewsForAsset = async (ticker, count = 5, forceRefresh = false) => {
+    const upperTicker = ticker.toUpperCase();
+    const CACHE_KEY = `news_cache_${upperTicker}`;
+    const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
+    // 1. Check Cache
+    if (!forceRefresh) {
+        try {
+            const cached = localStorage.getItem(CACHE_KEY);
+            if (cached) {
+                const { data, timestamp } = JSON.parse(cached);
+                if (Date.now() - timestamp < CACHE_TTL) {
+                    console.log(`[NewsService] Returning cached news for ${upperTicker}`);
+                    return data.slice(0, count);
+                }
+            }
+        } catch (e) {
+            console.warn('Failed to read news cache:', e);
+        }
+    }
+
+    // 2. Fetch Fresh Data
     // Try to fetch real news first
     const realNews = await fetchRealNews(ticker);
 
@@ -137,6 +159,16 @@ export const getNewsForAsset = async (ticker, count = 5) => {
         newsItems = generateMockNews(ticker, count);
     }
 
+    // 3. Save to Cache
+    try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+            data: newsItems,
+            timestamp: Date.now()
+        }));
+    } catch (e) {
+        console.warn('Failed to save news cache:', e);
+    }
+
     // Return structured objects for UI rendering
-    return newsItems;
+    return newsItems.slice(0, count);
 };
