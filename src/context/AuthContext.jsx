@@ -30,6 +30,10 @@ export const AuthProvider = ({ children }) => {
             })
             .catch((error) => {
                 console.error("Redirect sign-in error:", error);
+                // Debug: Alert on mobile to see the error
+                if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                    alert(`Login Error: ${error.message}`);
+                }
             });
     }, []);
 
@@ -69,6 +73,9 @@ export const AuthProvider = ({ children }) => {
             }
         } catch (error) {
             console.error('Google sign-in error:', error);
+            if (isMobile()) {
+                alert(`Sign-in Error: ${error.message}`);
+            }
             throw error;
         }
     };
