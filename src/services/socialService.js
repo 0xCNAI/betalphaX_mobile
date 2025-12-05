@@ -43,9 +43,10 @@ const TOKEN_NAMES = {
  * @param {string} symbol - Token symbol
  * @param {string} [projectHandle] - Official project Twitter handle (optional)
  * @param {string} [passedTokenName] - Token name (optional, preferred over hardcoded map)
+ * @param {boolean} forceRefresh - Whether to bypass cache
  * @returns {Promise<Array>} - Top 5 Authors and their tweets
  */
-export async function getRecommendedKOLs(symbol, projectHandle = null, passedTokenName = null) {
+export async function getRecommendedKOLs(symbol, projectHandle = null, passedTokenName = null, forceRefresh = false) {
     const upperSymbol = symbol.toUpperCase();
 
     // Use fallback handle if not provided
@@ -54,24 +55,26 @@ export async function getRecommendedKOLs(symbol, projectHandle = null, passedTok
     const cacheKey = effectiveHandle ? `${upperSymbol}_${effectiveHandle}` : upperSymbol;
 
     // 1. Check Firestore Cache
-    try {
-        const docRef = doc(db, 'token_social_insights', cacheKey);
-        const docSnap = await getDoc(docRef);
+    if (!forceRefresh) {
+        try {
+            const docRef = doc(db, 'token_social_insights', cacheKey);
+            const docSnap = await getDoc(docRef);
 
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            const now = Date.now();
-            // Check if cache is recent (< 1h) AND version matches
-            if (data.updatedAt &&
-                (now - new Date(data.updatedAt).getTime() < CACHE_DURATION_MS) &&
-                data.version === CACHE_VERSION
-            ) {
-                console.log(`[Social] Using cached global insights for ${upperSymbol}`);
-                return data.topVoices || [];
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                const now = Date.now();
+                // Check if cache is recent (< 1h) AND version matches
+                if (data.updatedAt &&
+                    (now - new Date(data.updatedAt).getTime() < CACHE_DURATION_MS) &&
+                    data.version === CACHE_VERSION
+                ) {
+                    console.log(`[Social] Using cached global insights for ${upperSymbol}`);
+                    return data.topVoices || [];
+                }
             }
+        } catch (e) {
+            console.warn('[Social] Cache read error:', e);
         }
-    } catch (e) {
-        console.warn('[Social] Cache read error:', e);
     }
 
     console.log(`[Social] ❄️ Cold Start: Fetching fresh insights for ${upperSymbol} ${effectiveHandle ? `(@${effectiveHandle})` : ''}`);
@@ -233,9 +236,11 @@ export async function getRecommendedKOLs(symbol, projectHandle = null, passedTok
  * @param {string} symbol - Token symbol
  * @param {Array<string>} userTrackedHandles - List of handles the user tracks (e.g. ['@vitalik'])
  * @param {string} [projectHandle] - Official project Twitter handle (optional)
+ * @param {string} [tokenName] - Token name (optional)
+ * @param {boolean} forceRefresh - Whether to bypass cache
  * @returns {Promise<Array>} - Combined sorted feed of tweets
  */
-export async function getTrackedFeed(symbol, userTrackedHandles = [], projectHandle = null, tokenName = null) {
+export async function getTrackedFeed(symbol, userTrackedHandles = [], projectHandle = null, tokenName = null, forceRefresh = false) {
     const upperSymbol = symbol.toUpperCase();
 
     // 1. Fetch Global Data (Recommendation Pool)
@@ -261,7 +266,7 @@ export async function getTrackedFeed(symbol, userTrackedHandles = [], projectHan
 
     try {
         // This will use the new logic (and potentially trigger a fresh fetch if cache is old/wrong version)
-        globalKOLs = await getRecommendedKOLs(upperSymbol, projectHandle, tokenName);
+        globalKOLs = await getRecommendedKOLs(upperSymbol, projectHandle, tokenName, forceRefresh);
     } catch (e) {
         console.error('Error getting global KOLs:', e);
     }

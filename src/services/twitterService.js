@@ -614,25 +614,55 @@ export async function prefetchTweetsForAssets() {
 /**
  * Fetch the AI-generated News Dashboard for a symbol
  * @param {string} symbol - Asset symbol (e.g., "FLUID")
+ * @param {boolean} forceRefresh - Whether to bypass cache
  * @returns {Promise<Object>} - Structured dashboard data
  */
 export async function getNewsDashboard(symbol, forceRefresh = false) {
-    console.log(`[Twitter] Fetching News Dashboard for ${symbol}, forceRefresh: ${forceRefresh}`);
+    console.log(`[Twitter] Fetching News Dashboard for ${symbol}`);
+
+    const CACHE_KEY = `news_dashboard_${symbol.toUpperCase()}`;
+    const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
+
+    // 1. Check Cache
+    if (!forceRefresh) {
+        try {
+            const cached = localStorage.getItem(CACHE_KEY);
+            if (cached) {
+                const { timestamp, data } = JSON.parse(cached);
+                if (Date.now() - timestamp < CACHE_DURATION) {
+                    console.log(`[Twitter] Using cached dashboard for ${symbol}`);
+                    return data;
+                }
+            }
+        } catch (e) {
+            console.warn('[Twitter] Cache read error:', e);
+        }
+    }
+
     try {
         const response = await fetch('/api/news-dashboard', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                symbol,
-                timestamp: forceRefresh ? Date.now() : undefined // Cache busting
-            })
+            body: JSON.stringify({ symbol })
         });
 
         if (!response.ok) {
             throw new Error(`API Error: ${response.status}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+
+        // 2. Save to Cache
+        try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify({
+                timestamp: Date.now(),
+                data
+            }));
+        } catch (e) {
+            console.warn('[Twitter] Cache write error:', e);
+        }
+
+        return data;
     } catch (error) {
         console.error('[Twitter] Failed to fetch dashboard, using mock:', error);
         return getMockNewsDashboard(symbol);

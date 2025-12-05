@@ -1,96 +1,100 @@
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
+
 
 export const config = {
-  maxDuration: 60,
+    maxDuration: 60, // Increase timeout to 60s (Pro) or 10s (Hobby)
 };
 
 const TWITTER_API_KEY = process.env.TWITTER_API_KEY || 'new1_f96fb36ea3274017be61efe351c31c5c';
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-const genAI = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
-const model = genAI ? genAI.getGenerativeModel({ model: "gemini-2.0-flash" }) : null;
+const openai = new OpenAI({
+    apiKey: OPENAI_API_KEY || 'dummy', // Prevent crash on init, check later
+});
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+    // Vercel Serverless (Node.js) signature: (req, res)
 
-  try {
-    const { symbol } = req.body;
-
-    if (!symbol) {
-      return res.status(400).json({ error: 'Symbol is required' });
+    if (!OPENAI_API_KEY) {
+        console.error('Missing OPENAI_API_KEY');
+        return res.status(500).json({ error: 'Configuration Error: Missing OPENAI_API_KEY on Vercel' });
     }
 
-    console.log(`[NewsDashboard] Generating dashboard for ${symbol}`);
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
 
-    // 1. Multi-Query Strategy
-    const oneMonthAgo = new Date();
-    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-    const sinceDate = oneMonthAgo.toISOString().split('T')[0];
+    try {
+        // In Vercel Node.js functions, req.body is already parsed if Content-Type is application/json
+        const { symbol } = req.body;
 
-    const queries = [
-      { type: 'Roadmap', q: `${symbol} (roadmap OR upgrade OR "v2" OR mainnet OR launch) min_faves:10 -filter:retweets` },
-      { type: 'RecentEvents', q: `${symbol} (live OR announced OR partnership OR listing OR exploit OR refund) since:${sinceDate} min_faves:5 -filter:retweets` },
-      { type: 'Discussions', q: `${symbol} (thought OR opinion OR thread OR analysis OR "bullish on" OR "bearish on") min_faves:5 -filter:retweets` },
-      { type: 'General', q: `${symbol} min_faves:50 -filter:retweets` }
-    ];
+        if (!symbol) {
+            return res.status(400).json({ error: 'Symbol is required' });
+        }
 
-    const fetchPromises = queries.map(async (queryObj) => {
-      const url = `https://api.twitterapi.io/twitter/tweet/advanced_search?query=${encodeURIComponent(queryObj.q)}&type=Top`;
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        console.log(`[NewsDashboard] Generating dashboard for ${symbol}`);
 
-        const response = await fetch(url, {
-          headers: { 'X-API-Key': TWITTER_API_KEY },
-          signal: controller.signal
+        // 1. Multi-Query Strategy
+        const oneMonthAgo = new Date();
+        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+        const sinceDate = oneMonthAgo.toISOString().split('T')[0];
+
+        const queries = [
+            { type: 'Roadmap', q: `${symbol} (roadmap OR upgrade OR "v2" OR mainnet OR launch) min_faves:10 -filter:retweets` },
+            { type: 'RecentEvents', q: `${symbol} (live OR announced OR partnership OR listing OR exploit OR refund) since:${sinceDate} min_faves:5 -filter:retweets` },
+            { type: 'Discussions', q: `${symbol} (thought OR opinion OR thread OR analysis OR "bullish on" OR "bearish on") min_faves:5 -filter:retweets` },
+            { type: 'General', q: `${symbol} min_faves:50 -filter:retweets` }
+        ];
+
+        const fetchPromises = queries.map(async (queryObj) => {
+            const url = `https://api.twitterapi.io/twitter/tweet/advanced_search?query=${encodeURIComponent(queryObj.q)}&type=Top`;
+            try {
+                // Add 8s timeout per request to prevent hanging
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+                const response = await fetch(url, {
+                    headers: { 'X-API-Key': TWITTER_API_KEY },
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+
+                if (!response.ok) throw new Error(`${response.status}`);
+                const data = await response.json();
+                return data.tweets || [];
+            } catch (e) {
+                console.warn(`[NewsDashboard] Query failed [${queryObj.type}]: ${e.message}`);
+                return [];
+            }
         });
-        clearTimeout(timeoutId);
 
-        if (!response.ok) throw new Error(`${response.status}`);
-        const data = await response.json();
-        return data.tweets || [];
-      } catch (e) {
-        console.warn(`[NewsDashboard] Query failed [${queryObj.type}]: ${e.message}`);
-        return [];
-      }
-    });
+        const results = await Promise.all(fetchPromises);
+        const rawTweets = results.flat();
 
-    const results = await Promise.all(fetchPromises);
-    const rawTweets = results.flat();
+        // Deduplicate
+        const seenIds = new Set();
+        const uniqueTweets = rawTweets.filter(t => {
+            if (seenIds.has(t.id)) return false;
+            seenIds.add(t.id);
+            return true;
+        }).map(t => ({
+            text: t.text,
+            author: t.author?.userName || 'unknown',
+            date: t.createdAt,
+            likes: t.likeCount,
+            retweets: t.retweetCount,
+            url: t.url || `https://x.com/${t.author?.userName}/status/${t.id}`
+        }));
 
-    // Deduplicate
-    const seenIds = new Set();
-    const uniqueTweets = rawTweets.filter(t => {
-      if (seenIds.has(t.id)) return false;
-      seenIds.add(t.id);
-      return true;
-    }).map(t => ({
-      text: t.text,
-      author: t.author?.userName || 'unknown',
-      date: t.createdAt,
-      likes: t.likeCount,
-      retweets: t.retweetCount,
-      url: t.url || `https://x.com/${t.author?.userName}/status/${t.id}`
-    }));
+        console.log(`[NewsDashboard] Analyzed ${uniqueTweets.length} unique tweets`);
 
-    console.log(`[NewsDashboard] Analyzed ${uniqueTweets.length} unique tweets`);
+        if (uniqueTweets.length === 0) {
+            return res.status(404).json({ error: 'No data found' });
+        }
 
-    // 2. LLM Analysis with Gemini (or Fallback)
-    if (!model) {
-      console.warn('[NewsDashboard] Missing GEMINI_API_KEY, using mock response.');
-      return res.status(200).json(getMockDashboard(symbol));
-    }
-
-    if (uniqueTweets.length === 0) {
-      // If no tweets found, return mock instead of 404 to avoid breaking UI
-      console.warn('[NewsDashboard] No tweets found, using mock response.');
-      return res.status(200).json(getMockDashboard(symbol));
-    }
-
-    const prompt = `
+        // 2. LLM Analysis
+        const prompt = `
 You are an Elite Crypto Analyst. Your goal is to generate a "Deep Dive News Dashboard" for ${symbol}.
 
 Input Data (${uniqueTweets.length} Tweets):
@@ -144,59 +148,21 @@ Output Schema (JSON):
   ]
 }
 
-Return ONLY the JSON string. Do not include markdown formatting like \`\`\`json.
+Return ONLY the JSON.
 `;
 
-    try {
-      const result = await model.generateContent(prompt);
-      const responseText = result.response.text();
+        const completion = await openai.chat.completions.create({
+            messages: [{ role: "system", content: prompt }],
+            model: "gpt-4o-mini",
+            response_format: { type: "json_object" }
+        });
 
-      // Clean up markdown if present
-      const jsonString = responseText.replace(/```json\n?|\n?```/g, '').trim();
-      const dashboardData = JSON.parse(jsonString);
+        const dashboardData = JSON.parse(completion.choices[0].message.content);
 
-      return res.status(200).json(dashboardData);
+        return res.status(200).json(dashboardData);
 
-    } catch (geminiError) {
-      console.error('[NewsDashboard] Gemini API failed:', geminiError);
-      // Fallback to mock if Gemini fails (e.g. 429)
-      return res.status(200).json(getMockDashboard(symbol));
+    } catch (error) {
+        console.error('[NewsDashboard] Error:', error);
+        return res.status(500).json({ error: error.message });
     }
-
-  } catch (error) {
-    console.error('[NewsDashboard] Error:', error);
-    return res.status(500).json({ error: error.message });
-  }
-}
-
-// Mock Data Generator for Fallback
-function getMockDashboard(symbol) {
-  return {
-    symbol: symbol,
-    discussions: [
-      {
-        theme: "Market Sentiment",
-        points: [
-          { detail: "Community is discussing recent price action and potential breakout.", source_url: "" },
-          { detail: "High engagement on recent governance proposals.", source_url: "" }
-        ]
-      }
-    ],
-    past_month_events: [
-      {
-        date: new Date().toISOString().split('T')[0].slice(5),
-        event: "Protocol Update",
-        details: "Minor bug fixes and performance improvements.",
-        source_url: ""
-      }
-    ],
-    future_events: [
-      {
-        timeline: "Q4 2024",
-        event: "Ecosystem Expansion",
-        details: "Expected launch of new partnerships and integrations.",
-        source_url: ""
-      }
-    ]
-  };
 }
