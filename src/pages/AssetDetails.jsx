@@ -13,6 +13,7 @@ import ImportantEvents from '../components/ImportantEvents';
 import FundamentalWidget from '../components/FundamentalWidget';
 import TransactionForm from '../components/TransactionForm';
 import TradingViewChart from '../components/TradingViewChart';
+import NativeAreaChart from '../components/NativeAreaChart';
 import TADiagnosis from '../components/TADiagnosis';
 import Modal from '../components/Modal';
 
@@ -28,6 +29,7 @@ const AssetDetails = () => {
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
   const [expandedTxIds, setExpandedTxIds] = useState([]);
   const [activeTab, setActiveTab] = useState('chart');
+  const [chartType, setChartType] = useState('tv'); // 'tv' or 'native'
 
   const [tvSymbol, setTvSymbol] = useState(null);
 
@@ -172,7 +174,29 @@ const AssetDetails = () => {
           {activeTab === 'chart' && (
             <div className="flex flex-col gap-4 animate-in fade-in duration-300">
               <div className="card-auto relative min-h-[400px] pt-4">
-                <TradingViewChart symbol={tvSymbol || symbol} autosize />
+                {/* Chart Type Toggle */}
+                <div className="absolute top-4 right-4 z-20 flex bg-slate-800 rounded-lg p-1 border border-slate-700">
+                  <button
+                    onClick={() => setChartType('tv')}
+                    className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${chartType === 'tv' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                  >
+                    TradingView
+                  </button>
+                  <button
+                    onClick={() => setChartType('native')}
+                    className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${chartType === 'native' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                  >
+                    Native
+                  </button>
+                </div>
+
+                {chartType === 'tv' ? (
+                  <TradingViewChart symbol={tvSymbol || symbol} autosize />
+                ) : (
+                  <NativeAreaChart symbol={symbol} height={400} />
+                )}
               </div>
               <div className="card-auto shrink-0">
                 <TADiagnosis
