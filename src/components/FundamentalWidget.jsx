@@ -24,39 +24,67 @@ const FundamentalWidget = ({ symbol, name }) => {
         setAiAnalysis(null);
         setLoading(true);
 
-        const fetchData = async () => {
+        const fetchData = async (forceRefresh = false) => {
             if (!symbol) return;
 
             try {
                 // 1. Fetch Fundamentals
-                const result = await getTokenFundamentals(symbol, name);
+                const result = await getTokenFundamentals(symbol, name, forceRefresh);
 
                 if (mounted && result) {
                     setData(result);
 
+                    // 2. Check Cache for AI Analysis
+                    const cacheKey = `fundamental_analysis_${symbol}`;
+                    const cachedAnalysis = localStorage.getItem(cacheKey);
+                    let analysisData = null;
 
-
-                    // 2. Trigger AI Analysis
-                    setAnalyzing(true);
-
-                    // Fetch Social Context
-                    let socialContext = [];
-                    try {
-                        const metadata = await getCoinMetadata(symbol);
-                        const projectHandle = metadata?.twitter_screen_name;
-                        if (projectHandle) {
-                            const feed = await getTrackedFeed(symbol, projectHandle, name);
-                            socialContext = feed.slice(0, 10);
+                    if (!forceRefresh && cachedAnalysis) {
+                        try {
+                            const { timestamp, data } = JSON.parse(cachedAnalysis);
+                            // 1 Hour Cache TTL
+                            if (Date.now() - timestamp < 60 * 60 * 1000) {
+                                console.log(`[FundamentalWidget] Using cached AI analysis for ${symbol}`);
+                                analysisData = data;
+                                setAiAnalysis(data);
+                            }
+                        } catch (e) {
+                            console.warn("Invalid cache for analysis", e);
                         }
-                    } catch (e) {
-                        console.warn("Failed to fetch social context", e);
                     }
 
-                    // Generate Analysis
-                    const analysis = await generateFundamentalAnalysis(symbol, result, socialContext);
-                    if (mounted) {
-                        setAiAnalysis(analysis);
-                        setAnalyzing(false);
+                    // 3. Trigger AI Analysis if no cache
+                    if (!analysisData) {
+                        setAnalyzing(true);
+
+                        // Fetch Social Context
+                        let socialContext = [];
+                        try {
+                            const metadata = await getCoinMetadata(symbol);
+                            const projectHandle = metadata?.twitter_screen_name;
+                            if (projectHandle) {
+                                const feed = await getTrackedFeed(symbol, projectHandle, name);
+                                socialContext = feed.slice(0, 10);
+                            }
+                        } catch (e) {
+                            console.warn("Failed to fetch social context", e);
+                        }
+
+                        // Generate Analysis
+                        const analysis = await generateFundamentalAnalysis(symbol, result, socialContext);
+
+                        if (mounted) {
+                            setAiAnalysis(analysis);
+                            setAnalyzing(false);
+
+                            // Save to Cache
+                            if (analysis && analysis.verdict) {
+                                localStorage.setItem(cacheKey, JSON.stringify({
+                                    timestamp: Date.now(),
+                                    data: analysis
+                                }));
+                            }
+                        }
                     }
                 }
             } catch (err) {
