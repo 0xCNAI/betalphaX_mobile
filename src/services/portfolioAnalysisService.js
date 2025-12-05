@@ -1,6 +1,8 @@
 import { generateGeminiContent } from './geminiService';
 import { analyzeTechnicals } from './technicalService';
 import { getRecommendedKOLs } from './socialService';
+import { getNewsDashboard } from './twitterService';
+import { getTokenFundamentals } from './fundamentalService';
 
 /**
  * Generate a comprehensive AI Portfolio Report
@@ -18,7 +20,7 @@ export async function generatePortfolioReport(transactions, prices) {
             return null;
         }
 
-        // 2. Fetch External Data (Technicals & Social) in Parallel
+        // 2. Fetch External Data (Technicals, Social, Fundamentals, Events) in Parallel
         const enrichedAssets = await enrichAssetsWithExternalData(portfolioData.assets);
 
         // 3. Construct Prompt
@@ -43,32 +45,6 @@ export async function generatePortfolioReport(transactions, prices) {
         }
         return getMockPortfolioReport(portfolioData);
     }
-}
-
-/**
- * Generate mock Portfolio Report for fallback
- */
-function getMockPortfolioReport(portfolioData) {
-    const healthScore = 78;
-
-    return {
-        executiveSummary: {
-            healthScore: healthScore,
-            overview: "Your portfolio demonstrates strong conviction in major L1s but lacks diversification in DeFi sectors. While BTC holdings provide stability, the heavy concentration exposes you to systemic risks if the macro environment shifts.",
-            topPriorityAction: "Consider trimming your ETH position to reallocate into high-growth L2 protocols or stablecoins to hedge against short-term volatility."
-        },
-        assets: portfolioData.assets.map(asset => ({
-            symbol: asset.symbol,
-            technicalVerdict: Math.random() > 0.5 ? "Bullish - Strong momentum above 50 EMA" : "Neutral - Consolidating in range",
-            fundamentalInsight: "High developer activity and increasing TVL suggest long-term growth potential.",
-            strategicAdvice: Math.random() > 0.5 ? "Hold - Thesis remains valid" : "Accumulate - Good entry zone"
-        })),
-        actionableChecklist: [
-            "Set a stop-loss for your ETH position at $2,850 to protect recent gains.",
-            "Research and identify 2 potential RWA (Real World Asset) projects to diversify your sector exposure.",
-            "Review your stablecoin yield strategy; current Aave rates are attractive."
-        ]
-    };
 }
 
 /**
@@ -143,17 +119,17 @@ function aggregatePortfolioData(transactions, prices) {
 }
 
 /**
- * Fetch Technicals and Social signals for each asset
+ * Fetch Technicals, Social, Fundamentals, and Events for each asset
  */
 async function enrichAssetsWithExternalData(assets) {
     const promises = assets.map(async (asset) => {
-        // Fetch Technicals
+        // 1. Fetch Technicals
         let technicals = null;
         try {
             technicals = await analyzeTechnicals(asset.symbol);
         } catch (e) { console.warn(`Failed to fetch technicals for ${asset.symbol}`, e); }
 
-        // Fetch Social Signals (Top 3 KOLs tweets)
+        // 2. Fetch Social Signals (Top 3 KOLs tweets)
         let social = null;
         try {
             const kols = await getRecommendedKOLs(asset.symbol);
@@ -164,6 +140,42 @@ async function enrichAssetsWithExternalData(assets) {
             }));
         } catch (e) { console.warn(`Failed to fetch social for ${asset.symbol}`, e); }
 
+        // 3. Fetch Important Events (News Dashboard)
+        let events = null;
+        try {
+            // Note: getNewsDashboard is likely in twitterService based on previous context, 
+            // but imported from socialService if re-exported. Adjust import if needed.
+            // Based on user file view, it is in twitterService.js.
+            // I will assume it is available via the import at the top.
+            const newsData = await getNewsDashboard(asset.symbol);
+            if (newsData) {
+                events = {
+                    upcoming: newsData.future_events?.map(e => `${e.timeline}: ${e.event}`),
+                    recent: newsData.past_month_events?.map(e => e.event),
+                    discussions: newsData.discussions?.map(d => d.theme)
+                };
+            }
+        } catch (e) { console.warn(`Failed to fetch events for ${asset.symbol}`, e); }
+
+        // 4. Fetch Fundamentals
+        let fundamentals = null;
+        try {
+            const fundData = await getTokenFundamentals(asset.symbol, asset.symbol); // Name might be needed, using symbol as fallback
+            if (fundData) {
+                fundamentals = {
+                    valuation: fundData.valuation ? {
+                        mcap: fundData.valuation.mcap,
+                        fdv: fundData.valuation.fdv,
+                        isHighRisk: fundData.valuation.isHighRisk
+                    } : null,
+                    growth: fundData.growth ? {
+                        tvl_30d_change: fundData.growth.tvl_30d_change_percent
+                    } : null,
+                    tags: fundData.tags
+                };
+            }
+        } catch (e) { console.warn(`Failed to fetch fundamentals for ${asset.symbol}`, e); }
+
         return {
             ...asset,
             technicals: technicals ? {
@@ -172,7 +184,9 @@ async function enrichAssetsWithExternalData(assets) {
                 action: technicals.action,
                 signals: technicals.signals.map(s => s.msg)
             } : null,
-            social
+            social,
+            events,
+            fundamentals
         };
     });
 
@@ -191,7 +205,9 @@ function constructPrompt(assets, summary) {
         buyReasons: a.buyReasons,
         notes: a.notes,
         technicals: a.technicals,
-        socialBuzz: a.social
+        socialBuzz: a.social,
+        fundamentals: a.fundamentals,
+        events: a.events
     })), null, 2);
 
     return `
@@ -217,8 +233,8 @@ Generate a JSON report with the following structure:
     {
       "symbol": "BTC",
       "technicalVerdict": "Bullish/Bearish/Neutral (explain in 1 short sentence)",
-      "fundamentalInsight": "Insight based on social buzz or news (1 sentence)",
-      "strategicAdvice": "Buy/Sell/Hold/Trim/Accumulate - and WHY. Focus on if their buy thesis is still valid or if technicals suggest an exit."
+      "fundamentalInsight": "Insight based on Fundamentals, Events, or Social Buzz (1 sentence)",
+      "strategicAdvice": "Buy/Sell/Hold/Trim/Accumulate - and WHY. Focus on if their buy thesis is still valid, if technicals suggest an exit, or if upcoming events present an opportunity."
     }
   ],
   "actionableChecklist": [
@@ -229,8 +245,8 @@ Generate a JSON report with the following structure:
 
 **Rules:**
 1. **Be Critical:** If a user is holding a coin with bad technicals and no valid thesis, tell them to reconsider.
-2. **Synthesize:** Combine technicals (Trend/Momentum) with Social Signals (Sentiment).
-3. **Focus on Alpha:** Highlight opportunities or risks that are not obvious.
+2. **Synthesize:** Combine Technicals (Trend), Fundamentals (Valuation/TVL), and Events (Catalysts) for a holistic view.
+3. **Focus on Alpha:** Highlight opportunities (e.g., upcoming roadmap events) or risks (e.g., high FDV dilution).
 4. **JSON Only:** Return ONLY the JSON object. No markdown formatting.
 `;
 }
@@ -246,4 +262,30 @@ function parseAIResponse(text) {
         console.error('Failed to parse AI report:', text);
         return null;
     }
+}
+
+/**
+ * Generate mock Portfolio Report for fallback
+ */
+function getMockPortfolioReport(portfolioData) {
+    const healthScore = 78;
+
+    return {
+        executiveSummary: {
+            healthScore: healthScore,
+            overview: "Your portfolio demonstrates strong conviction in major L1s but lacks diversification in DeFi sectors. While BTC holdings provide stability, the heavy concentration exposes you to systemic risks if the macro environment shifts.",
+            topPriorityAction: "Consider trimming your ETH position to reallocate into high-growth L2 protocols or stablecoins to hedge against short-term volatility."
+        },
+        assets: portfolioData.assets.map(asset => ({
+            symbol: asset.symbol,
+            technicalVerdict: Math.random() > 0.5 ? "Bullish - Strong momentum above 50 EMA" : "Neutral - Consolidating in range",
+            fundamentalInsight: "High developer activity and increasing TVL suggest long-term growth potential.",
+            strategicAdvice: Math.random() > 0.5 ? "Hold - Thesis remains valid" : "Accumulate - Good entry zone"
+        })),
+        actionableChecklist: [
+            "Set a stop-loss for your ETH position at $2,850 to protect recent gains.",
+            "Research and identify 2 potential RWA (Real World Asset) projects to diversify your sector exposure.",
+            "Review your stablecoin yield strategy; current Aave rates are attractive."
+        ]
+    };
 }
