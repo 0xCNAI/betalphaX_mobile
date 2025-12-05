@@ -8,9 +8,10 @@ const apiCache = new Map();
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
 // Rate Limiting Queue
+// Rate Limiting Queue
 const requestQueue = [];
 let isProcessingQueue = false;
-const RATE_LIMIT_DELAY = 2000; // 2 seconds between calls to stay safe
+const RATE_LIMIT_DELAY = 5000; // 5 seconds between calls (Conservative for Free Tier)
 
 const processQueue = async () => {
     if (isProcessingQueue || requestQueue.length === 0) return;
@@ -34,7 +35,7 @@ const processQueue = async () => {
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
-const executeGeminiCall = async (prompt) => {
+const executeGeminiCall = async (prompt, retries = 3) => {
     if (!GEMINI_API_KEY) {
         console.error('Missing VITE_GEMINI_API_KEY');
         throw new Error('Missing API Key');
@@ -56,6 +57,12 @@ const executeGeminiCall = async (prompt) => {
         });
 
         if (response.status === 429) {
+            if (retries > 0) {
+                const waitTime = (4 - retries) * 2000; // 2s, 4s, 6s
+                console.warn(`Quota exceeded. Retrying in ${waitTime}ms...`);
+                await new Promise(r => setTimeout(r, waitTime));
+                return executeGeminiCall(prompt, retries - 1);
+            }
             throw new Error('Quota exceeded. Please try again later.');
         }
 
