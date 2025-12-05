@@ -61,21 +61,15 @@ export const AuthProvider = ({ children }) => {
     const signInWithGoogle = async () => {
         const provider = new GoogleAuthProvider();
         try {
-            if (isMobile()) {
-                // Use redirect for mobile to avoid popup blockers and storage issues
-                await signInWithRedirect(auth, provider);
-                // The result will be handled in the useEffect above
-                return;
-            } else {
-                // Use popup for desktop
-                const result = await signInWithPopup(auth, provider);
-                return result;
-            }
+            // Use popup for both mobile and desktop.
+            // Redirect flow (signInWithRedirect) often fails on mobile due to
+            // storage access policies or state loss during full page reload.
+            // Modern mobile browsers handle popups (as new tabs) well.
+            const result = await signInWithPopup(auth, provider);
+            return result;
         } catch (error) {
             console.error('Google sign-in error:', error);
-            if (isMobile()) {
-                alert(`Sign-in Error: ${error.message}`);
-            }
+            alert(`Sign-in Error: ${error.message}`);
             throw error;
         }
     };
