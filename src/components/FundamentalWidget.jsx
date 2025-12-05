@@ -35,7 +35,7 @@ const FundamentalWidget = ({ symbol, name }) => {
                     setData(result);
 
                     // 2. Check Cache for AI Analysis
-                    const cacheKey = `fundamental_analysis_${symbol}`;
+                    const cacheKey = `fundamental_analysis_v2_${symbol}`;
                     const cachedAnalysis = localStorage.getItem(cacheKey);
                     let analysisData = null;
 
