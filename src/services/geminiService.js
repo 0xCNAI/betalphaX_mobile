@@ -477,7 +477,14 @@ Keep it professional, objective, and data-driven.
         if (!generatedText) return null;
 
         const jsonString = generatedText.replace(/```json\n?|\n?```/g, '').trim();
-        return JSON.parse(jsonString);
+        const result = JSON.parse(jsonString);
+
+        // Map keys to match mobile frontend expectations
+        return {
+            ...result,
+            reasoning: result.verdictReasoning || result.reasoning,
+            projectDescription: result.whatItDoes || result.projectDescription
+        };
     } catch (error) {
         console.error('Error generating fundamental analysis:', error);
         return null;
