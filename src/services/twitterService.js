@@ -616,13 +616,16 @@ export async function prefetchTweetsForAssets() {
  * @param {string} symbol - Asset symbol (e.g., "FLUID")
  * @returns {Promise<Object>} - Structured dashboard data
  */
-export async function getNewsDashboard(symbol) {
-    console.log(`[Twitter] Fetching News Dashboard for ${symbol}`);
+export async function getNewsDashboard(symbol, forceRefresh = false) {
+    console.log(`[Twitter] Fetching News Dashboard for ${symbol}, forceRefresh: ${forceRefresh}`);
     try {
         const response = await fetch('/api/news-dashboard', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ symbol })
+            body: JSON.stringify({
+                symbol,
+                timestamp: forceRefresh ? Date.now() : undefined // Cache busting
+            })
         });
 
         if (!response.ok) {
