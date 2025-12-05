@@ -3,7 +3,35 @@
  * @param {string} prompt - The prompt to send to Gemini
  * @returns {Promise<string>} - The generated text response
  */
-export const generateGeminiContent = async (prompt) => {
+// Simple in-memory cache
+const apiCache = new Map();
+const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+// Rate Limiting Queue
+const requestQueue = [];
+let isProcessingQueue = false;
+const RATE_LIMIT_DELAY = 2000; // 2 seconds between calls to stay safe
+
+const processQueue = async () => {
+    if (isProcessingQueue || requestQueue.length === 0) return;
+    isProcessingQueue = true;
+
+    while (requestQueue.length > 0) {
+        const { prompt, resolve, reject } = requestQueue.shift();
+        try {
+            const result = await executeGeminiCall(prompt);
+            resolve(result);
+        } catch (error) {
+            reject(error);
+        }
+        // Wait before next request
+        await new Promise(r => setTimeout(r, RATE_LIMIT_DELAY));
+    }
+
+    isProcessingQueue = false;
+};
+
+const executeGeminiCall = async (prompt) => {
     try {
         const response = await fetch('/api/gemini', {
             method: 'POST',
@@ -15,6 +43,10 @@ export const generateGeminiContent = async (prompt) => {
                 model: "gemini-2.0-flash"
             })
         });
+
+        if (response.status === 429) {
+            throw new Error('Quota exceeded. Please try again later.');
+        }
 
         if (!response.ok) {
             const errorData = await response.json();
@@ -29,6 +61,38 @@ export const generateGeminiContent = async (prompt) => {
         console.error('Error calling Gemini API:', error);
         throw error;
     }
+};
+
+/**
+ * Generic function to call Gemini API via Backend Proxy
+ * Includes Rate Limiting and Caching
+ * @param {string} prompt - The prompt to send to Gemini
+ * @returns {Promise<string>} - The generated text response
+ */
+export const generateGeminiContent = async (prompt) => {
+    // 1. Check Cache
+    const cacheKey = prompt.trim();
+    if (apiCache.has(cacheKey)) {
+        const { timestamp, data } = apiCache.get(cacheKey);
+        if (Date.now() - timestamp < CACHE_TTL) {
+            return data;
+        }
+        apiCache.delete(cacheKey);
+    }
+
+    // 2. Add to Queue
+    return new Promise((resolve, reject) => {
+        requestQueue.push({
+            prompt,
+            resolve: (data) => {
+                // Cache successful results
+                apiCache.set(cacheKey, { timestamp: Date.now(), data });
+                resolve(data);
+            },
+            reject
+        });
+        processQueue();
+    });
 };
 
 /**
