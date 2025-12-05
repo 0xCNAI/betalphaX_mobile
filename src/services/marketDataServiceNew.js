@@ -84,12 +84,12 @@ async function fetchBinanceOHLC(symbol, interval) {
     console.log(`[Binance] Response status for ${pair}:`, response.status);
 
     if (!response.ok) {
-        const errorText = await response.text();
         // 400 usually means symbol not found (invalid symbol for Binance)
         if (response.status === 400) {
-            console.log(`[Binance] ${pair} not found on Binance (400), skipping...`);
-            return []; // Return empty array to allow fallback
+            // Suppress error log for expected 400s (symbol not found)
+            return [];
         }
+        const errorText = await response.text();
         throw new Error(`Binance API error: ${response.status} - ${errorText}`);
     }
 
