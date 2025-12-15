@@ -19,7 +19,8 @@ import {
   Loader2,
   FastForward,
   HelpCircle,
-  FileText
+  FileText,
+  ChevronUp
 } from 'lucide-react';
 import { useBuyThesis } from '../context/BuyThesisContext';
 
@@ -35,7 +36,7 @@ import { captureContextSnapshot, getOutcomeOptions, getExitFactors } from '../se
 import { getCoachAdvice } from '../services/aiCoachService'; // Import AI Coach
 import FundamentalWidget from './FundamentalWidget';
 import SocialNotificationWidget from './SocialNotificationWidget'; // For Events/Insights
-import { ChevronUp, ChevronRight, Activity, Target, Newspaper, ChevronDown, Check, Loader2, Sparkles, AlertTriangle } from 'lucide-react'; // Helper Component/Icon
+
 
 // ...
 
@@ -2305,43 +2306,43 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
         </div>
       )
     }
-        </div >
 
-  <div className="step-actions" style={{
-    marginTop: 'auto',
-    borderTop: '1px solid #1e293b',
-    backgroundColor: '#020617',
-    padding: '16px 24px',
-    position: 'sticky',
-    bottom: 0,
-    zIndex: 10
-  }}>
-    <button type="button" onClick={() => setStep(3)} className="btn-secondary" style={{ backgroundColor: 'transparent', border: '1px solid #334155', color: '#cbd5e1' }}>
-      <ArrowLeft size={18} /> Back
-    </button>
-    <button
-      type="button"
-      onClick={handleSubmit}
-      className="btn-primary"
-      disabled={isOverselling || isSubmitting}
-      style={{
-        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-        border: 'none',
-        opacity: (isOverselling || isSubmitting) ? 0.5 : 1,
-        cursor: (isOverselling || isSubmitting) ? 'not-allowed' : 'pointer'
-      }}
-    >
-      {isSubmitting ? (
-        <>
-          <Loader2 size={18} className="spin" /> Saving...
-        </>
-      ) : (
-        <>
-          <Check size={18} /> Save Transaction
-        </>
-      )}
-    </button>
-  </div>
+
+    <div className="step-actions" style={{
+      marginTop: 'auto',
+      borderTop: '1px solid #1e293b',
+      backgroundColor: '#020617',
+      padding: '16px 24px',
+      position: 'sticky',
+      bottom: 0,
+      zIndex: 10
+    }}>
+      <button type="button" onClick={() => setStep(3)} className="btn-secondary" style={{ backgroundColor: 'transparent', border: '1px solid #334155', color: '#cbd5e1' }}>
+        <ArrowLeft size={18} /> Back
+      </button>
+      <button
+        type="button"
+        onClick={handleSubmit}
+        className="btn-primary"
+        disabled={isOverselling || isSubmitting}
+        style={{
+          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+          border: 'none',
+          opacity: (isOverselling || isSubmitting) ? 0.5 : 1,
+          cursor: (isOverselling || isSubmitting) ? 'not-allowed' : 'pointer'
+        }}
+      >
+        {isSubmitting ? (
+          <>
+            <Loader2 size={18} className="spin" /> Saving...
+          </>
+        ) : (
+          <>
+            <Check size={18} /> Save Transaction
+          </>
+        )}
+      </button>
+    </div>
       </div >
     );
   };
