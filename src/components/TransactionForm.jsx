@@ -2262,115 +2262,114 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             </span>
           </div>
         </div>
-      </div>
 
-          {/* 3. Thesis & Notes Card */ }
-    <div className="thesis-card" style={{ backgroundColor: '#0f172a', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
-      <h5 style={{ margin: '0 0 16px', color: 'white', fontSize: '0.95rem', fontWeight: 'bold' }}>Thesis & Notes</h5>
+        {/* 3. Thesis & Notes Card */}
+        <div className="thesis-card" style={{ backgroundColor: '#0f172a', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
+          <h5 style={{ margin: '0 0 16px', color: 'white', fontSize: '0.95rem', fontWeight: 'bold' }}>Thesis & Notes</h5>
 
-      <div style={{ marginBottom: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: 'bold', color: '#94a3b8', marginBottom: '8px' }}>
-          <Target size={12} /> {formData.type === 'buy' ? 'BUY THESIS' : 'SELL OUTCOME'}
-        </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-          {formData.tags && formData.tags.length > 0 ? (
-            formData.tags.map(tag => (
-              <span key={tag} style={{ color: '#94a3b8', fontSize: '0.85rem', fontStyle: 'italic' }}>#{tag}</span>
-            ))
-          ) : <span style={{ color: '#64748b', fontSize: '0.85rem', fontStyle: 'italic' }}>No thesis tags selected</span>}
-        </div>
-      </div>
-    </div>
-
-
-
-    {/* Sell Amount Validation Error */ }
-    {
-      isOverselling && (
-        <div className="validation-error" style={{
-          padding: 'var(--spacing-md)',
-          backgroundColor: 'rgba(239, 68, 68, 0.1)',
-          border: '1px solid var(--accent-danger)',
-          borderRadius: 'var(--radius-md)',
-          color: 'var(--accent-danger)',
-          marginTop: 'var(--spacing-md)',
-          marginBottom: '20px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--spacing-sm)'
-        }}>
-          <AlertTriangle size={20} />
-          <div>
-            <strong>Insufficient Holdings:</strong> You are trying to sell {sellAmount.toFixed(4)} {formData.asset}, but you only hold {currentHoldings.toFixed(4)} {formData.asset}.
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: 'bold', color: '#94a3b8', marginBottom: '8px' }}>
+              <Target size={12} /> {formData.type === 'buy' ? 'BUY THESIS' : 'SELL OUTCOME'}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {formData.tags && formData.tags.length > 0 ? (
+                formData.tags.map(tag => (
+                  <span key={tag} style={{ color: '#94a3b8', fontSize: '0.85rem', fontStyle: 'italic' }}>#{tag}</span>
+                ))
+              ) : <span style={{ color: '#64748b', fontSize: '0.85rem', fontStyle: 'italic' }}>No thesis tags selected</span>}
+            </div>
           </div>
         </div>
-      )
-    }
 
 
-    <div className="step-actions" style={{
-      marginTop: 'auto',
-      borderTop: '1px solid #1e293b',
-      backgroundColor: '#020617',
-      padding: '16px 24px',
-      position: 'sticky',
-      bottom: 0,
-      zIndex: 10
-    }}>
-      <button type="button" onClick={() => setStep(3)} className="btn-secondary" style={{ backgroundColor: 'transparent', border: '1px solid #334155', color: '#cbd5e1' }}>
-        <ArrowLeft size={18} /> Back
-      </button>
-      <button
-        type="button"
-        onClick={handleSubmit}
-        className="btn-primary"
-        disabled={isOverselling || isSubmitting}
-        style={{
-          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-          border: 'none',
-          opacity: (isOverselling || isSubmitting) ? 0.5 : 1,
-          cursor: (isOverselling || isSubmitting) ? 'not-allowed' : 'pointer'
-        }}
-      >
-        {isSubmitting ? (
-          <>
-            <Loader2 size={18} className="spin" /> Saving...
-          </>
-        ) : (
-          <>
-            <Check size={18} /> Save Transaction
-          </>
-        )}
-      </button>
-    </div>
+
+        {/* Sell Amount Validation Error */}
+        {
+          isOverselling && (
+            <div className="validation-error" style={{
+              padding: 'var(--spacing-md)',
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid var(--accent-danger)',
+              borderRadius: 'var(--radius-md)',
+              color: 'var(--accent-danger)',
+              marginTop: 'var(--spacing-md)',
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--spacing-sm)'
+            }}>
+              <AlertTriangle size={20} />
+              <div>
+                <strong>Insufficient Holdings:</strong> You are trying to sell {sellAmount.toFixed(4)} {formData.asset}, but you only hold {currentHoldings.toFixed(4)} {formData.asset}.
+              </div>
+            </div>
+          )
+        }
+
+
+        <div className="step-actions" style={{
+          marginTop: 'auto',
+          borderTop: '1px solid #1e293b',
+          backgroundColor: '#020617',
+          padding: '16px 24px',
+          position: 'sticky',
+          bottom: 0,
+          zIndex: 10
+        }}>
+          <button type="button" onClick={() => setStep(3)} className="btn-secondary" style={{ backgroundColor: 'transparent', border: '1px solid #334155', color: '#cbd5e1' }}>
+            <ArrowLeft size={18} /> Back
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            className="btn-primary"
+            disabled={isOverselling || isSubmitting}
+            style={{
+              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+              border: 'none',
+              opacity: (isOverselling || isSubmitting) ? 0.5 : 1,
+              cursor: (isOverselling || isSubmitting) ? 'not-allowed' : 'pointer'
+            }}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 size={18} className="spin" /> Saving...
+              </>
+            ) : (
+              <>
+                <Check size={18} /> Save Transaction
+              </>
+            )}
+          </button>
+        </div>
       </div >
     );
   };
 
 
 
-return (
-  <div className="wizard-container">
-    <div className="progress-bar">
-      <div className={`progress-step ${step >= 1 ? 'active' : ''}`}>1</div>
-      <div className="progress-line"></div>
-      {formData.type === 'sell' && (
-        <>
-          <div className={`progress-step ${step >= 2 ? 'active' : ''}`}>2</div>
-          <div className="progress-line"></div>
-        </>
-      )}
-      <div className={`progress-step ${step >= 3 ? 'active' : ''}`}>{formData.type === 'sell' ? 3 : 2}</div>
-      <div className="progress-line"></div>
-      <div className={`progress-step ${step >= 4 ? 'active' : ''}`}>{formData.type === 'sell' ? 4 : 3}</div>
-    </div>
+  return (
+    <div className="wizard-container">
+      <div className="progress-bar">
+        <div className={`progress-step ${step >= 1 ? 'active' : ''}`}>1</div>
+        <div className="progress-line"></div>
+        {formData.type === 'sell' && (
+          <>
+            <div className={`progress-step ${step >= 2 ? 'active' : ''}`}>2</div>
+            <div className="progress-line"></div>
+          </>
+        )}
+        <div className={`progress-step ${step >= 3 ? 'active' : ''}`}>{formData.type === 'sell' ? 3 : 2}</div>
+        <div className="progress-line"></div>
+        <div className={`progress-step ${step >= 4 ? 'active' : ''}`}>{formData.type === 'sell' ? 4 : 3}</div>
+      </div>
 
-    {step === 1 && renderMergedStep1()}
-    {step === 2 && renderAnalysisStep()}
-    {step === 3 && renderStep3()}
-    {step === 4 && renderStep4()}
+      {step === 1 && renderMergedStep1()}
+      {step === 2 && renderAnalysisStep()}
+      {step === 3 && renderStep3()}
+      {step === 4 && renderStep4()}
 
-    <style>{`
+      <style>{`
         .analysis-step {
           max-width: 800px;
           margin: 0 auto;
@@ -3184,8 +3183,8 @@ return (
             }
         }
       `}</style>
-  </div>
-);
+    </div>
+  );
 };
 
 export default TransactionForm;
