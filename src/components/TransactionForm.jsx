@@ -47,6 +47,21 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
   const { addTransaction, updateTransaction, transactions } = useTransactions();
   const { user } = useAuth();
   const { getPrice, getIcon, fetchPriceForTicker } = usePrices();
+  // Helper Constants for Sell Flow
+  const getOutcomeOptions = () => [
+    { id: 'win_big', label: 'Big Win (3R+)' },
+    { id: 'win_small', label: 'Small Win (1-2R)' },
+    { id: 'breakeven', label: 'Breakeven' },
+    { id: 'loss_small', label: 'Small Loss (<1R)' },
+    { id: 'loss_big', label: 'Big Loss (>1R)' }
+  ];
+
+  const getExitFactors = () => ({
+    technical: ['Resistance Hit', 'Trend Reversal', 'Stop Loss Hit', 'Trailing Stop', 'Indicator Divergence'],
+    fundamental: ['Thesis Invalidated', 'News Catalyst', 'Tokenomics Change'],
+    psychology: ['Panic Sell', 'FOMO Exit', 'Profit Taking', 'Boredom', 'Need Liquidity']
+  });
+
   const { theses } = useBuyThesis(); // Get saved theses
   const [step, setStep] = useState(initialStep);
   const [formData, setFormData] = useState({
@@ -113,13 +128,6 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
     "Stop Loss Hit", "Take Profit", "Rebalancing", "Liquidity Mining"
   ];
 
-  // --- Step 3: Exit Tag Selection ---
-  const [exitTagSearch, setExitTagSearch] = useState('');
-  const [aiExitTags, setAiExitTags] = useState([]);
-  const [isLoadingAiExitTags, setIsLoadingAiExitTags] = useState(false);
-  const [showAllExitTags, setShowAllExitTags] = useState(false);
-
-  // Default Exit Tag Library
   const defaultExitTags = [
     "Fixed Take Profit", "Trailing Stop", "Time Based Exit",
     "Resistance Level", "Support Break", "RSI Overbought",
@@ -1217,44 +1225,52 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
       }, []);
 
     return (
-      <div className="step-container">
-        <div className="step-header">
-          <h4>Step 2: Link Narrative</h4>
-          <p>What original thesis are you closing? (Sorted by recent)</p>
+      <div className="step-container" style={{ padding: '24px' }}>
+        <div className="step-header" style={{ marginBottom: '24px' }}>
+          <h4 style={{ color: '#818cf8', margin: 0, fontSize: '1.25rem' }}>Step 2: Link Narrative</h4>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>What original thesis are you closing? (Sorted by recent)</p>
         </div>
 
         {uniqueReasons.length > 0 ? (
-          <div className="reasons-list">
+          <div className="reasons-list" style={{ display: 'grid', gap: '8px', marginBottom: '24px' }}>
             {uniqueReasons.map(({ reason, date }) => {
-              const isSelected = formData.linkedBuyReasons.includes(reason);
+              const isSelected = formData.linkedBuyReasons && formData.linkedBuyReasons.includes(reason);
               return (
                 <div
                   key={reason}
-                  className={`reason-card-link ${isSelected ? 'selected' : ''}`}
+                  className={`buy-tx-card ${isSelected ? 'selected' : ''}`}
                   onClick={() => {
                     setFormData(prev => {
+                      const currentLinks = prev.linkedBuyReasons || [];
                       const newReasons = isSelected
-                        ? prev.linkedBuyReasons.filter(r => r !== reason)
-                        : [...prev.linkedBuyReasons, reason];
+                        ? currentLinks.filter(r => r !== reason)
+                        : [...currentLinks, reason];
                       return { ...prev, linkedBuyReasons: newReasons };
                     });
                   }}
+                  style={{
+                    backgroundColor: isSelected ? 'rgba(99, 102, 241, 0.1)' : 'var(--bg-secondary)',
+                    border: isSelected ? '1px solid var(--accent-primary)' : '1px solid var(--bg-tertiary)',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
                 >
-                  <div className="reason-text">{reason}</div>
-                  <div className="reason-date">First active: {date}</div>
-                  {isSelected && <Check size={16} className="selected-icon" />}
+                  <div className="reason-text" style={{ color: 'white', fontSize: '0.9rem', marginBottom: '4px' }}>{reason}</div>
+                  <div className="reason-date" style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>First active: {date}</div>
                 </div>
               );
             })}
           </div>
         ) : (
-          <div className="no-positions-warning">
-            <AlertTriangle size={24} />
-            <p>No active buy narratives found for {formData.asset}.</p>
+          <div className="no-positions-warning" style={{ padding: '20px', textAlign: 'center', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--accent-danger)', borderRadius: '8px', marginBottom: '24px' }}>
+            <AlertTriangle size={24} style={{ color: 'var(--accent-danger)', marginBottom: '8px' }} />
+            <p style={{ color: 'var(--accent-danger)', fontSize: '0.9rem', margin: 0 }}>No active buy narratives found for {formData.asset}.</p>
           </div>
         )}
 
-        <div className="step-actions">
+        <div className="step-actions" style={{ display: 'flex', justifyContent: 'space-between', marginTop: 'auto' }}>
           <button type="button" onClick={() => setStep(1)} className="btn-secondary">
             <ArrowLeft size={18} /> Back
           </button>
@@ -1262,6 +1278,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             type="button"
             onClick={() => setStep(3)}
             className="btn-primary"
+            disabled={(!formData.linkedBuyReasons || formData.linkedBuyReasons.length === 0) && uniqueReasons.length > 0} // Optional enforcement
           >
             Next: Outcome <ArrowRight size={18} />
           </button>
