@@ -14,6 +14,7 @@ import {
 import { useAuth } from './AuthContext';
 import { clearOverviewCache } from '../services/analysisService';
 import { getTokenFundamentals } from '../services/fundamentalService';
+import { createTransaction } from '../types/transaction';
 
 const TransactionContext = createContext();
 
@@ -160,21 +161,44 @@ export const TransactionProvider = ({ children }) => {
             if (fundResult) {
                 marketSnapshot = {
                     timestamp: Date.now(),
+                    // Price / TA (Placeholder)
+                    price: null,
+                    price_change_24h: null,
+                    rsi_1h: null,
+                    rsi_4h: null,
+                    rsi_1d: null,
+                    macd_1h: null,
+                    macd_4h: null,
+                    structure_4h: null,
+                    structure_1d: null,
+                    near_level: null,
+
+                    // Fundamentals
+                    fdv: fundResult.valuation?.fdv || null,
+                    mcap: fundResult.valuation?.mcap || null,
                     fdv_ratio: fundResult.valuation?.fdv_mcap_ratio || null,
+                    tvl: fundResult.growth?.tvl_current || null,
                     tvl_trend_30d: fundResult.growth?.tvl_30d_change_percent || null,
-                    sector_tags: fundResult.tags || []
+                    sector_tags: fundResult.tags || [],
+
+                    // Narrative
+                    narratives: [],
+                    news_sentiment: null,
+                    social_buzz_level: null
                 };
             }
         } catch (err) {
             console.warn("Failed to fetch market snapshot:", err);
         }
 
-        const newTx = {
+        const newTx = createTransaction({
             ...transaction,
             userId: user.uid,
             createdAt: new Date().toISOString(),
-            market_context_snapshot: marketSnapshot
-        };
+            market_context_snapshot: marketSnapshot,
+            coinId: transaction.coinId || null,
+            coinName: transaction.coinName || null
+        });
 
         try {
             // Try Firestore first with a short timeout
