@@ -39,7 +39,13 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser);
+            // BYPASS AUTH: Always set a mock user
+            // setUser({
+            //    uid: 'mock-user-123',
+            //    email: 'preview@example.com',
+            //    displayName: 'Preview User'
+            // });
+            setUser(currentUser); // Original line
             setLoading(false);
         });
 

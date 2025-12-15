@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, Activity, Settings, LogOut, Trash2 } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Activity, Settings, LogOut, Trash2, StickyNote } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTransactions } from '../context/TransactionContext';
 
@@ -23,7 +23,7 @@ const Layout = ({ children }) => {
     { path: '/', label: 'Portfolio', icon: LayoutDashboard },
     { path: '/feeds', label: 'Feeds', icon: Activity },
     { path: '/journal', label: 'Journal', icon: BookOpen },
-    // { path: '/settings', label: 'Settings', icon: Settings }, // Future
+    { path: '/notebook', label: 'Notebook', icon: StickyNote },
   ];
 
   return (

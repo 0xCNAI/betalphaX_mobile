@@ -24,15 +24,68 @@ export const TransactionProvider = ({ children }) => {
     const { user } = useAuth();
     const [isOffline, setIsOffline] = useState(false);
 
-    // Load from local storage if offline
+    // Mock Data for Dev/Testing if empty
+    const MOCK_DATA = [
+        {
+            id: 'local_mock_1',
+            asset: 'BTC',
+            type: 'buy',
+            amount: 0.15,
+            price: 65000,
+            date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString().split('T')[0], // 10 days ago
+            status: 'open',
+            memo: "Accumulating spot BTC as a long-term hedge. Analyzing the 4-year cycle indicators which suggest we are in the early bull phase. Will look to add more on dips below 62k.",
+            tags: ["Hedge", "Cycle", "Long Term"],
+            userId: user?.uid || 'mock_user'
+        },
+        {
+            id: 'local_mock_2',
+            asset: 'ETH',
+            type: 'buy',
+            amount: 2.5,
+            price: 3200,
+            date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString().split('T')[0], // 5 days ago
+            status: 'open',
+            memo: "Entry for yield farming strategy on Aave. Expecting ETH ETF narrative to pick up steam in Q2. Risk/Reward looks favorable here with invalidation below 2800.",
+            tags: ["DeFi", "Yield", "Narrative"],
+            userId: user?.uid || 'mock_user'
+        },
+        {
+            id: 'local_mock_3',
+            asset: 'SOL',
+            type: 'buy',
+            amount: 150,
+            price: 145,
+            date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString().split('T')[0], // 2 days ago
+            status: 'open',
+            memo: "Momentum trade. Solana showing relative strength against both BTC and ETH. Breakout above 140 was efficient. Targeting 180 short term.",
+            tags: ["Momentum", "Breakout", "L1"],
+            userId: user?.uid || 'mock_user'
+        }
+    ];
+
+    // Load from local storage if offline or init mock data
     useEffect(() => {
-        if (isOffline && user) {
+        if (user) {
             const localData = localStorage.getItem(`transactions_${user.uid}`);
             if (localData) {
-                setTransactions(JSON.parse(localData));
+                const parsed = JSON.parse(localData);
+                if (parsed.length > 0) {
+                    setTransactions(parsed);
+                } else {
+                    // Seed mock data if empty
+                    console.log("Seeding mock data for empty portfolio...");
+                    setTransactions(MOCK_DATA);
+                    localStorage.setItem(`transactions_${user.uid}`, JSON.stringify(MOCK_DATA));
+                }
+            } else {
+                // Seed mock data if no local storage found
+                console.log("Seeding mock data (first init)...");
+                setTransactions(MOCK_DATA);
+                localStorage.setItem(`transactions_${user.uid}`, JSON.stringify(MOCK_DATA));
             }
         }
-    }, [isOffline, user]);
+    }, [user]);
 
     useEffect(() => {
         if (!user) {

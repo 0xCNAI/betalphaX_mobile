@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { BarChart3, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Tag, Activity, Layers, Plus, X, Sparkles, DollarSign } from 'lucide-react';
 import { getTokenFundamentals } from '../services/fundamentalService';
-import { getTrackedFeed } from '../services/socialService';
+import { searchCryptoTweets } from '../services/twitterService';
 import { getCoinMetadata } from '../services/coinGeckoApi';
 import { generateFundamentalAnalysis } from '../services/geminiService';
 
@@ -57,15 +57,12 @@ const FundamentalWidget = ({ symbol, name }) => {
                     if (!analysisData) {
                         setAnalyzing(true);
 
-                        // Fetch Social Context
+                        // Fetch Social Context using real Twitter Service
                         let socialContext = [];
                         try {
-                            const metadata = await getCoinMetadata(symbol);
-                            const projectHandle = metadata?.twitter_screen_name;
-                            if (projectHandle) {
-                                const feed = await getTrackedFeed(symbol, projectHandle, name);
-                                socialContext = feed.slice(0, 10);
-                            }
+                            // Using searchCryptoTweets from twitterService for better data
+                            const tweets = await searchCryptoTweets(symbol, 5, null, forceRefresh);
+                            socialContext = tweets;
                         } catch (e) {
                             console.warn("Failed to fetch social context", e);
                         }

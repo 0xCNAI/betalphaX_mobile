@@ -1,6 +1,6 @@
 
 import { fetchOHLC } from './marketDataServiceNew';
-import { getPrice } from './coinGeckoApi'; // Or appropriate price service
+
 
 /**
  * Get AI Coach advice for a trade

@@ -222,11 +222,11 @@ const Feeds = () => {
     };
 
     return (
-        <div className="feeds-container">
+        <div className="feeds-container centered-layout">
             {/* 1. Header Section */}
-            <div className="feeds-header">
-                <h1>Portfolio Signals</h1>
-                <p className="feeds-subtitle">Daily AI insights generated from your current holdings.</p>
+            <div className="dashboard-header">
+                <h1>Market Intelligence Dashboard</h1>
+                <p className="dashboard-subtitle">Unified AI analysis of Risks and Opportunities across your market.</p>
             </div>
 
             {/* 2. Primary CTA Section */}
@@ -236,14 +236,9 @@ const Feeds = () => {
                     onClick={generateSignals}
                     disabled={loading}
                 >
-                    {loading ? <RefreshCw className="spin-icon" /> : <Zap />}
-                    {loading ? 'Analyzing...' : (signalsReady ? 'Refresh Signals' : 'Generate Signals')}
+                    {loading ? <RefreshCw className="spin-icon" /> : <Zap fill="currentColor" />}
+                    {loading ? 'Analyzing...' : 'Generate Intelligence'}
                 </button>
-                {generationStatus && (
-                    <div className="generation-status-text" style={{ marginTop: '8px', fontSize: '0.8rem', color: '#94a3b8', fontStyle: 'italic' }}>
-                        {generationStatus}
-                    </div>
-                )}
                 {lastGenerated && !loading && (
                     <span className="last-updated-text">
                         Last updated: {formatDistanceToNow(lastGenerated)} ago
@@ -251,27 +246,30 @@ const Feeds = () => {
                 )}
             </div>
 
-            {/* 3. Holdings Selector */}
-            <div className="holdings-selector">
-                <span className="holdings-label">Holdings Analyzed Today ({analyzedAssets.length}):</span>
-                <div className="holdings-list">
-                    {selectedAssets.length > 0 ? (
-                        selectedAssets.map((asset, index) => (
-                            <span key={asset} className="holding-item">
-                                {asset} {index < selectedAssets.length - 1 && '•'}
-                            </span>
-                        ))
-                    ) : (
-                        <span className="holding-item placeholder">Select assets to analyze...</span>
+            {/* 3. Target Assets Selector */}
+            <div className="target-assets-section">
+                <div className="target-label">TARGET ASSETS ({selectedAssets.length}):</div>
+
+                <div className="target-assets-display">
+                    {selectedAssets.slice(0, 3).map(asset => (
+                        <div key={asset} className="target-asset-pill">
+                            <div className="coin-icon-placeholder">
+                                {asset[0]}
+                            </div>
+                            {asset}
+                        </div>
+                    ))}
+                    {selectedAssets.length > 3 && (
+                        <span className="more-assets">+{selectedAssets.length - 3}</span>
                     )}
                 </div>
 
-                <div className="asset-selector-wrapper">
+                <div className="asset-selector-wrapper centered">
                     <button
-                        className="edit-holdings-btn"
+                        className="edit-holdings-btn-simple"
                         onClick={() => setShowAssetSelector(!showAssetSelector)}
                     >
-                        [ Select Asset ] <ChevronDown size={14} />
+                        [ Select Assets ] <ChevronDown size={14} />
                     </button>
 
                     {showAssetSelector && (
@@ -280,6 +278,34 @@ const Feeds = () => {
                                 <span>Select Assets</span>
                                 <X size={16} className="close-icon" onClick={() => setShowAssetSelector(false)} />
                             </div>
+
+                            {/* Add Asset Input */}
+                            <div className="add-asset-input-row" style={{ padding: '8px 12px', borderBottom: '1px solid var(--bg-tertiary)', display: 'flex', gap: '8px' }}>
+                                <input
+                                    type="text"
+                                    placeholder="Add Ticker (e.g. SOL)"
+                                    className="simple-input"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            const val = e.target.value.trim().toUpperCase();
+                                            if (val && !selectedAssets.includes(val)) {
+                                                setSelectedAssets([...selectedAssets, val]);
+                                                e.target.value = '';
+                                            }
+                                        }
+                                    }}
+                                    style={{
+                                        flex: 1,
+                                        background: 'rgba(255,255,255,0.05)',
+                                        border: '1px solid var(--bg-tertiary)',
+                                        color: 'white',
+                                        padding: '6px 10px',
+                                        borderRadius: '6px',
+                                        fontSize: '0.8rem'
+                                    }}
+                                />
+                            </div>
+
                             <div className="selector-list">
                                 {analyzedAssets.map(asset => (
                                     <div
@@ -293,218 +319,86 @@ const Feeds = () => {
                                         <span>{asset}</span>
                                     </div>
                                 ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* 4. Visual Widgets Grid - NEW LAYOUT */}
-            <div className="visual-widget-grid">
-
-                {/* RISK WIDGET */}
-                <div className="visual-widget risk" onClick={() => handleWidgetClick('/risk')}>
-                    <div className="widget-header">
-                        <div className="widget-icon-wrapper risk">
-                            <AlertTriangle size={20} />
-                        </div>
-                        <span className="widget-title">Risk Alerts</span>
-                    </div>
-
-                    {metrics.widgets && metrics.widgets.risk ? (
-                        <div className="widget-content">
-                            <div className="widget-headline">{metrics.widgets.risk.headline}</div>
-                            <div className="widget-subline">{metrics.widgets.risk.subline}</div>
-
-                            <div className="widget-metrics-row">
-                                <div className="metric-item">
-                                    <span className="metric-val">{metrics.widgets.risk.metrics.activeFlags}</span>
-                                    <span className="metric-lbl">Flags</span>
-                                </div>
-                                <div className="metric-item">
-                                    <span className="metric-val">{metrics.widgets.risk.metrics.highestVol}</span>
-                                    <span className="metric-lbl">High Vol</span>
-                                </div>
-                                <div className="metric-item">
-                                    <span className="metric-val">{metrics.widgets.risk.metrics.negativeEvents}</span>
-                                    <span className="metric-lbl">Events</span>
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="widget-loading">Loading...</div>
-                    )}
-                </div>
-
-                {/* OPPORTUNITY WIDGET */}
-                <div className="visual-widget opp" onClick={() => handleWidgetClick('/opportunities')}>
-                    <div className="widget-header">
-                        <div className="widget-icon-wrapper opp">
-                            <TrendingUp size={20} />
-                        </div>
-                        <span className="widget-title">Opportunities</span>
-                    </div>
-
-                    {metrics.widgets && metrics.widgets.opp ? (
-                        <div className="widget-content">
-                            <div className="widget-headline">{metrics.widgets.opp.headline}</div>
-                            <div className="widget-subline">{metrics.widgets.opp.subline}</div>
-
-                            <div className="widget-metrics-row">
-                                <div className="metric-item">
-                                    <span className="metric-val">{metrics.widgets.opp.metrics.momentumCount}</span>
-                                    <span className="metric-lbl">Momentum</span>
-                                </div>
-                                <div className="metric-item">
-                                    <span className="metric-val">{metrics.widgets.opp.metrics.socialBuzzCount}</span>
-                                    <span className="metric-lbl">Buzz</span>
-                                </div>
-                                {metrics.widgets.opp.metrics.newOpp && (
-                                    <div className="metric-item highlight">
-                                        <span className="metric-val"><Zap size={12} fill="currentColor" /></span>
-                                        <span className="metric-lbl">New</span>
+                                {/* Show manually added assets that are NOT in holdings */}
+                                {selectedAssets.filter(a => !analyzedAssets.includes(a)).map(asset => (
+                                    <div
+                                        key={asset}
+                                        className="selector-item selected"
+                                        onClick={() => toggleAsset(asset)}
+                                    >
+                                        <div className="checkbox">
+                                            <Check size={12} />
+                                        </div>
+                                        <span>{asset} (Manual)</span>
                                     </div>
-                                )}
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="widget-loading">Loading...</div>
-                    )}
-                </div>
-
-                {/* SENTIMENT WIDGET */}
-                <div className="visual-widget sentiment" onClick={() => handleWidgetClick('/sentiment')}>
-                    <div className="widget-header">
-                        <div className="widget-icon-wrapper sentiment">
-                            <Activity size={20} />
-                        </div>
-                        <span className="widget-title">Net Sentiment</span>
-                    </div>
-
-                    {metrics.widgets && metrics.widgets.sentiment ? (
-                        <div className="widget-content">
-                            <div className="widget-headline">{metrics.widgets.sentiment.headline}</div>
-                            <div className="widget-subline">{metrics.widgets.sentiment.subline}</div>
-
-                            <div className="widget-metrics-row">
-                                <div className="metric-item bullish">
-                                    <span className="metric-val">{metrics.widgets.sentiment.metrics.bullishCount}</span>
-                                    <span className="metric-lbl">Bullish</span>
-                                </div>
-                                <div className="metric-item bearish">
-                                    <span className="metric-val">{metrics.widgets.sentiment.metrics.bearishCount}</span>
-                                    <span className="metric-lbl">Bearish</span>
-                                </div>
-                                <div className="metric-item">
-                                    <span className="metric-val">{metrics.widgets.sentiment.metrics.highEngagementCount}</span>
-                                    <span className="metric-lbl">Viral</span>
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="widget-loading">Loading...</div>
-                    )}
-                </div>
-
-                {/* TOP ASSET WIDGET */}
-                <div className="visual-widget top-asset" onClick={() => handleWidgetClick('/asset-details')}>
-                    <div className="widget-header">
-                        <div className="widget-icon-wrapper top-asset">
-                            <Award size={20} />
-                        </div>
-                        <span className="widget-title">Top Asset</span>
-                    </div>
-
-                    {metrics.widgets && metrics.widgets.topAsset ? (
-                        <div className="widget-content">
-                            <div className="widget-headline">{metrics.widgets.topAsset.headline}</div>
-                            <ul className="widget-bullet-list">
-                                {metrics.widgets.topAsset.subline.map((line, i) => (
-                                    <li key={i}>{line}</li>
                                 ))}
-                            </ul>
-
-                            <div className="widget-breakdown">
-                                <div className="breakdown-item">
-                                    <span>Perf</span>
-                                    <div className="progress-bar"><div className="fill" style={{ width: `${metrics.widgets.topAsset.metrics.performance}%`, background: '#10b981' }}></div></div>
-                                </div>
-                                <div className="breakdown-item">
-                                    <span>Liq</span>
-                                    <div className="progress-bar"><div className="fill" style={{ width: `${metrics.widgets.topAsset.metrics.liquidity}%`, background: '#3b82f6' }}></div></div>
-                                </div>
-                                <div className="breakdown-item">
-                                    <span>Sent</span>
-                                    <div className="progress-bar"><div className="fill" style={{ width: `${metrics.widgets.topAsset.metrics.sentiment}%`, background: '#8b5cf6' }}></div></div>
-                                </div>
                             </div>
                         </div>
-                    ) : (
-                        <div className="widget-loading">Loading...</div>
                     )}
                 </div>
-
             </div>
 
-            {/* 5. Narrative & Social Intelligence Board */}
-            {metrics.boardEvents && metrics.boardEvents.length > 0 ? (
-                <div className="event-board">
-                    <div className="event-board-header">
-                        <h3>Narrative & Social Intelligence</h3>
-                        <span className="event-count">
-                            {metrics.boardEvents.length} Active Narratives • {metrics.totalTweetsAnalyzed} Tweets Analyzed
-                        </span>
-                    </div>
-                    <div className="event-list">
-                        {metrics.boardEvents.map((event, idx) => (
-                            <div
-                                key={idx}
-                                className={`event-row ${expandedEventId === idx ? 'expanded' : ''}`}
-                                onClick={() => toggleEventExpansion(idx)}
-                            >
-                                <div className="event-row-main">
-                                    <div className="event-asset-col">
-                                        <span className="event-asset-badge">{event.asset}</span>
-                                    </div>
-                                    <div className="event-desc-col">
-                                        <span className="event-desc">{event.headline}</span>
-                                        <div className="event-meta">
-                                            <span className={`stance-tag ${event.stance?.toLowerCase() || 'neutral'}`}>
-                                                {event.stance || 'NEUTRAL'}
-                                            </span>
-                                            <span className="event-source">
-                                                • {event.sources?.tweets || 0} tweets
-                                                {event.sources?.news > 0 && `, ${event.sources.news} news`}
-                                            </span>
-                                        </div>
+            {/* 4. Asset Intelligence List */}
+            <div className="asset-intel-list">
+                {selectedAssets.map(asset => {
+                    // Calculate basic stats for this asset from existing logic
+                    // We need to filter 'allEvents' from metrics if available, or simpler counts
+                    // Since 'metrics' is memoized, we can access it.
+                    // However, metrics is derived from selectedAssets.
+                    // Let's re-derive basic counts here for display.
+
+                    const assetEvents = metrics.boardEvents ? metrics.boardEvents.filter(e => e.asset === asset) : [];
+                    // This is imperfect because boardEvents is filtered top 7.
+                    // Better to look at the raw 'holdingsFeed' or regenerate localized event counts.
+                    // For the UI visuals requested, we'll try to find counts.
+
+                    // Simple heuristic for demo based on feed data
+                    const assetFeed = holdingsFeed.filter(f => f.asset === asset);
+                    // Mocking opps/risks count logic based on sentiment/type for now if specific event data isn't exposed raw
+                    // In real app, 'detectAssetEvents' output for ALL assets should be accessible.
+                    // The 'metrics' object in the original code logic filtered 'allEvents'.
+                    // Let's trust 'metrics.widgets' data if possible, or just mock for visual step if logic is complex.
+                    // Actually, let's use a simpler heuristic available:
+                    const oppCount = assetFeed.filter(i => i.sentiment === 'bullish' || i.type === 'opportunity').length;
+                    const riskCount = assetFeed.filter(i => i.sentiment === 'bearish' || i.type === 'risk').length;
+
+                    return (
+                        <div key={asset} className="asset-intel-card" onClick={() => handleWidgetClick('/asset-details')}>
+                            <div className="asset-col">
+                                <div className="coin-icon-large">
+                                    {/* Placeholder for real icon */}
+                                    <div className="coin-icon-img" style={{ backgroundImage: `url(https://assets.coingecko.com/coins/images/1/small/bitcoin.png)` }}>
+                                        {/* In reality we need to fetch the icon url or use a Component, using initial for now if no generic component */}
+                                        {asset[0]}
                                     </div>
                                 </div>
-
-                                {/* Expanded Tweet Details */}
-                                {expandedEventId === idx && event.tweets && event.tweets.length > 0 && (
-                                    <div className="event-details" onClick={(e) => e.stopPropagation()}>
-                                        <div className="details-header">Top Contributing Tweets</div>
-                                        <div className="tweet-list">
-                                            {event.tweets.map((tweet, tIdx) => (
-                                                <TweetItem key={tIdx} tweet={tweet} />
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
+                                <div className="asset-info">
+                                    <span className="asset-symbol">{asset}</span>
+                                    <span className="asset-subtitle">Market Intel</span>
+                                </div>
                             </div>
-                        ))}
-                    </div>
-                </div>
-            ) : (
-                <div className="event-board empty">
-                    <div className="event-board-header">
-                        <h3>Narrative & Social Intelligence</h3>
-                    </div>
-                    <div className="event-empty-state">
-                        No significant social or news events detected today.
-                    </div>
-                </div>
-            )}
+
+                            <div className="intel-summary-col">
+                                <span className="intel-text">
+                                    <span className="highlight-white">{oppCount} opportunities</span> • <span className="highlight-white">{riskCount} risks</span>
+                                </span>
+                                <span className="intel-subtext">AI market intelligence for {asset}</span>
+                            </div>
+
+                            <div className="intel-badges-col">
+                                <div className="intel-badge opp">
+                                    <TrendingUp size={14} /> {oppCount}
+                                </div>
+                                <div className="intel-badge risk">
+                                    <AlertTriangle size={14} /> {riskCount}
+                                </div>
+                                <ChevronDown size={16} className="card-arrow" />
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
         </div>
     );
 };

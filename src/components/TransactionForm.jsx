@@ -18,7 +18,8 @@ import {
   X,
   Loader2,
   FastForward,
-  HelpCircle
+  HelpCircle,
+  FileText
 } from 'lucide-react';
 import { useBuyThesis } from '../context/BuyThesisContext';
 
@@ -779,28 +780,22 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
     };
 
     return (
-      <div className="step-container" style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        gap: 'var(--spacing-sm)',
-        paddingBottom: 'var(--spacing-sm)'
-      }}>
-        <div className="step-header" style={{ marginBottom: 0 }}>
+      <div className="step-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '16px' }}>
+        <div className="step-header">
           <h4>Transaction Details</h4>
           <p>Enter details and categorize your trade.</p>
         </div>
 
         {/* Row 1: Ticker + Date */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)' }}>
-          <div className="form-group" style={{ position: 'relative', marginBottom: 0 }}>
-            <label className="block text-sm font-medium text-slate-400 mb-1">Token Ticker</label>
-            <div ref={inputRef} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div className="form-group">
+            <label className="form-label">Token Ticker</label>
+            <div ref={inputRef} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               {formData.asset && getIcon && getIcon(formData.asset) && (
                 <img
                   src={getIcon(formData.asset)}
                   alt={formData.asset}
-                  style={{ width: '20px', height: '20px', borderRadius: '50%', position: 'absolute', left: '10px', zIndex: 1 }}
+                  style={{ width: '20px', height: '20px', borderRadius: '50%', position: 'absolute', left: '12px', zIndex: 1 }}
                 />
               )}
               <input
@@ -810,29 +805,29 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                 onChange={handleChange}
                 placeholder="e.g., BTC"
                 required
-                className="form-input large-input"
+                className="form-input"
                 autoFocus
-                style={{ width: '100%', paddingLeft: formData.asset && getIcon && getIcon(formData.asset) ? '40px' : '12px' }}
+                style={{ paddingLeft: formData.asset && getIcon && getIcon(formData.asset) ? '40px' : '16px' }}
               />
+
               {/* Autocomplete Dropdown */}
               {showDropdown && (searchResults.length > 0 || isSearching) && createPortal(
-                <div className="autocomplete-dropdown" style={{
+                <div className="modal-content" style={{
                   position: 'fixed',
                   top: dropdownPos.top,
                   left: dropdownPos.left,
                   width: dropdownPos.width,
-                  backgroundColor: 'var(--bg-secondary)',
-                  border: '1px solid var(--bg-tertiary)',
-                  borderRadius: 'var(--radius-md)',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
                   maxHeight: '300px',
-                  overflowY: 'auto',
-                  zIndex: 99999
+                  zIndex: 99999,
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  padding: '8px 0',
+                  marginTop: '4px'
                 }}>
                   {isSearching ? (
-                    <div style={{ padding: '12px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                      <Loader2 size={16} className="spin" style={{ display: 'inline-block' }} />
-                      <span style={{ marginLeft: '8px' }}>Searching...</span>
+                    <div style={{ padding: '12px', textAlign: 'center', color: '#94a3b8' }}>
+                      <Loader2 size={16} className="animate-spin" style={{ display: 'inline-block', marginRight: '8px' }} />
+                      Searching...
                     </div>
                   ) : (
                     searchResults.map((coin) => (
@@ -840,15 +835,14 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                         key={coin.id}
                         onClick={() => handleTickerSelect(coin)}
                         style={{
-                          padding: '10px 12px',
+                          padding: '10px 16px',
                           display: 'flex',
                           alignItems: 'center',
                           gap: '12px',
                           cursor: 'pointer',
-                          transition: 'background-color 0.2s',
-                          borderBottom: '1px solid var(--bg-tertiary)'
+                          transition: 'background-color 0.2s'
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       >
                         {coin.thumb && (
@@ -859,12 +853,8 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                           />
                         )}
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
-                            {coin.symbol}
-                          </div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                            {coin.name}
-                          </div>
+                          <div style={{ fontWeight: '600', color: '#f8fafc' }}>{coin.symbol}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{coin.name}</div>
                         </div>
                       </div>
                     ))
@@ -872,25 +862,25 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                 </div>,
                 document.body
               )}
+
               {/* Holdings Display */}
               {formData.asset && (
                 <div style={{
                   position: 'absolute',
-                  bottom: '-18px',
+                  bottom: '-20px',
                   right: '0',
                   fontSize: '0.75rem',
-                  color: 'var(--text-secondary)',
-                  textAlign: 'right',
-                  whiteSpace: 'nowrap'
+                  color: '#94a3b8',
+                  textAlign: 'right'
                 }}>
-                  Holdings: <strong>{currentHoldings.toFixed(4)}</strong>
+                  Holdings: <strong style={{ color: '#f8fafc' }}>{currentHoldings.toFixed(4)}</strong>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="block text-sm font-medium text-slate-400 mb-1">Date</label>
+          <div className="form-group">
+            <label className="form-label">Date</label>
             <input
               type="date"
               name="date"
@@ -898,15 +888,14 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
               onChange={handleChange}
               className="form-input"
               required
-              style={{ width: '100%', padding: 'var(--spacing-md)' }}
             />
           </div>
         </div>
 
         {/* Row 2: Amount + Price */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)', marginTop: 'var(--spacing-xs)' }}>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="block text-sm font-medium text-slate-400 mb-1">Amount</label>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '8px' }}>
+          <div className="form-group">
+            <label className="form-label">Amount</label>
             <input
               type="number"
               name="amount"
@@ -916,12 +905,11 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
               step="any"
               className="form-input"
               required
-              style={{ width: '100%' }}
             />
           </div>
 
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="block text-sm font-medium text-slate-400 mb-1">Price per Coin ($)</label>
+          <div className="form-group">
+            <label className="form-label">Price per Coin ($)</label>
             <input
               type="number"
               name="price"
@@ -931,108 +919,97 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
               step="any"
               className="form-input"
               required
-              style={{ width: '100%' }}
             />
           </div>
         </div>
 
         {/* Row 3: Total Cost */}
-        <div className="total-cost-display" style={{
-          padding: '0.75rem',
-          backgroundColor: 'var(--bg-secondary)',
-          borderRadius: 'var(--radius-sm)',
+        <div style={{
+          padding: '12px 16px',
+          backgroundColor: 'rgba(30, 41, 59, 0.5)',
+          borderRadius: '12px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          border: '1px solid var(--bg-tertiary)',
-          margin: 0
+          border: '1px solid rgba(255,255,255,0.05)',
+          marginBottom: '20px'
         }}>
-          <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Total Cost:</span>
-          <span style={{ fontSize: '1.1rem', fontWeight: '600', color: 'var(--text-primary)' }}>
+          <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Total Cost:</span>
+          <span style={{ fontSize: '1.1rem', fontWeight: '600', color: '#f8fafc' }}>
             ${((parseFloat(formData.amount || 0) * parseFloat(formData.price || 0)) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
         </div>
 
         {/* Row 4: Type Toggles & Quick Add */}
-        <div className="flex flex-col gap-3 mt-2">
-          {/* Type Toggles */}
-          <div className="flex gap-3">
-            <button
-              type="button"
-              className={`flex-1 py-4 rounded-xl font-bold transition-all border text-lg ${formData.type === 'buy'
-                ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
-                : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-800'}`}
-              onClick={() => setFormData(prev => ({ ...prev, type: 'buy' }))}
-            >
-              Buy
-            </button>
-            <button
-              type="button"
-              className={`flex-1 py-4 rounded-xl font-bold transition-all border text-lg ${formData.type === 'sell'
-                ? 'bg-rose-500/20 border-rose-500/50 text-rose-400'
-                : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-800'}`}
-              disabled={isOverSelling}
-              onClick={() => !isOverSelling && setFormData(prev => ({ ...prev, type: 'sell' }))}
-            >
-              {isOverSelling ? 'Insufficient Holdings' : 'Sell'}
-            </button>
-          </div>
-
-          {/* Quick Add Button (Large) */}
-          <button
-            type="button"
-            disabled={!assetExists}
-            className={`w-full py-4 rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 transition-all transform text-lg mt-2
-              ${assetExists
-                ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-900/20 hover:scale-[1.02]'
-                : 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-50'}`}
-            onClick={() => {
-              if (!assetExists) return;
-
-              const assetTransactions = transactions
-                .filter(t => t.asset === formData.asset && t.type === formData.type)
-                .sort((a, b) => new Date(b.date) - new Date(a.date));
-
-              if (assetTransactions.length > 0) {
-                const lastTx = assetTransactions[0];
-                setFormData(prev => ({
-                  ...prev,
-                  tags: lastTx.tags || [],
-                  exitTags: lastTx.exitTags || [],
-                  investmentNotes: lastTx.memo ? [lastTx.memo] : [''],
-                  exitNotes: lastTx.exitMemo ? [lastTx.exitMemo] : [''],
-                  selectedReasons: lastTx.selectedReasons || [],
-                  reasonDetails: lastTx.reasonDetails || {},
-                  customReasons: lastTx.customReasons || { fundamental: '', eventDriven: '', technical: '', social: '' },
-                  selectedSellSignals: lastTx.selectedSellSignals || [],
-                }));
-              }
-              setStep(4);
-            }}
+        <div className="type-selector-row">
+          <div
+            className={`type-option buy ${formData.type === 'buy' ? 'selected' : ''}`}
+            onClick={() => setFormData(prev => ({ ...prev, type: 'buy' }))}
           >
-            <FastForward size={20} /> Quick Add (Skip Analysis)
-          </button>
+            Buy
+          </div>
+          <div
+            className={`type-option sell ${formData.type === 'sell' ? 'selected' : ''}`}
+            onClick={() => !isOverSelling && setFormData(prev => ({ ...prev, type: 'sell' }))}
+            style={{ opacity: isOverSelling ? 0.5 : 1, cursor: isOverSelling ? 'not-allowed' : 'pointer' }}
+          >
+            {isOverSelling ? 'Insufficient Holdings' : 'Sell'}
+          </div>
         </div>
 
+        {/* Quick Add Button */}
+        <button
+          type="button"
+          disabled={!assetExists}
+          className="btn-primary"
+          style={{
+            width: '100%',
+            justifyContent: 'center',
+            background: assetExists ? 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' : '#1e293b',
+            boxShadow: assetExists ? '0 4px 12px rgba(79, 70, 229, 0.3)' : 'none',
+            color: assetExists ? 'white' : '#64748b'
+          }}
+          onClick={() => {
+            if (!assetExists) return;
+            const assetTransactions = transactions
+              .filter(t => t.asset === formData.asset && t.type === formData.type)
+              .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (assetTransactions.length > 0) {
+              const lastTx = assetTransactions[0];
+              setFormData(prev => ({
+                ...prev,
+                tags: lastTx.tags || [],
+                exitTags: lastTx.exitTags || [],
+                investmentNotes: lastTx.memo ? [lastTx.memo] : [''],
+                exitNotes: lastTx.exitMemo ? [lastTx.exitMemo] : [''],
+                selectedReasons: lastTx.selectedReasons || [],
+                reasonDetails: lastTx.reasonDetails || {},
+                customReasons: lastTx.customReasons || { fundamental: '', eventDriven: '', technical: '', social: '' },
+                selectedSellSignals: lastTx.selectedSellSignals || [],
+              }));
+            }
+            setStep(4);
+          }}
+        >
+          <FastForward size={18} /> Quick Add (Skip Analysis)
+        </button>
+
         {/* Row 5: Investment Note & Generate Tags */}
-        <div className="form-group" style={{ marginBottom: 0, marginTop: 'var(--spacing-lg)' }}>
-          <div className="flex justify-between items-center mb-1">
-            <div className="flex items-center gap-2">
-              <label className="mb-0 text-lg font-bold text-white">Investment Note</label>
-              <div className="group relative flex items-center">
-                <HelpCircle size={16} className="text-slate-400 cursor-help hover:text-white transition-colors" />
-                <div className="absolute left-full ml-2 w-64 p-3 bg-slate-800 border border-slate-700 rounded-lg shadow-xl text-xs text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                  The Investment Note is your space to capture the rationale behind this trade. Use it for self-reflection or to enable AI to generate personalized trading insights.
-                </div>
-              </div>
+        <div className="form-group" style={{ marginTop: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <label className="form-label" style={{ marginBottom: 0 }}>Investment Note</label>
+              <HelpCircle size={14} color="#64748b" />
             </div>
             <button
               type="button"
               onClick={handleGenerateTags}
               disabled={isLoadingAiTags || !formData.investmentNotes[0]}
-              className="px-3 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-secondary"
+              style={{ padding: '4px 12px', fontSize: '0.75rem', height: 'auto' }}
             >
-              {isLoadingAiTags ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+              {isLoadingAiTags ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
               Generate Tags
             </button>
           </div>
@@ -1040,34 +1017,33 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             name="investmentNotes"
             value={formData.investmentNotes[0] || ''}
             onChange={(e) => handleNoteChange('investment', 0, e.target.value)}
-            placeholder="Why are you taking this trade? (Click 'Generate Tags' to analyze)"
-            className="form-input large-memo"
+            placeholder="Why are you taking this trade?"
+            className="form-input"
             style={{
               height: '80px',
               minHeight: '80px',
-              padding: '0.75rem',
               resize: 'none',
-              width: '100%'
+              lineHeight: '1.5'
             }}
           />
         </div>
 
         {/* Row 6: Tags Section (Merged from Step 2) - Only for BUY */}
         {formData.type === 'buy' && (
-          <div className="tags-section-merged mt-4">
+          <div style={{ marginTop: '24px' }}>
             {/* Search Bar */}
-            <div className="search-wrapper mb-3" style={{ position: 'relative', display: 'flex', gap: '8px' }}>
-              <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
+            <div style={{ position: 'relative', display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
               <input
                 type="text"
                 placeholder="Search or create tag..."
                 value={tagSearch}
                 onChange={(e) => setTagSearch(e.target.value)}
                 className="form-input"
-                style={{ paddingLeft: '34px', flex: 1, fontSize: '0.9rem' }}
+                style={{ paddingLeft: '36px' }}
               />
               {isCustomTag && (
-                <button type="button" className="btn-secondary small" onClick={handleCreateTag}>
+                <button type="button" className="btn-secondary" onClick={handleCreateTag}>
                   <Plus size={14} /> Add
                 </button>
               )}
@@ -1075,23 +1051,12 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
 
             {/* Selected Tags */}
             {formData.tags && formData.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-4">
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
                 {formData.tags.map(tag => (
                   <span
                     key={tag}
-                    className="tag-pill selected"
+                    className="tag-pill selected active"
                     onClick={() => toggleTag(tag)}
-                    style={{
-                      backgroundColor: 'var(--accent-primary)',
-                      color: 'white',
-                      padding: '6px 12px',
-                      borderRadius: '16px',
-                      fontSize: '0.8rem',
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}
                   >
                     {tag} <X size={12} />
                   </span>
@@ -1101,23 +1066,17 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
 
             {/* AI Tags */}
             {aiTags.length > 0 && (
-              <div className="mb-3">
-                <h5 className="text-xs text-indigo-400 mb-2 flex items-center gap-1"><Sparkles size={12} /> AI Suggested</h5>
-                <div className="flex flex-wrap gap-2">
+              <div style={{ marginBottom: '16px' }}>
+                <h5 style={{ fontSize: '0.75rem', color: '#6366f1', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Sparkles size={12} /> AI Suggested
+                </h5>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   {aiTags.map(tag => (
                     <button
                       key={`ai-${tag}`}
                       type="button"
                       className={`tag-pill ${formData.tags?.includes(tag) ? 'active' : ''}`}
                       onClick={() => toggleTag(tag)}
-                      style={{
-                        padding: '5px 10px',
-                        borderRadius: '14px',
-                        border: formData.tags?.includes(tag) ? '1px solid var(--accent-primary)' : '1px solid var(--bg-tertiary)',
-                        backgroundColor: formData.tags?.includes(tag) ? 'rgba(99, 102, 241, 0.1)' : 'rgba(30, 41, 59, 0.5)',
-                        color: formData.tags?.includes(tag) ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                        fontSize: '0.8rem'
-                      }}
                     >
                       {tag}
                     </button>
@@ -1127,25 +1086,15 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             )}
 
             {/* Recommended Tags */}
-            <div className="mt-10 mb-6">
-              <div className="mb-2">
-                <h5 className="text-lg font-bold text-white mb-0">Recommended Tags</h5>
-              </div>
-              <div className="flex flex-wrap gap-2">
+            <div>
+              <h5 style={{ fontSize: '0.85rem', color: '#f8fafc', marginBottom: '8px', fontWeight: '600' }}>Recommended Tags</h5>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {displayedDefaultTags.map(tag => (
                   <button
                     key={`def-${tag}`}
                     type="button"
                     className={`tag-pill ${formData.tags?.includes(tag) ? 'active' : ''}`}
                     onClick={() => toggleTag(tag)}
-                    style={{
-                      padding: '5px 10px',
-                      borderRadius: '14px',
-                      border: formData.tags?.includes(tag) ? '1px solid var(--accent-primary)' : '1px solid var(--bg-tertiary)',
-                      backgroundColor: formData.tags?.includes(tag) ? 'rgba(99, 102, 241, 0.1)' : 'rgba(30, 41, 59, 0.5)',
-                      color: formData.tags?.includes(tag) ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                      fontSize: '0.8rem'
-                    }}
                   >
                     {tag}
                   </button>
@@ -1155,182 +1104,79 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
           </div>
         )}
 
-        {/* Advanced Settings */}
-        <div className="advanced-settings-section mt-4">
+        {/* Group & Chain Settings */}
+        <div style={{ marginTop: '24px' }}>
           <button
             type="button"
-            className="btn-text"
+            className="btn-secondary"
             onClick={() => setShowAdvanced(!showAdvanced)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              color: 'var(--text-secondary)',
-              fontSize: '0.85rem',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '0'
-            }}
+            style={{ width: '100%', justifyContent: 'space-between', border: 'none', background: 'rgba(255,255,255,0.03)' }}
           >
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>Advanced Settings (Group & Chain)</span>
             {showAdvanced ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-            Advanced Settings (Group & Chain)
           </button>
 
           {showAdvanced && (
-            <div className="advanced-options" style={{
-              marginTop: 'var(--spacing-sm)',
-              padding: 'var(--spacing-md)',
-              backgroundColor: 'var(--bg-tertiary)',
-              borderRadius: 'var(--radius-md)',
+            <div style={{
+              marginTop: '12px',
+              padding: '16px',
+              backgroundColor: 'rgba(30, 41, 59, 0.3)',
+              borderRadius: '12px',
               display: 'flex',
               flexDirection: 'column',
-              gap: 'var(--spacing-md)'
+              gap: '16px'
             }}>
-              {/* Group Selection */}
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label style={{ fontSize: '0.85rem' }}>Asset Group</label>
-                {!isAddingGroup ? (
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <select
-                      value={formData.selectedGroup}
-                      onChange={(e) => {
-                        if (e.target.value === 'new') {
-                          setIsAddingGroup(true);
-                        } else {
-                          setFormData(prev => ({ ...prev, selectedGroup: e.target.value }));
-                        }
-                      }}
-                      className="form-select"
-                      style={{ flex: 1 }}
-                    >
-                      <option value="">Default (Manual Entry)</option>
-                      {[...new Set(transactions
-                        .map(tx => tx.group || tx.asset)
-                        .filter(name => name && name !== 'Manual Entry')
-                      )].sort().map(group => (
-                        <option key={group} value={group}>{group}</option>
-                      ))}
-                      <option value="new">+ Add New Group...</option>
-                    </select>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <input
-                      type="text"
-                      value={newGroupName}
-                      onChange={(e) => setNewGroupName(e.target.value)}
-                      placeholder="Enter group name..."
-                      className="form-input"
-                      style={{ flex: 1 }}
-                      autoFocus
-                    />
-                    <button
-                      type="button"
-                      className="btn-primary small"
-                      onClick={() => {
-                        if (newGroupName.trim()) {
-                          setFormData(prev => ({ ...prev, selectedGroup: newGroupName.trim() }));
-                          setIsAddingGroup(false);
-                          setNewGroupName('');
-                        }
-                      }}
-                    >
-                      Add
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-secondary small"
-                      onClick={() => {
-                        setIsAddingGroup(false);
-                        setNewGroupName('');
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                )}
+              <div className="form-group">
+                <label className="form-label">Asset Group</label>
+                <select
+                  value={formData.selectedGroup}
+                  onChange={(e) => setFormData(prev => ({ ...prev, selectedGroup: e.target.value }))}
+                  className="form-input"
+                >
+                  <option value="">Default (Manual Entry)</option>
+                  {[...new Set(transactions.map(tx => tx.group || tx.asset).filter(n => n))].sort().map(g => (
+                    <option key={g} value={g}>{g}</option>
+                  ))}
+                  <option value="new">+ Add New Group...</option>
+                </select>
               </div>
 
-              {/* Chain Selection */}
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label style={{ fontSize: '0.85rem' }}>Chain</label>
-                {!isAddingChain ? (
-                  <select
-                    value={formData.selectedChain}
-                    onChange={(e) => {
-                      if (e.target.value === 'new') {
-                        setIsAddingChain(true);
-                      } else {
-                        setFormData(prev => ({ ...prev, selectedChain: e.target.value }));
-                      }
-                    }}
-                    className="form-select"
-                  >
-                    <option value="">N/A</option>
-                    <option value="Ethereum">Ethereum</option>
-                    <option value="Solana">Solana</option>
-                    <option value="Bitcoin">Bitcoin</option>
-                    <option value="Arbitrum">Arbitrum</option>
-                    <option value="Optimism">Optimism</option>
-                    <option value="Polygon">Polygon</option>
-                    <option value="Base">Base</option>
-                    <option value="Avalanche">Avalanche</option>
-                    <option value="BSC">BSC</option>
-                    <option value="new">+ Add Custom Chain...</option>
-                  </select>
-                ) : (
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <input
-                      type="text"
-                      value={newChainName}
-                      onChange={(e) => setNewChainName(e.target.value)}
-                      placeholder="Enter chain name..."
-                      className="form-input"
-                      style={{ flex: 1 }}
-                      autoFocus
-                    />
-                    <button
-                      type="button"
-                      className="btn-primary small"
-                      onClick={() => {
-                        if (newChainName.trim()) {
-                          setFormData(prev => ({ ...prev, selectedChain: newChainName.trim() }));
-                          setIsAddingChain(false);
-                          setNewChainName('');
-                        }
-                      }}
-                    >
-                      Add
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-secondary small"
-                      onClick={() => {
-                        setIsAddingChain(false);
-                        setNewChainName('');
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                )}
+              <div className="form-group">
+                <label className="form-label">Chain</label>
+                <select
+                  value={formData.selectedChain}
+                  onChange={(e) => setFormData(prev => ({ ...prev, selectedChain: e.target.value }))}
+                  className="form-input"
+                >
+                  <option value="">N/A</option>
+                  <option value="Ethereum">Ethereum</option>
+                  <option value="Solana">Solana</option>
+                  <option value="Bitcoin">Bitcoin</option>
+                  <option value="Arbitrum">Arbitrum</option>
+                  <option value="Optimism">Optimism</option>
+                  <option value="Polygon">Polygon</option>
+                  <option value="Base">Base</option>
+                  <option value="Avalanche">Avalanche</option>
+                  <option value="BSC">BSC</option>
+                  <option value="new">+ Add Custom Chain...</option>
+                </select>
               </div>
             </div>
           )}
         </div>
 
         {/* Next Button */}
-        <div className="step-actions-bottom mt-4">
+        <div className="step-actions">
           <button
             type="button"
-            className="btn-primary full-width"
+            className="btn-primary"
+            style={{ width: '100%', justifyContent: 'center' }}
             onClick={() => setStep(formData.type === 'buy' ? 3 : 2)}
           >
             Next: {formData.type === 'buy' ? 'Sell Signals' : 'Link Narrative'} <ArrowRight size={18} />
           </button>
         </div>
-      </div >
+      </div>
     );
   };
 
@@ -1543,53 +1389,61 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
   };
 
   const renderStep3 = () => {
-    if (formData.type === 'sell') {
-      return renderSellStep3();
-    }
+    // If specific sell type step logic is needed (e.g. for linking reasons), handle here.
+    // For now, mirroring desktop "Exit Strategy" design which seems universal or buy-centric.
 
-    // Exit Tag UI Setup
+    // Filter tags
     const filteredDefaultExitTags = defaultExitTags.filter(t => t.toLowerCase().includes(exitTagSearch.toLowerCase()));
     const displayedDefaultExitTags = showAllExitTags ? filteredDefaultExitTags : filteredDefaultExitTags.slice(0, 10);
     const isCustomExitTag = exitTagSearch.trim() && !defaultExitTags.some(t => t.toLowerCase() === exitTagSearch.trim().toLowerCase()) && !aiExitTags.some(t => t.toLowerCase() === exitTagSearch.trim().toLowerCase());
 
-    // Existing Buy Step 3 (Exit Strategy)
     return (
       <div className="step-container">
         <div className="step-header">
-          <h4>Step 3: Exit Strategy</h4>
-          <p>Plan your exit. When will you take profit or cut losses?</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <h4 style={{ color: '#818cf8', marginBottom: '8px' }}>Exit Strategy</h4>
+              <p style={{ color: 'var(--text-secondary)' }}>Plan your exit. When will you take profit or cut losses?</p>
+            </div>
+            <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)' }}>
+              <X size={24} />
+            </button>
+          </div>
         </div>
 
         <div className="reasons-grid">
-
-          {/* Custom Indicator Builder - PRESERVED */}
+          {/* Custom Indicator Builder */}
           <div className="custom-indicator-builder" style={{
             display: 'flex',
-            gap: '8px',
-            marginBottom: '1.5rem',
-            padding: '1rem',
-            backgroundColor: 'var(--bg-secondary)',
+            gap: '12px',
+            marginBottom: '24px',
+            padding: '16px',
+            backgroundColor: 'var(--bg-secondary)', // #0f172a
             borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--bg-tertiary)'
+            border: '1px solid var(--bg-tertiary)',
+            flexWrap: 'wrap' // Allow wrapping on small mobile screens if needed
           }}>
-            <div style={{ flex: 2 }}>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Indicator</label>
-              <select
-                value={formData.customIndicatorType}
-                onChange={(e) => setFormData(prev => ({ ...prev, customIndicatorType: e.target.value }))}
-                className="form-select"
-                style={{ width: '100%' }}
-              >
-                <option value="Price Target">Price Target ($)</option>
-                <option value="Stop Loss">Stop Loss ($)</option>
-                <option value="RSI">RSI (Level)</option>
-                <option value="Trailing Stop">Trailing Stop (%)</option>
-                <option value="MA Cross">MA Cross (Days)</option>
-                <option value="Volume Spike">Volume Spike (x)</option>
-              </select>
+            <div style={{ flex: '1 1 140px' }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>Indicator</label>
+              <div style={{ position: 'relative' }}>
+                <select
+                  value={formData.customIndicatorType}
+                  onChange={(e) => setFormData(prev => ({ ...prev, customIndicatorType: e.target.value }))}
+                  className="form-select"
+                  style={{ width: '100%', appearance: 'none', paddingRight: '30px' }}
+                >
+                  <option value="Price Target ($)">Price Target ($)</option>
+                  <option value="Stop Loss ($)">Stop Loss ($)</option>
+                  <option value="RSI (Level)">RSI (Level)</option>
+                  <option value="Trailing Stop (%)">Trailing Stop (%)</option>
+                  <option value="MA Cross (Days)">MA Cross (Days)</option>
+                  <option value="Volume Spike (x)">Volume Spike (x)</option>
+                </select>
+                <ChevronDown size={14} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', pointerEvents: 'none' }} />
+              </div>
             </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Value</label>
+            <div style={{ flex: '1 1 100px' }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>Value</label>
               <input
                 type="number"
                 value={formData.customIndicatorValue}
@@ -1601,58 +1455,60 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                     const signal = `${formData.customIndicatorType}: ${formData.customIndicatorValue}`;
                     setFormData(prev => ({
                       ...prev,
-                      selectedSellSignals: [...prev.selectedSellSignals, signal],
-                      exitTags: [...(prev.exitTags || []), signal], // Add to exitTags for display
+                      exitTags: [...(prev.exitTags || []), signal],
                       customIndicatorValue: ''
                     }));
                   }
                 }}
               />
             </div>
-            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '2px' }}>
               <button
                 type="button"
-                className="btn-primary small-btn"
+                className="btn-primary"
+                style={{ height: '42px', width: '42px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', border: 'none' }}
                 onClick={() => {
                   if (formData.customIndicatorValue) {
                     const signal = `${formData.customIndicatorType}: ${formData.customIndicatorValue}`;
                     setFormData(prev => ({
                       ...prev,
-                      selectedSellSignals: [...prev.selectedSellSignals, signal],
-                      exitTags: [...(prev.exitTags || []), signal], // Add to exitTags for display
+                      exitTags: [...(prev.exitTags || []), signal],
                       customIndicatorValue: ''
                     }));
                   }
                 }}
               >
-                <Plus size={18} />
+                <Plus size={20} />
               </button>
             </div>
           </div>
 
-          {/* NEW: Exit Tag Selection System */}
-          <div className="exit-tag-section" style={{ marginBottom: '1.5rem' }}>
-            <h5 style={{ fontSize: '0.95rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>Exit Strategy Tags</h5>
+          {/* Exit Tag Selection System */}
+          <div className="exit-tag-section" style={{ marginBottom: '24px' }}>
+            <h5 style={{ fontSize: '0.95rem', marginBottom: '12px', color: 'white', fontWeight: '600' }}>Exit Strategy Tags</h5>
 
             {/* Search Bar */}
-            <div className="form-group">
+            <div className="form-group" style={{ marginBottom: '20px' }}>
               <div className="search-wrapper" style={{ position: 'relative', display: 'flex', gap: '8px' }}>
-                <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
                 <input
                   type="text"
                   placeholder="Search or create new exit tag..."
                   value={exitTagSearch}
                   onChange={(e) => setExitTagSearch(e.target.value)}
                   className="form-input"
-                  style={{ paddingLeft: '36px', flex: 1 }}
+                  style={{ paddingLeft: '40px', flex: 1, backgroundColor: 'rgba(30, 41, 59, 0.5)', borderColor: 'var(--bg-tertiary)' }}
                 />
+                <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', background: 'var(--bg-tertiary)', borderRadius: '50%' }}>
+                  <Search size={12} style={{ color: 'var(--text-secondary)' }} />
+                </div>
+
                 {isCustomExitTag && (
                   <button
                     type="button"
                     className="btn-secondary"
                     onClick={handleCreateExitTag}
                   >
-                    <Plus size={16} /> Add "{exitTagSearch}"
+                    <Plus size={16} /> Add
                   </button>
                 )}
               </div>
@@ -1660,8 +1516,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
 
             {/* Selected Exit Tags Display */}
             {formData.exitTags && formData.exitTags.length > 0 && (
-              <div className="selected-tags-area" style={{ marginBottom: '1.5rem' }}>
-                <h5 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>Selected Exit Tags</h5>
+              <div className="selected-tags-area" style={{ marginBottom: '24px' }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   {formData.exitTags.map(tag => (
                     <span
@@ -1669,57 +1524,22 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                       className="tag-pill selected"
                       onClick={() => toggleExitTag(tag)}
                       style={{
-                        backgroundColor: 'var(--accent-primary)',
-                        color: 'white',
-                        padding: '8px 14px',
+                        backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                        color: '#a5b4fc',
+                        padding: '6px 12px',
                         borderRadius: '20px',
-                        fontSize: '0.875rem',
+                        fontSize: '0.85rem',
                         fontWeight: '500',
                         cursor: 'pointer',
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '6px',
-                        border: '2px solid var(--accent-primary)',
-                        boxShadow: '0 2px 4px rgba(99, 102, 241, 0.2)',
-                        transition: 'all 0.2s ease'
+                        border: '1px solid rgba(99, 102, 241, 0.3)',
                       }}
                     >
                       {tag}
-                      <X size={14} style={{ strokeWidth: 2.5 }} />
+                      <X size={14} />
                     </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* AI Suggested Exit Tags */}
-            {aiExitTags.length > 0 && (
-              <div className="tags-section" style={{ marginBottom: '1.5rem' }}>
-                <h5 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Sparkles size={14} color="var(--accent)" /> AI Suggested Exit Tags
-                </h5>
-                <div className="tags-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {aiExitTags.map(tag => (
-                    <button
-                      key={`ai-exit-${tag}`}
-                      type="button"
-                      className={`tag-pill ${formData.exitTags?.includes(tag) ? 'active' : ''}`}
-                      onClick={() => toggleExitTag(tag)}
-                      style={{
-                        padding: '7px 14px',
-                        borderRadius: '18px',
-                        border: formData.exitTags?.includes(tag) ? '2px solid rgba(99, 102, 241, 0.3)' : '1px solid rgba(148, 163, 184, 0.2)',
-                        backgroundColor: formData.exitTags?.includes(tag) ? 'rgba(99, 102, 241, 0.1)' : 'rgba(30, 41, 59, 0.5)',
-                        color: formData.exitTags?.includes(tag) ? 'var(--accent-primary)' : 'var(--text-primary)',
-                        cursor: 'pointer',
-                        fontSize: '0.875rem',
-                        fontWeight: formData.exitTags?.includes(tag) ? '500' : '400',
-                        transition: 'all 0.2s ease',
-                        boxShadow: formData.exitTags?.includes(tag) ? '0 2px 4px rgba(99, 102, 241, 0.15)' : 'none'
-                      }}
-                    >
-                      {tag}
-                    </button>
                   ))}
                 </div>
               </div>
@@ -1727,7 +1547,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
 
             {/* Recommended Exit Tags */}
             <div className="tags-section">
-              <h5 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+              <h5 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>
                 Recommended Exit Tags
               </h5>
               <div className="tags-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -1738,16 +1558,14 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                     className={`tag-pill ${formData.exitTags?.includes(tag) ? 'active' : ''}`}
                     onClick={() => toggleExitTag(tag)}
                     style={{
-                      padding: '7px 14px',
-                      borderRadius: '18px',
-                      border: formData.exitTags?.includes(tag) ? '2px solid rgba(99, 102, 241, 0.3)' : '1px solid rgba(148, 163, 184, 0.2)',
-                      backgroundColor: formData.exitTags?.includes(tag) ? 'rgba(99, 102, 241, 0.1)' : 'rgba(30, 41, 59, 0.5)',
-                      color: formData.exitTags?.includes(tag) ? 'var(--accent-primary)' : 'var(--text-primary)',
+                      padding: '8px 16px',
+                      borderRadius: '20px',
+                      border: '1px solid var(--bg-tertiary)',
+                      backgroundColor: 'rgba(15, 23, 42, 0.6)',
+                      color: 'var(--text-secondary)',
                       cursor: 'pointer',
-                      fontSize: '0.875rem',
-                      fontWeight: formData.exitTags?.includes(tag) ? '500' : '400',
+                      fontSize: '0.85rem',
                       transition: 'all 0.2s ease',
-                      boxShadow: formData.exitTags?.includes(tag) ? '0 2px 4px rgba(99, 102, 241, 0.15)' : 'none'
                     }}
                   >
                     {tag}
@@ -1758,57 +1576,33 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                 <button
                   type="button"
                   onClick={() => setShowAllExitTags(!showAllExitTags)}
-                  className="btn-secondary"
-                  style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}
+                  className="btn-ghost"
+                  style={{ marginTop: '12px', fontSize: '0.85rem', color: 'var(--text-secondary)', padding: '4px 8px' }}
                 >
                   {showAllExitTags ? 'Show Less' : `Show More (${filteredDefaultExitTags.length - 10} more)`}
                 </button>
               )}
             </div>
           </div>
-
-          {/* Price Target Signals Display */}
-
-
-          {generatedSellSignals && generatedSellSignals.length > 0 && (
-            <div className="reason-category">
-              <h5>AI Suggested Exit Signals</h5>
-              {generatedSellSignals.map((signal, idx) => (
-                <div
-                  key={`sig-${idx}`}
-                  className={`reason-chip ${formData.selectedSellSignals.includes(signal) ? 'selected' : ''}`}
-                  onClick={() => handleSellSignalToggle(signal)}
-                >
-                  {signal}
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
-        <div className="step-actions">
-          <button type="button" onClick={() => setStep(formData.type === 'buy' ? 1 : 2)} className="btn-secondary">
+        <div className="step-actions" style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid var(--bg-tertiary)' }}>
+          <button type="button" onClick={() => setStep(2)} className="btn-secondary" style={{ minWidth: '100px' }}>
             <ArrowLeft size={18} /> Back
           </button>
           <button
             type="button"
-            onClick={() => {
-              try {
-                // generateAIInsights(); // This function is not defined in the provided code
-                setStep(4);
-              } catch (err) {
-                console.error("Error proceeding to step 4:", err);
-                setStep(4); // Force proceed
-              }
-            }}
+            onClick={() => setStep(4)}
             className="btn-primary"
+            style={{ flex: 1, background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', border: 'none' }}
           >
-            Next: Transaction Details <ArrowRight size={18} />
+            Next: Review <ArrowRight size={18} />
           </button>
         </div>
       </div>
     );
   };
+
 
 
   const [activeTab, setActiveTab] = useState('fundamental'); // 'fundamental', 'feeds', 'technical'
@@ -2268,270 +2062,191 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
     const sellAmount = parseFloat(formData.amount || 0);
     const isOverselling = formData.type === 'sell' && sellAmount > effectiveHoldings;
 
+    // Helper to toggle collapsible sections
+    const toggleSection = (section) => {
+      // Implementation for collapsible interaction would logically require state, 
+      // using a simple local set for expanded items if not already present.
+      // For UI purpose, we just render them collapsed as per screenshot.
+    };
+
     return (
-      <div className="step-container">
-        <div className="step-header">
-          <h4>Step 4: Review & Save</h4>
-          <p>Review details and save your transaction.</p>
+      <div className="step-container" style={{ padding: '0' }}> {/* No padding on container to stretch header */}
+        <div className="step-header" style={{ padding: '20px 24px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h4 style={{ color: '#818cf8', margin: 0, fontSize: '1.25rem' }}>Review & Save</h4>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>Review transaction details and AI insights before saving.</p>
+          </div>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)' }}>
+            <X size={24} />
+          </button>
         </div>
 
-        {/* AI Coach Diagnosis */}
-        <div className="diagnosis-card" style={{
-          marginBottom: '1.5rem',
-          padding: '1rem',
-          backgroundColor: 'rgba(30, 41, 59, 0.5)',
-          borderRadius: '12px',
-          border: '1px solid rgba(148, 163, 184, 0.2)'
-        }}>
-          <h5 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem', color: 'var(--accent-primary)' }}>
-            <Sparkles size={18} /> AI Trade Coach
-          </h5>
+        <div className="review-content" style={{ padding: '0 24px 24px' }}>
 
-          {isAnalyzing ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-              <Loader2 className="animate-spin" size={16} /> Analyzing historical patterns...
+          {/* 1. AI Coach Review Card */}
+          <div className="ai-coach-card" style={{
+            background: 'linear-gradient(to right, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.8))',
+            border: '1px solid rgba(99, 102, 241, 0.2)',
+            borderRadius: '8px',
+            padding: '16px',
+            marginBottom: '20px',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Sparkles size={18} style={{ color: 'white' }} />
+                <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 'bold', color: 'white', letterSpacing: '0.5px' }}>AI COACH REVIEW</h4>
+              </div>
+              <Sparkles size={40} style={{ color: 'rgba(99, 102, 241, 0.3)', position: 'absolute', top: '5px', right: '5px' }} />
             </div>
-          ) : aiCoachDiagnosis ? (
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <div style={{
-                  padding: '4px 12px',
-                  borderRadius: '8px',
-                  fontWeight: 'bold',
-                  backgroundColor: aiCoachDiagnosis.final_verdict === 'BUY' ? 'rgba(34, 197, 94, 0.2)' : aiCoachDiagnosis.final_verdict === 'SELL' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(234, 179, 8, 0.2)',
-                  color: aiCoachDiagnosis.final_verdict === 'BUY' ? '#4ade80' : aiCoachDiagnosis.final_verdict === 'SELL' ? '#f87171' : '#facc15',
-                  border: `1px solid ${aiCoachDiagnosis.final_verdict === 'BUY' ? '#4ade80' : aiCoachDiagnosis.final_verdict === 'SELL' ? '#f87171' : '#facc15'}`
-                }}>
-                  VERDICT: {aiCoachDiagnosis.final_verdict}
-                </div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                  Confidence: {(aiCoachDiagnosis.confidence_score * 100).toFixed(0)}%
-                </div>
+
+            <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '16px', maxWidth: '85%' }}>
+              Check how this trade fits your system rules before saving.
+            </p>
+
+            <button style={{
+              background: 'linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%)',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '6px 16px',
+              color: 'white',
+              fontSize: '0.8rem',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer'
+            }}>
+              <Sparkles size={14} /> Review This Trade Setup
+            </button>
+          </div>
+
+          {/* 2. Transaction Details Card */}
+          <div className="details-card" style={{ marginBottom: '20px', borderRadius: '8px', overflow: 'hidden' }}>
+            <div style={{ backgroundColor: '#020617', padding: '12px 16px', borderTopLeftRadius: '8px', borderTopRightRadius: '8px', borderBottom: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h5 style={{ margin: 0, color: 'white', fontWeight: 'bold', fontSize: '0.95rem' }}>Transaction Details</h5>
+              <span style={{
+                color: formData.type === 'buy' ? '#22c55e' : '#ef4444',
+                fontWeight: 'bold',
+                fontSize: '0.8rem',
+                textTransform: 'uppercase',
+                backgroundColor: formData.type === 'buy' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                padding: '2px 8px',
+                borderRadius: '4px'
+              }}>
+                {formData.type}
+              </span>
+            </div>
+            <div style={{ backgroundColor: '#020617', padding: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem' }}>
+                <span style={{ color: '#94a3b8' }}>Asset</span>
+                <span style={{ color: 'white', fontWeight: '500' }}>{formData.asset}</span>
               </div>
-
-              <div style={{ marginBottom: '1rem' }}>
-                {/* Conditional Win Rate Display */}
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                      {formData.type === 'buy' ? 'Buy Win Rate' : 'Sell Win Rate'}
-                    </div>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: formData.type === 'buy' ? '#4ade80' : '#f87171' }}>
-                      {formData.type === 'buy'
-                        ? (aiCoachDiagnosis.buy_success_rate * 100).toFixed(0)
-                        : (aiCoachDiagnosis.sell_success_rate * 100).toFixed(0)}%
-                    </div>
-                  </div>
-                  <div style={{ height: '8px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
-                    <div style={{
-                      width: `${formData.type === 'buy' ? aiCoachDiagnosis.buy_success_rate * 100 : aiCoachDiagnosis.sell_success_rate * 100}%`,
-                      height: '100%',
-                      backgroundColor: formData.type === 'buy' ? '#4ade80' : '#f87171',
-                      transition: 'width 0.5s ease-out'
-                    }}></div>
-                  </div>
-                </div>
-
-                {/* Expected Holding Time */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '8px 12px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(255, 255, 255, 0.1)'
-                }}>
-                  <Activity size={16} color="var(--text-secondary)" />
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Expected Holding Time:</span>
-                  <span style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)' }}>
-                    {aiCoachDiagnosis.successful_holding_median > 0
-                      ? `${aiCoachDiagnosis.successful_holding_median} hours`
-                      : 'N/A'}
-                  </span>
-                </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem' }}>
+                <span style={{ color: '#94a3b8' }}>Amount</span>
+                <span style={{ color: 'white', fontWeight: '500' }}>{parseFloat(formData.amount).toLocaleString()}</span>
               </div>
-
-              <div style={{ fontSize: '0.9rem', lineHeight: '1.5', color: 'var(--text-primary)', padding: '10px', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
-                {aiCoachDiagnosis.reasoning_summary}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem' }}>
+                <span style={{ color: 'white', fontWeight: '500' }}>${parseFloat(formData.price).toLocaleString()}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem' }}>
+                <span style={{ color: '#94a3b8' }}>Date</span>
+                <span style={{ color: 'white', fontWeight: '500' }}>{formData.date}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '12px', borderTop: '1px solid #1e293b', fontSize: '0.95rem' }}>
+                <span style={{ color: '#94a3b8' }}>Total Value</span>
+                <span style={{ color: 'white', fontWeight: 'bold' }}>
+                  ${((parseFloat(formData.amount || 0) * parseFloat(formData.price || 0)) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
               </div>
             </div>
-          ) : (
-            <div style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-              Unable to generate diagnosis.
+          </div>
+
+          {/* 3. Thesis & Notes Card */}
+          <div className="thesis-card" style={{ backgroundColor: '#0f172a', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
+            <h5 style={{ margin: '0 0 16px', color: 'white', fontSize: '0.95rem', fontWeight: 'bold' }}>Thesis & Notes</h5>
+
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: 'bold', color: '#94a3b8', marginBottom: '8px' }}>
+                <Target size={12} /> {formData.type === 'buy' ? 'BUY THESIS' : 'SELL OUTCOME'}
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {formData.tags && formData.tags.length > 0 ? (
+                  formData.tags.map(tag => (
+                    <span key={tag} style={{ color: '#94a3b8', fontSize: '0.85rem', fontStyle: 'italic' }}>#{tag}</span>
+                  ))
+                ) : <span style={{ color: '#64748b', fontSize: '0.85rem', fontStyle: 'italic' }}>No thesis tags selected</span>}
+              </div>
+            </div>
+          </div>
+
+          {/* 4. Collapsible Sections (Visual Only) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            <div style={{ backgroundColor: '#020617', borderRadius: '8px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #1e293b' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '0', height: '0', borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '8px solid #94a3b8' }}></div>
+                <span style={{ color: '#e2e8f0', fontSize: '0.9rem', fontWeight: '500' }}>Pro Technical Analysis</span>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ width: '16px', height: '16px', border: '1px solid #475569', borderRadius: '2px' }}></div>
+                <ChevronDown size={16} color="#475569" />
+              </div>
+            </div>
+            <div style={{ backgroundColor: '#020617', borderRadius: '8px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #1e293b' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '0', height: '0', borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '8px solid #94a3b8' }}></div>
+                <span style={{ color: '#e2e8f0', fontSize: '0.9rem', fontWeight: '500' }}>Fundamental Intelligence</span>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ width: '16px', height: '16px', border: '1px solid #475569', borderRadius: '2px' }}></div>
+                <ChevronDown size={16} color="#475569" />
+              </div>
+            </div>
+            <div style={{ backgroundColor: '#020617', borderRadius: '8px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #1e293b' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '0', height: '0', borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '8px solid #94a3b8' }}></div>
+                <span style={{ color: '#e2e8f0', fontSize: '0.9rem', fontWeight: '500' }}>Important Events & Insights</span>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ width: '16px', height: '16px', border: '1px solid #475569', borderRadius: '2px' }}></div>
+                <ChevronDown size={16} color="#475569" />
+              </div>
+            </div>
+          </div>
+
+          {/* Sell Amount Validation Error */}
+          {isOverselling && (
+            <div className="validation-error" style={{
+              padding: 'var(--spacing-md)',
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid var(--accent-danger)',
+              borderRadius: 'var(--radius-md)',
+              color: 'var(--accent-danger)',
+              marginTop: 'var(--spacing-md)',
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--spacing-sm)'
+            }}>
+              <AlertTriangle size={20} />
+              <div>
+                <strong>Insufficient Holdings:</strong> You are trying to sell {sellAmount.toFixed(4)} {formData.asset}, but you only hold {currentHoldings.toFixed(4)} {formData.asset}.
+              </div>
             </div>
           )}
         </div>
 
-
-        <div className="review-card">
-          <div className="review-header">
-            <span className={`review-type ${formData.type}`}>{formData.type.toUpperCase()}</span>
-            <span className="review-asset">{formData.asset}</span>
-          </div>
-
-          <div className="summary-section">
-            {formData.type === 'buy' && (
-              <div className="financial-summary" style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: 'var(--bg-primary)', borderRadius: 'var(--radius-md)', border: '1px solid var(--bg-tertiary)' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-                  <div>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block' }}>Amount</span>
-                    <span style={{ fontSize: '1.1rem', fontWeight: '600' }}>{formData.amount}</span>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block' }}>Price</span>
-                    <span style={{ fontSize: '1.1rem', fontWeight: '600' }}>${formData.price}</span>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block' }}>Total Cost</span>
-                    <span style={{ fontSize: '1.1rem', fontWeight: '600', color: 'var(--accent-primary)' }}>
-                      ${((parseFloat(formData.amount || 0) * parseFloat(formData.price || 0)) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div className="selected-reasons-summary">
-              <span className="summary-label">{formData.type === 'buy' ? 'Buy Thesis:' : 'Sell Thesis:'}</span>
-              {formData.type === 'sell' && formData.outcomeStatus ? (
-                <div className="sell-summary">
-                  <div className="summary-item"><strong>Amount:</strong> {formData.amount} @ {formData.price}</div>
-                  <div className="summary-item"><strong>Outcome:</strong> {getOutcomeOptions().find(o => o.id === formData.outcomeStatus)?.label || formData.outcomeStatus}</div>
-                  <div className="summary-item"><strong>Factors:</strong> {formData.exitFactors.join(', ')}</div>
-                  <div className="summary-item"><strong>Linked Narratives:</strong> {formData.linkedBuyReasons.length}</div>
-                </div>
-              ) : (
-                formData.tags && formData.tags.length > 0 ? (
-                  <div className="tags-display" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '0.5rem' }}>
-                    {formData.tags.map((tag, i) => (
-                      <span
-                        key={i}
-                        className="tag-pill"
-                        style={{
-                          backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                          color: 'var(--accent-primary)',
-                          padding: '6px 12px',
-                          borderRadius: '16px',
-                          fontSize: '0.85rem',
-                          fontWeight: '500',
-                          border: '1px solid rgba(99, 102, 241, 0.3)'
-                        }}
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <span className="text-secondary italic">No buy reasons selected.</span>
-                )
-              )}
-            </div>
-
-            {/* Exit Strategy Section */}
-            {formData.type === 'buy' && (formData.exitTags && formData.exitTags.length > 0) && (
-              <div className="selected-reasons-summary">
-                <span className="summary-label">Exit Strategy:</span>
-                <div className="tags-display" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '0.5rem' }}>
-                  {formData.exitTags.map((tag, i) => (
-                    <span
-                      key={i}
-                      className="tag-pill"
-                      style={{
-                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                        color: 'var(--accent-primary)',
-                        padding: '6px 12px',
-                        borderRadius: '16px',
-                        fontSize: '0.85rem',
-                        fontWeight: '500',
-                        border: '1px solid rgba(99, 102, 241, 0.3)'
-                      }}
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {
-            formData.investmentNotes.some(n => n) && (
-              <div className="review-section">
-                <h5>Notes</h5>
-                {formData.investmentNotes.filter(n => n).map((note, i) => (
-                  <p key={i} className="review-note">"{note}"</p>
-                ))}
-              </div>
-            )
-          }
-        </div >
-
-        {/* Sell Amount Validation Error */}
-        {isOverselling && (
-          <div className="validation-error" style={{
-            padding: 'var(--spacing-md)',
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid var(--accent-danger)',
-            borderRadius: 'var(--radius-md)',
-            color: 'var(--accent-danger)',
-            marginTop: 'var(--spacing-md)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--spacing-sm)'
-          }}>
-            <AlertTriangle size={20} />
-            <div>
-              <strong>Insufficient Holdings:</strong> You are trying to sell {sellAmount.toFixed(4)} {formData.asset}, but you only hold {currentHoldings.toFixed(4)} {formData.asset}.
-            </div>
-          </div>
-        )}
-
-        {
-          overview && !diagnosis && (
-            <div className="diagnosis-result overview">
-              <div className="diagnosis-header">
-                <h5>Portfolio Health</h5>
-                <span className={`health-score ${overview.healthIndex?.overallScore >= 70 ? 'good' : 'warning'}`}>
-                  {overview.healthIndex?.overallScore ? overview.healthIndex.overallScore.toFixed(0) : 0}/100
-                </span>
-              </div>
-              <div className="diagnosis-metrics">
-                <div className="metric">
-                  <span>Win Rate</span>
-                  <strong>{overview.winRate ? overview.winRate.toFixed(1) : 0}%</strong>
-                </div>
-                <div className="metric">
-                  <span>Avg R/R</span>
-                  <strong>{overview.avgRR ? overview.avgRR.toFixed(2) : 0}</strong>
-                </div>
-              </div>
-            </div>
-          )
-        }
-
-        {
-          diagnosis && (
-            <div className={`diagnosis-result ${diagnosis.riskLevel}`}>
-              <div className="diagnosis-header">
-                <h5>Trade Diagnosis</h5>
-                <span className={`risk-badge ${diagnosis.riskLevel}`}>
-                  {diagnosis.riskLevel ? diagnosis.riskLevel.toUpperCase() : 'UNKNOWN'} RISK
-                </span>
-              </div>
-              <ul className="diagnosis-list">
-                {diagnosis.advice && diagnosis.advice.map((point, i) => (
-                  <li key={i}>{point}</li>
-                ))}
-              </ul>
-              <div className="diagnosis-footer">
-                AI Analysis based on your history
-              </div>
-            </div>
-          )
-        }
-
-        <div className="step-actions">
-          <button type="button" onClick={() => setStep(3)} className="btn-secondary">
+        <div className="step-actions" style={{
+          marginTop: 'auto',
+          borderTop: '1px solid #1e293b',
+          backgroundColor: '#020617',
+          padding: '16px 24px',
+          position: 'sticky',
+          bottom: 0,
+          zIndex: 10
+        }}>
+          <button type="button" onClick={() => setStep(3)} className="btn-secondary" style={{ backgroundColor: 'transparent', border: '1px solid #334155', color: '#cbd5e1' }}>
             <ArrowLeft size={18} /> Back
           </button>
           <button
@@ -2539,7 +2254,12 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             onClick={handleSubmit}
             className="btn-primary"
             disabled={isOverselling || isSubmitting}
-            style={{ opacity: (isOverselling || isSubmitting) ? 0.5 : 1, cursor: (isOverselling || isSubmitting) ? 'not-allowed' : 'pointer' }}
+            style={{
+              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+              border: 'none',
+              opacity: (isOverselling || isSubmitting) ? 0.5 : 1,
+              cursor: (isOverselling || isSubmitting) ? 'not-allowed' : 'pointer'
+            }}
           >
             {isSubmitting ? (
               <>
@@ -2552,7 +2272,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             )}
           </button>
         </div>
-      </div >
+      </div>
     );
   };
 
@@ -3110,764 +2830,287 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
           margin-bottom: 4px;
         }
 
-        .outcome-desc {
-          font-size: 0.8rem;
-          color: var(--text-secondary);
+
+        /* Dark Premium Theme Variables & Overrides */
+        :root {
+          --bg-primary: #020617;   /* Slate 950 */
+        --bg-secondary: #0f172a; /* Slate 900 */
+        --bg-tertiary: #1e293b;  /* Slate 800 */
+
+        --text-primary: #f8fafc; /* Slate 50 */
+        --text-secondary: #94a3b8; /* Slate 400 */
+        --text-tertiary: #64748b; /* Slate 500 */
+
+        --accent-primary: #6366f1; /* Indigo 500 */
+        --accent-secondary: #4f46e5; /* Indigo 600 */
+        --accent-success: #10b981; /* Emerald 500 */
+        --accent-warning: #f59e0b; /* Amber 500 */
+        --accent-danger: #ef4444; /* Red 500 */
+
+        --border-color: rgba(255, 255, 255, 0.1);
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+
+        --spacing-xs: 4px;
+        --spacing-sm: 8px;
+        --spacing-md: 16px;
+        --spacing-lg: 24px;
+        --spacing-xl: 32px;
         }
 
-        .selected-icon {
-          position: absolute;
-          top: 10px;
-          right: 10px;
-          color: var(--accent-primary);
-        }
-        
-        .factors-container {
-           display: flex;
-           flex-direction: column;
-           gap: var(--spacing-md);
-        }
-        
-        .factor-category h5 {
-           font-size: 0.85rem;
-           color: var(--text-secondary);
-           margin-bottom: var(--spacing-xs);
-           text-transform: uppercase;
-           letter-spacing: 0.5px;
-        }
-          font-size: 0.8rem;
-          color: var(--text-secondary);
-          margin-top: 2px;
-          margin-left: var(--spacing-sm);
-          font-style: italic;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-          text-overflow: ellipsis;
+        .modal-overlay {
+          position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(8px);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.2s ease-out;
         }
 
-        .summary-reason-text {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-          border-radius: var(--radius-md);
-          border: 1px solid var(--bg-tertiary);
-          height: 100%;
+        .modal-content {
+          background-color: #0f172a;
+        width: 100%;
+        max-width: 600px;
+        max-height: 90vh;
+        border-radius: var(--radius-lg);
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .summary-label {
-          font-weight: 600;
-          font-size: 0.875rem;
+        .modal-header {
+          padding: 20px 24px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(15, 23, 42, 0.95);
+        }
+
+        .modal-header h2 {
+          margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #f8fafc;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        }
+
+        .close-btn {
+          background: none;
+        border: none;
+        color: #64748b;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 50%;
+        transition: all 0.2s;
+        }
+        .close-btn:hover {
+          color: #f8fafc;
+        background: rgba(255,255,255,0.1);
+        }
+
+        .modal-body {
+          padding: 24px;
+        overflow-y: auto;
+        flex: 1;
+        scrollbar-width: thin;
+        scrollbar-color: #334155 transparent;
+        }
+
+        .steps-indicator {
+          display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        position: relative;
+        padding: 0 12px;
+        }
+
+        .steps-indicator::before {
+          content: '';
+        position: absolute;
+        top: 50%; left: 0; right: 0;
+        height: 2px;
+        background: #1e293b;
+        z-index: 0;
+        transform: translateY(-50%);
+        }
+
+        .step-bubble {
+          width: 32px; height: 32px;
+        border-radius: 50%;
+        background: #1e293b;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        font-weight: 600;
+        position: relative;
+        z-index: 1;
+        border: 4px solid #0f172a;
+        transition: all 0.3s ease;
+        }
+        .step-bubble.active {
+          background: #6366f1;
+        color: white;
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+        }
+        .step-bubble.completed {
+          background: #10b981;
+        color: white;
+        }
+
+        .form-group {
+          margin-bottom: 20px;
+        }
+
+        .form-label {
           display: block;
-          margin-bottom: var(--spacing-xs);
-          color: var(--text-accent);
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #94a3b8;
+        margin-bottom: 8px;
         }
 
-        .summary-list {
-          list-style-type: disc;
-          padding-left: var(--spacing-lg);
-          font-size: 0.875rem;
-          color: var(--text-secondary);
+        .form-input {
+          width: 100%;
+        padding: 12px 16px;
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid rgba(148, 163, 184, 0.1);
+        border-radius: 12px;
+        color: #f8fafc;
+        font-size: 1rem;
+        transition: all 0.2s;
+        }
+        .form-input:focus {
+          outline: none;
+        border-color: #6366f1;
+        background: rgba(30, 41, 59, 0.8);
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
+        .type-selector-row {
+          display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+        }
+        .type-option {
+          flex: 1;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.05);
+        background: rgba(255,255,255,0.02);
+        font-weight: 600;
+        color: #64748b;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        }
+        .type-option.buy.selected {
+          background: rgba(16, 185, 129, 0.15);
+        border-color: #10b981;
+        color: #10b981;
+        }
+        .type-option.sell.selected {
+          background: rgba(239, 68, 68, 0.15);
+        border-color: #ef4444;
+        color: #ef4444;
         }
 
         .step-actions {
           display: flex;
-          justify-content: space-between;
-          gap: var(--spacing-md);
-          margin-top: auto;
-          padding-top: var(--spacing-md);
-        }
-
-        .full-width {
-          width: 100%;
-          justify-content: center;
-        }
-
-        .btn-primary, .btn-secondary {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 10px 20px;
-          border-radius: var(--radius-md);
-          font-weight: 500;
-          transition: all 0.2s;
-        }
-
-        .btn-primary {
-          background-color: var(--accent-primary);
-          color: white;
-        }
-
-        .btn-primary:hover {
-          background-color: var(--accent-secondary);
-        }
-
-        .btn-primary:disabled {
-          opacity: 0.7;
-          cursor: not-allowed;
+        justify-content: space-between;
+        margin-top: 32px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255,255,255,0.05);
         }
 
         .btn-secondary {
-          background-color: transparent;
-          color: var(--text-secondary);
-          border: 1px solid var(--bg-tertiary);
+          background: transparent;
+        color: #94a3b8;
+        padding: 10px 20px;
+        border-radius: 99px;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid rgba(255,255,255,0.1);
+        transition: all 0.2s;
         }
-
         .btn-secondary:hover {
-          background-color: var(--bg-tertiary);
-          color: var(--text-primary);
-        }
-
-
-        .spin {
-          animation: spin 1s linear infinite;
-        }
-
-        .type-selection {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: var(--spacing-lg);
-          margin: var(--spacing-xl) 0;
-        }
-
-        .type-btn {
-          position: relative;
-          z-index: 10;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: var(--spacing-sm);
-          padding: var(--spacing-xl);
-          border-radius: var(--radius-lg);
-          border: 2px solid var(--bg-tertiary);
-          background-color: var(--bg-secondary);
-          cursor: pointer;
-          transition: all 0.3s;
-          font-size: 2rem;
-        }
-
-        .type-btn:hover {
-          border-color: var(--accent-primary);
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .type-btn.active {
-          border-color: var(--accent-primary);
-          background-color: rgba(var(--accent-primary-rgb), 0.05);
-        }
-
-        .type-btn.buy.active {
-          border-color: #10b981; /* Green */
-          background-color: rgba(16, 185, 129, 0.1);
-        }
-
-        .type-btn.sell.active {
-          border-color: #ef4444; /* Red */
-          background-color: rgba(239, 68, 68, 0.1);
-        }
-
-        .type-btn span {
-          font-size: 1.1rem;
-          font-weight: 600;
-          color: var(--text-primary);
-        }
-
-        .type-btn small {
-          font-size: 0.875rem;
-          color: var(--text-secondary);
-        }
-
-        .type-btn:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-        }
-
-        .type-btn:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-          transform: none;
-        }
-
-        .buy-btn:hover:not(:disabled) {
-          border-color: var(--accent-success);
-          background-color: rgba(16, 185, 129, 0.05);
-        }
-
-        .sell-btn:hover:not(:disabled) {
-          border-color: var(--accent-danger);
-          background-color: rgba(239, 68, 68, 0.05);
-        }
-
-        .ai-insights-section {
-          background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
-          border: 1px solid var(--accent-primary);
-          border-radius: var(--radius-lg);
-          padding: var(--spacing-lg);
-          margin-bottom: var(--spacing-lg);
-        }
-
-        .insights-header {
-          display: flex;
-          align-items: center;
-          gap: var(--spacing-sm);
-          margin-bottom: var(--spacing-md);
-        }
-
-        .insights-header h4 {
-          font-size: 1rem;
-          font-weight: 600;
-          color: var(--accent-primary);
-        }
-
-        .sparkle-icon {
-          color: var(--accent-primary);
-          animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-
-        .insights-content {
-          display: flex;
-          flex-direction: column;
-          gap: var(--spacing-sm);
-        }
-
-        .insight-item {
-          background-color: var(--bg-secondary);
-          padding: var(--spacing-sm) var(--spacing-md);
-          border-radius: var(--radius-md);
-          font-size: 0.9rem;
-          line-height: 1.5;
-        }
-
-        .current-price-display {
-          background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));
-          border: 1px solid var(--accent-success);
-          border-radius: var(--radius-lg);
-          padding: var(--spacing-md) var(--spacing-lg);
-          margin-bottom: var(--spacing-lg);
-          text-align: center;
-        }
-
-        .price-label {
-          font-size: 0.75rem;
-          color: var(--text-secondary);
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          margin-bottom: var(--spacing-xs);
-        }
-
-        .price-value {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: var(--accent-success);
-          font-family: 'Courier New', monospace;
-        }
-
-        .italic {
-          font-style: italic;
-        }
-
-        .price-input-wrapper {
-          position: relative;
-          display: flex;
-          align-items: center;
-          gap: var(--spacing-sm);
-        }
-
-        .price-input-with-market {
-          flex: 1;
-        }
-
-        .market-price-indicator {
-          position: absolute;
-          right: 12px;
-          top: 50%;
-          transform: translateY(-50%);
-          font-size: 0.75rem;
-          color: var(--text-secondary);
-          background-color: var(--bg-tertiary);
-          padding: 4px 8px;
-          border-radius: var(--radius-sm);
-          white-space: nowrap;
-          pointer-events: none;
-          font-weight: 500;
-        }
-
-        .price-input-with-market {
-          padding-right: 140px; /* Make room for the market price indicator */
-        }
-        .diagnosis-actions {
-          display: flex;
-          gap: var(--spacing-md);
-          margin-bottom: var(--spacing-md);
-        }
-
-        .btn-diagnosis {
-          flex: 1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          padding: 10px;
-          border-radius: var(--radius-md);
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .btn-diagnosis.secondary {
-          background-color: var(--bg-tertiary);
-          color: var(--text-primary);
-          border: 1px solid var(--bg-tertiary);
-        }
-
-        .btn-diagnosis.primary {
-          background-color: rgba(99, 102, 241, 0.1);
-          color: var(--accent-primary);
-          border: 1px solid var(--accent-primary);
-        }
-
-        .btn-diagnosis:hover {
-          transform: translateY(-1px);
-        }
-
-        .diagnosis-result {
-          background-color: var(--bg-secondary);
-          border: 1px solid var(--bg-tertiary);
-          border-radius: var(--radius-md);
-          padding: var(--spacing-md);
-          animation: fadeIn 0.3s ease-out;
-        }
-
-        .diagnosis-result.overview {
-          border-color: var(--accent-primary);
-        }
-
-        .diagnosis-result.high {
-          border-color: var(--accent-danger);
-          background-color: rgba(239, 68, 68, 0.05);
-        }
-
-        .diagnosis-result.medium {
-          border-color: var(--accent-warning);
-          background-color: rgba(245, 158, 11, 0.05);
-        }
-
-        .diagnosis-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: var(--spacing-md);
-        }
-
-        .diagnosis-header h5 {
-          font-weight: 600;
-          color: var(--text-primary);
-        }
-
-        .health-score {
-          font-weight: 700;
-          padding: 2px 8px;
-          border-radius: 4px;
-        }
-        .health-score.good { color: var(--accent-success); background: rgba(16, 185, 129, 0.1); }
-        .health-score.warning { color: var(--accent-warning); background: rgba(245, 158, 11, 0.1); }
-
-        .risk-badge {
-          font-size: 0.75rem;
-          font-weight: 600;
-          padding: 2px 8px;
-          border-radius: 4px;
-          text-transform: uppercase;
-        }
-        .risk-badge.high { color: var(--accent-danger); background: rgba(239, 68, 68, 0.1); }
-        .risk-badge.medium { color: var(--accent-warning); background: rgba(245, 158, 11, 0.1); }
-
-        .diagnosis-metrics {
-          display: flex;
-          justify-content: space-around;
-        }
-
-        .metric {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-
-        .metric span {
-          font-size: 0.75rem;
-          color: var(--text-secondary);
-        }
-
-        .metric strong {
-          font-size: 1.1rem;
-          color: var(--text-primary);
-        }
-
-        .diagnosis-list {
-          list-style-type: none;
-          padding: 0;
-          margin-bottom: var(--spacing-sm);
-        }
-
-        .diagnosis-list li {
-          position: relative;
-          padding-left: 20px;
-          margin-bottom: 6px;
-          font-size: 0.9rem;
-          color: var(--text-secondary);
-        }
-
-        .diagnosis-list li::before {
-          content: "•";
-          position: absolute;
-          left: 0;
-          color: var(--accent-primary);
-        }
-
-        .diagnosis-footer {
-          font-size: 0.75rem;
-          color: var(--text-secondary);
-          text-align: right;
-          font-style: italic;
-        }
-        /* New Styles for Refactored UI */
-        .type-selector.parallel {
-          display: flex;
-          flex-direction: row;
-          gap: var(--spacing-md);
-        }
-
-        .type-btn.simple {
-          flex: 1;
-          padding: var(--spacing-lg);
-          font-size: 1.2rem;
-          font-weight: 600;
-          border-radius: var(--radius-md);
-          border: 2px solid transparent;
-          background-color: var(--bg-tertiary);
-          color: var(--text-secondary);
-          transition: all 0.2s;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .type-btn.simple.buy {
-          border-color: rgba(16, 185, 129, 0.3);
-          background-color: rgba(16, 185, 129, 0.05);
-          color: #10b981;
-        }
-
-        .type-btn.simple.buy.active {
-          background-color: #10b981;
           color: white;
-          border-color: #10b981;
+        border-color: rgba(255,255,255,0.3);
         }
 
-        .type-btn.simple.sell {
-          border-color: rgba(239, 68, 68, 0.3);
-          background-color: rgba(239, 68, 68, 0.05);
-          color: #ef4444;
+        .btn-primary {
+          background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white;
+        padding: 10px 24px;
+        border-radius: 99px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        transition: all 0.2s;
         }
+        .btn-primary:active {transform: translateY(1px); }
+        .btn-primary:disabled {opacity: 0.5; cursor: not-allowed; }
 
-        .type-btn.simple.sell.active {
-          background-color: #ef4444;
-          color: white;
-          border-color: #ef4444;
-        }
+        @keyframes fadeIn {from {opacity: 0; } to {opacity: 1; } }
+        @keyframes slideUp {from {opacity: 0; transform: translateY(20px); } to {opacity: 1; transform: translateY(0); } }
 
-        .notes-container {
-          display: flex;
-          flex-direction: column;
-          gap: var(--spacing-sm);
+        .tag-pill {
+          display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.03);
+        color: #94a3b8;
         }
-
-        .note-input-group {
-          position: relative;
-        }
-
-        .remove-note {
-          position: absolute;
-          top: 8px;
-          right: 8px;
-          color: var(--text-tertiary);
-          background: rgba(0,0,0,0.2);
-          border-radius: 50%;
-          padding: 4px;
-          cursor: pointer;
-          z-index: 5;
-        }
-        
-        .remove-note:hover {
-          color: var(--accent-danger);
+        .tag-pill:hover {
           background: rgba(255,255,255,0.1);
+        color: #f8fafc;
+        }
+        .tag-pill.selected, .tag-pill.active {
+          background: rgba(99, 102, 241, 0.15);
+        border-color: #6366f1;
+        color: #818cf8;
         }
 
-        .add-note-btn {
-          align-self: flex-start;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .add-note-btn.full-width {
-          width: 100%;
-          justify-content: center;
-          margin-top: 4px;
-          padding: 8px;
-          border: 1px dashed var(--bg-tertiary);
-          background: transparent;
-          color: var(--text-secondary);
-        }
-        
-        .add-note-btn.full-width:hover {
-          border-color: var(--accent-primary);
-          background: var(--bg-secondary);
-          color: var(--text-primary);
-        }
-
-        .reason-chip {
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 100%;
-          display: block;
-          padding: 6px 12px;
-        }
-
-        .chip-content {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .reason-card-link {
-          background-color: var(--bg-secondary);
-          border: 1px solid var(--bg-tertiary);
-          padding: var(--spacing-md);
-          border-radius: var(--radius-md);
-          margin-bottom: var(--spacing-sm);
-          cursor: pointer;
-          transition: all 0.2s;
-          position: relative;
-        }
-
-        .reason-card-link:hover {
-          border-color: var(--accent-primary);
-        }
-
-        .reason-card-link.selected {
-          border-color: var(--accent-primary);
-          background-color: rgba(99, 102, 241, 0.05);
-        }
-
-        .reason-text {
-          font-weight: 600;
-          font-size: 0.95rem;
-          margin-bottom: 4px;
-        }
-
-        .reason-date {
-          font-size: 0.8rem;
-          color: var(--text-secondary);
-        }
-
-        .tags-container {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-
-        .tag-btn {
-          padding: 8px 16px;
-          border-radius: 20px;
-          border: 1px solid var(--bg-tertiary);
-          background-color: var(--bg-secondary);
-          color: var(--text-secondary);
-          font-size: 0.9rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-
-        .tag-btn:hover {
-          border-color: var(--accent-primary);
-          color: var(--text-primary);
-          background-color: var(--bg-tertiary);
-        }
-
-        .tag-btn.selected {
-          background-color: var(--accent-primary);
-          color: white;
-          border-color: var(--accent-primary);
-          box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
-          transform: translateY(-1px);
-        }
-
-        .custom-tag-input {
-          display: flex;
-          align-items: center;
-          border: 1px solid var(--bg-tertiary);
-          border-radius: 20px;
-          padding: 2px 8px;
-          background-color: var(--bg-secondary);
-        }
-
-        .custom-tag-input input {
-          border: none;
-          background: transparent;
-          color: var(--text-primary);
-          font-size: 0.85rem;
-          width: 100px;
-          outline: none;
-        }
-
-        .custom-tag-input button {
-          background: none;
-          border: none;
-          color: var(--accent-primary);
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-        }
-
-        .holdings-info {
-          margin-bottom: var(--spacing-md);
-          padding: var(--spacing-sm);
-          background-color: var(--bg-secondary);
-          border-radius: var(--radius-sm);
-          font-size: 0.9rem;
-        }
-
-        .holdings-display {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .percent-badge {
-          font-size: 0.8rem;
-          padding: 2px 6px;
-          border-radius: 4px;
-          background-color: rgba(16, 185, 129, 0.1);
-          color: #10b981;
-        }
-
-        .percent-badge.error {
-          background-color: rgba(239, 68, 68, 0.1);
-          color: #ef4444;
-        }
-
-        .form-row {
-          display: flex;
-          gap: var(--spacing-md);
-        }
-
-        .half-width {
-          flex: 1;
-        }
-        
-        .fade-in {
-          animation: fadeIn 0.3s ease-out;
-        }
-
-        /* Remote Styles for Step 1 */
-        .step-actions-bottom {
-          display: flex;
-          gap: var(--spacing-md);
-          margin-top: var(--spacing-xl);
-        }
-
-        .type-btn-large {
-          flex: 1;
-          padding: var(--spacing-lg);
-          font-size: 1.25rem;
-          font-weight: 600;
-          border-radius: var(--radius-lg);
-          border: 2px solid transparent;
-          cursor: pointer;
-          transition: all 0.2s;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background-color: var(--bg-tertiary);
-          color: var(--text-secondary);
-        }
-
-        .type-btn-large:hover {
-          transform: translateY(-2px);
-          box-shadow: var(--shadow-md);
-        }
-
-        .type-btn-large.buy {
-          border-color: rgba(16, 185, 129, 0.3);
-          color: var(--accent-success);
-        }
-
-        .type-btn-large.buy:hover, .type-btn-large.buy.active {
-          background-color: rgba(16, 185, 129, 0.1);
-          border-color: var(--accent-success);
-        }
-
-        .type-btn-large.sell {
-          border-color: rgba(239, 68, 68, 0.3);
-          color: var(--accent-danger);
-        }
-
-        .type-btn-large.sell:hover, .type-btn-large.sell.active {
-          background-color: rgba(239, 68, 68, 0.1);
-          border-color: var(--accent-danger);
-        }
-
-        /* Mobile Layout Fixes */
-        .step-container {
-          display: flex;
-          flex-direction: column;
-          min-height: 100%;
-          position: relative;
-        }
-
-        .step-actions {
-          position: sticky;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          background-color: var(--bg-secondary);
-          padding: var(--spacing-md) 0;
-          border-top: 1px solid var(--bg-tertiary);
-          margin-top: auto;
-          z-index: 1000; /* Super high z-index */
-          display: flex;
-          justify-content: space-between;
-          gap: var(--spacing-md);
-        }
-        
-        /* Adjust modal content for mobile */
         @media (max-width: 600px) {
-          .modal-content {
-            height: 100vh;
-            max-height: 100vh;
-            border-radius: 0;
-            padding-bottom: 120px; /* Massive padding to ensure scroll clears everything */
-          }
-          
-          .step-actions {
-            padding: var(--spacing-md);
-            margin: 0 -1rem -1rem -1rem; 
-            width: calc(100% + 2rem);
-            bottom: 0; 
-            padding-bottom: max(1rem, env(safe-area-inset-bottom));
-          }
+            .modal-content {
+          height: 100%;
+        max-height: 100%;
+        border-radius: 0;
+            }
+        .modal-header {
+          padding-top: max(20px, env(safe-area-inset-top));
+            }
+        .step-actions {
+          padding-bottom: max(20px, env(safe-area-inset-bottom));
+            }
         }
       `}</style>
     </div>

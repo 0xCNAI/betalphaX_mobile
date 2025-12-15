@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Settings, Plus, X, User, ExternalLink, RefreshCw, List, PlusCircle } from 'lucide-react';
-import { getRecommendedKOLs, getTrackedFeed } from '../services/socialService';
+import { searchCryptoTweets } from '../services/twitterService';
 import { getUserTrackingList, updateUserTrackingList } from '../services/userService';
 import { getCoinMetadata } from '../services/coinGeckoApi';
 import { formatDistanceToNow } from 'date-fns';
@@ -43,22 +43,27 @@ const SocialNotificationWidget = ({ symbol, user, compact = false, onAddToThesis
         try {
             // 0. Get Project Metadata (Twitter Handle & Name)
             const metadata = await getCoinMetadata(symbol);
-            const projectHandle = metadata?.twitterHandle;
-            const tokenName = metadata?.name;
 
             // 1. Get User's Tracking List
             const userList = await getUserTrackingList(user.uid, symbol);
             setTrackedHandles(userList);
 
-            // 2. Get Recommendations (Cold Start Data)
-            // Pass tokenName for better search relevance
-            const recommendations = await getRecommendedKOLs(symbol, projectHandle, tokenName);
-            setRecommendedKOLs(recommendations);
+            // 2. Search Tweets (Use Robust Twitter Service)
+            // This combines searches for the symbol ($TICKER) and tracked handles 
+            const tweets = await searchCryptoTweets(symbol, 20, metadata?.twitter_screen_name, true);
 
-            // 3. Get Feed
-            // Pass tokenName for better search relevance
-            const feedData = await getTrackedFeed(symbol, userList, projectHandle, tokenName);
-            setFeed(feedData);
+            // Format tweets to match widget expectation
+            const formattedFeed = tweets.map(t => ({
+                id: t.id,
+                author: t.author,
+                timestamp: t.timestamp,
+                text: t.text,
+                url: t.link || t.url,
+                likes: t.likes,
+                retweets: t.retweets
+            }));
+
+            setFeed(formattedFeed);
 
             // Update last viewed to now
             setLastViewed(Date.now());

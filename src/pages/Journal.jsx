@@ -1,57 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTransactions } from '../context/TransactionContext';
 import { usePrices } from '../context/PriceContext';
-import { generatePortfolioOverview, getCachedOverview } from '../services/analysisService';
-import { BookOpen, Sparkles, Calendar, TrendingUp, TrendingDown, Brain, ArrowRight, Activity, AlertTriangle, Edit2, X, FileText, Wallet } from 'lucide-react';
+import { Brain, ArrowRight, TrendingDown, Edit2, FileText, Wallet } from 'lucide-react';
 import TransactionForm from '../components/TransactionForm';
 import Modal from '../components/Modal';
 
 const Journal = () => {
   const { transactions } = useTransactions();
-  const { getPrice, getIcon } = usePrices();
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [weeklyReview, setWeeklyReview] = useState(null);
-  const [overview, setOverview] = useState(null);
+  const { getIcon } = usePrices();
 
   // Edit state
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [initialStep, setInitialStep] = useState(1);
 
   const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-  // Load overview for analysis section
-  useEffect(() => {
-    const loadOverview = () => {
-      const cached = getCachedOverview();
-      if (cached) {
-        setOverview(cached);
-      } else {
-        // Generate if not cached
-        const currentPrices = {};
-        transactions.forEach(tx => {
-          const p = getPrice(tx.asset);
-          if (p) currentPrices[tx.asset] = p;
-        });
-        const data = generatePortfolioOverview(transactions, currentPrices);
-        setOverview(data);
-      }
-    };
-    loadOverview();
-  }, [transactions, getPrice]);
-
-  const generateReview = () => {
-    setIsGenerating(true);
-    // Mock AI generation
-    setTimeout(() => {
-      setWeeklyReview({
-        summary: "This week showed a strong preference for momentum trading. Your entry on SOL was particularly well-timed, capturing the breakout.",
-        strengths: ["Good patience waiting for confirmation", "Risk management was disciplined"],
-        weaknesses: ["Tendency to exit winners too early", "FOMO detected in ETH trade"],
-        actionable: "Consider using trailing stops to let winners run longer."
-      });
-      setIsGenerating(false);
-    }, 2000);
-  };
 
   const [expandedIds, setExpandedIds] = useState([]);
 
@@ -63,60 +25,6 @@ const Journal = () => {
 
   return (
     <div className="journal-container">
-
-
-      {/* AI Portfolio Analysis Section (Moved from Portfolio) */}
-      {overview && (
-        <div className="analysis-section">
-          <div className="section-title">
-            <Activity size={20} className="text-accent" />
-            <h3>Portfolio Health Breakdown</h3>
-          </div>
-          <div className="health-dimensions-grid">
-            {overview.healthIndex?.metrics?.map((metric, idx) => (
-              <div key={idx} className="dimension-card">
-                <div className="dimension-header">
-                  <span className="dim-name">{metric.name}</span>
-                  <span className={`dim-score ${metric.score >= 80 ? 'good' : metric.score >= 50 ? 'avg' : 'bad'}`}>
-                    {metric.score.toFixed(0)}/100
-                  </span>
-                </div>
-                <div className="dim-bar-bg">
-                  <div
-                    className="dim-bar-fill"
-                    style={{
-                      width: `${metric.score}%`,
-                      backgroundColor: metric.score >= 80 ? 'var(--accent-success)' : metric.score >= 50 ? 'var(--accent-warning)' : 'var(--accent-danger)'
-                    }}
-                  ></div>
-                </div>
-                <p className="dim-desc">{metric.text}</p>
-
-                <div className="dim-stats">
-                  {metric.name === 'Downside Risk' && metric.details && (
-                    <>
-                      <span className="stat-pill">Max Loss: {metric.details.exposure}</span>
-                      <span className="stat-pill">SL Coverage: {metric.details.coverage}</span>
-                    </>
-                  )}
-                  {metric.name === 'Win Quality' && metric.details && (
-                    <>
-                      <span className="stat-pill">Avg Win R/R: {metric.details.avgWinRR}</span>
-                      <span className="stat-pill">Loss Efficiency: {metric.details.lossEfficiency}</span>
-                    </>
-                  )}
-                  {metric.name === 'Concentration' && metric.details && (
-                    <span className="stat-pill">Top Asset: {metric.details.value}</span>
-                  )}
-                  {metric.name === 'Discipline' && metric.details && (
-                    <span className="stat-pill">Plan Adherence: {metric.details.value}</span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div className="journal-layout">
         <div className="feed-section">
@@ -282,50 +190,6 @@ const Journal = () => {
             })}
           </div>
         </div>
-
-        <div className="insights-sidebar">
-          {weeklyReview && (
-            <div className="insight-card review-card">
-              <div className="card-title">
-                <Sparkles size={18} className="text-accent" />
-                <h4>Weekly AI Review</h4>
-              </div>
-              <p className="summary">{weeklyReview.summary}</p>
-
-              <div className="review-section">
-                <h5>Strengths</h5>
-                <ul>{weeklyReview.strengths.map((s, i) => <li key={i}>{s}</li>)}</ul>
-              </div>
-
-              <div className="review-section">
-                <h5>Areas for Improvement</h5>
-                <ul>{weeklyReview.weaknesses.map((w, i) => <li key={i}>{w}</li>)}</ul>
-              </div>
-
-              <div className="actionable-tip">
-                <strong>💡 Tip:</strong> {weeklyReview.actionable}
-              </div>
-            </div>
-          )}
-
-          <div className="insight-card">
-            <div className="card-title">
-              <TrendingUp size={18} />
-              <h4>Pattern Recognition</h4>
-            </div>
-            <div className="pattern-item">
-              <span className="pattern-label">Win Rate on Breakouts</span>
-              <div className="progress-bar">
-                <div className="fill" style={{ width: '75%' }}></div>
-              </div>
-              <span className="pattern-value">75%</span>
-            </div>
-            <div className="pattern-item">
-              <span className="pattern-label">Avg Hold Time</span>
-              <span className="pattern-value">14 Days</span>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Transaction Modal (Edit Mode) */}
@@ -345,116 +209,18 @@ const Journal = () => {
           flex-direction: column;
           gap: var(--spacing-xl);
           height: 100%;
-        }
-
-        .journal-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding-bottom: var(--spacing-lg);
-          border-bottom: 1px solid var(--bg-tertiary);
-        }
-
-        .header-content h2 {
-          display: flex;
-          align-items: center;
-          gap: var(--spacing-sm);
-          font-size: 1.5rem;
-          margin-bottom: 4px;
-        }
-
-        .header-content p {
-          color: var(--text-secondary);
-        }
-
-        /* Analysis Section */
-        .analysis-section {
-            background-color: var(--bg-secondary);
-            border: 1px solid var(--bg-tertiary);
-            border-radius: var(--radius-lg);
-            padding: var(--spacing-lg);
-        }
-
-        .section-title {
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-sm);
-            margin-bottom: var(--spacing-lg);
-        }
-
-        .section-title h3 {
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .health-dimensions-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: var(--spacing-md);
-            width: 100%;
-        }
-
-        .dimension-card {
-            background-color: var(--bg-primary);
-            padding: var(--spacing-md);
-            border-radius: var(--radius-md);
-            border: 1px solid var(--bg-tertiary);
-            min-width: 0; /* Prevent content from overflowing */
-        }
-
-        .dimension-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-
-        .dim-score.good { color: var(--accent-success); }
-        .dim-score.avg { color: var(--accent-warning); }
-        .dim-score.bad { color: var(--accent-danger); }
-
-        .dim-bar-bg {
-            height: 6px;
-            background-color: var(--bg-tertiary);
-            border-radius: 3px;
-            overflow: hidden;
-            margin-bottom: 8px;
-        }
-
-        .dim-bar-fill {
-            height: 100%;
-            border-radius: 3px;
-        }
-
-        .dim-desc {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-            line-height: 1.3;
-            min-height: 2.6em; /* 2 lines */
-        }
-
-        .dim-stats {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-        }
-
-        .stat-pill {
-            font-size: 0.7rem;
-            background-color: rgba(255,255,255,0.05);
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: var(--text-secondary);
-            border: 1px solid var(--bg-tertiary);
+          max-width: 100%; /* Ensure full width */
         }
 
         .journal-layout {
-          display: grid;
-          grid-template-columns: 2fr 1fr;
+          display: flex; /* Changed from grid to flex for full width */
+          flex-direction: column;
           gap: var(--spacing-xl);
-          align-items: start;
+          width: 100%;
+        }
+
+        .feed-section {
+            width: 100%; /* Ensure section takes full width */
         }
 
         .feed-section h3 {
@@ -501,18 +267,6 @@ const Journal = () => {
           background-color: rgba(255,255,255,0.04);
         }
 
-        .header-left {
-          display: flex;
-          align-items: center;
-          gap: var(--spacing-md);
-        }
-
-        .header-right {
-          display: flex;
-          align-items: center;
-          gap: var(--spacing-lg);
-        }
-
         .asset-badge {
           display: flex;
           align-items: center;
@@ -544,26 +298,8 @@ const Journal = () => {
           font-size: 0.85rem;
         }
         
-        .financials-compact {
-          display: flex;
-          gap: var(--spacing-md);
-          font-size: 0.9rem;
-          font-weight: 500;
-          color: var(--text-primary);
-        }
-
         .amount { color: var(--text-secondary); }
         .price { color: var(--text-primary); }
-
-        .toggle-btn {
-          background: none;
-          border: none;
-          color: var(--text-secondary);
-          padding: 4px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
 
         .chevron {
           transition: transform 0.2s;
@@ -621,115 +357,6 @@ const Journal = () => {
           border-radius: var(--radius-sm);
           font-size: 0.85rem;
         }
-
-        .insights-sidebar {
-          display: flex;
-          flex-direction: column;
-          gap: var(--spacing-lg);
-          position: sticky;
-          top: 20px;
-        }
-
-        .insight-card {
-          background-color: var(--bg-secondary);
-          border: 1px solid var(--bg-tertiary);
-          border-radius: var(--radius-lg);
-          padding: var(--spacing-lg);
-        }
-
-        .review-card {
-          border-color: var(--accent-primary);
-          background: linear-gradient(to bottom right, var(--bg-secondary), rgba(99, 102, 241, 0.05));
-        }
-
-        .card-title {
-          display: flex;
-          align-items: center;
-          gap: var(--spacing-sm);
-          margin-bottom: var(--spacing-md);
-          font-weight: 600;
-        }
-
-        .text-accent { color: var(--accent-primary); }
-
-        .summary {
-          font-style: italic;
-          margin-bottom: var(--spacing-md);
-          line-height: 1.5;
-        }
-
-        .review-section {
-          margin-bottom: var(--spacing-md);
-        }
-
-        .review-section h5 {
-          font-size: 0.8rem;
-          text-transform: uppercase;
-          color: var(--text-secondary);
-          margin-bottom: 4px;
-        }
-
-        .review-section ul {
-          padding-left: 16px;
-          font-size: 0.9rem;
-        }
-
-        .actionable-tip {
-          background-color: rgba(255, 255, 255, 0.05);
-          padding: var(--spacing-md);
-          border-radius: var(--radius-md);
-          font-size: 0.9rem;
-        }
-
-        .pattern-item {
-          margin-bottom: var(--spacing-md);
-        }
-
-        .pattern-label {
-          display: block;
-          font-size: 0.875rem;
-          color: var(--text-secondary);
-          margin-bottom: 4px;
-        }
-
-        .progress-bar {
-          height: 6px;
-          background-color: var(--bg-tertiary);
-          border-radius: 3px;
-          overflow: hidden;
-          margin-bottom: 4px;
-        }
-
-        .fill {
-          height: 100%;
-          background-color: var(--accent-success);
-        }
-
-        .pattern-value {
-          font-weight: 600;
-          font-size: 0.9rem;
-        }
-
-        .btn-primary {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          background-color: var(--accent-primary);
-          color: white;
-          padding: 10px 20px;
-          border-radius: var(--radius-md);
-          font-weight: 500;
-          transition: all 0.2s;
-        }
-
-        .btn-primary:hover {
-          background-color: var(--accent-secondary);
-        }
-        
-        .btn-primary:disabled {
-          opacity: 0.7;
-          cursor: not-allowed;
-        }
         
         /* Modal Styles */
         .modal-overlay {
@@ -778,12 +405,6 @@ const Journal = () => {
         }
         .modal-close-x:hover {
           background: rgba(255, 255, 255, 0.1);
-        }
-        
-        @media (max-width: 768px) {
-            .journal-layout {
-                grid-template-columns: 1fr;
-            }
         }
       `}</style>
     </div>

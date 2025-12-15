@@ -8,6 +8,7 @@ import Feeds from './pages/Feeds';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import DebugTwitter from './pages/DebugTwitter';
+import Notebook from './pages/Notebook';
 import { TransactionProvider } from './context/TransactionContext';
 import { PriceProvider } from './context/PriceContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -58,6 +59,7 @@ const App = () => {
                         <Route path="/feeds" element={<Feeds />} />
                         <Route path="/asset/:symbol" element={<AssetDetails />} />
                         <Route path="/journal" element={<Journal />} />
+                        <Route path="/notebook" element={<Notebook />} />
                         <Route path="/debug-twitter" element={<DebugTwitter />} />
                       </Routes>
                     </Layout>
