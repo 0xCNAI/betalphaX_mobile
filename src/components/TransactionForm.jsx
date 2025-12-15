@@ -128,6 +128,12 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
     "Stop Loss Hit", "Take Profit", "Rebalancing", "Liquidity Mining"
   ];
 
+  // --- Step 3: Exit Tag Selection ---
+  const [exitTagSearch, setExitTagSearch] = useState('');
+  const [aiExitTags, setAiExitTags] = useState([]);
+  const [isLoadingAiExitTags, setIsLoadingAiExitTags] = useState(false);
+  const [showAllExitTags, setShowAllExitTags] = useState(false);
+
   const defaultExitTags = [
     "Fixed Take Profit", "Trailing Stop", "Time Based Exit",
     "Resistance Level", "Support Break", "RSI Overbought",
