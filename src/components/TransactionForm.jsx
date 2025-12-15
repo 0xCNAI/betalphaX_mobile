@@ -34,6 +34,7 @@ import { generateTagsFromNote } from '../services/geminiService';
 import { generatePortfolioOverview, getTradeDiagnosis, getCachedOverview } from '../services/analysisService';
 import { captureContextSnapshot, getOutcomeOptions, getExitFactors } from '../services/contextService';
 import { getCoachAdvice } from '../services/aiCoachService'; // Import AI Coach
+import TechnicalAnalysisWidget from './TechnicalAnalysisWidget';
 import FundamentalWidget from './FundamentalWidget';
 import SocialNotificationWidget from './SocialNotificationWidget'; // For Events/Insights
 
@@ -2190,21 +2191,8 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                 </div>
               </summary>
               <div style={{ padding: '0 16px 16px', borderTop: '1px solid #1e293b' }}>
-                <div className="p-4" style={{ marginTop: '12px' }}>
-                  <div className="bg-slate-900 rounded p-4 border border-slate-800">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-slate-400 text-sm">RSI (14)</span>
-                      <span className="text-emerald-400 font-mono">42.5 (Neutral)</span>
-                    </div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-slate-400 text-sm">MACD</span>
-                      <span className="text-rose-400 font-mono">Bearish Cross</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-400 text-sm">Trend</span>
-                      <span className="text-blue-400 font-mono">Accumulation</span>
-                    </div>
-                  </div>
+                <div style={{ marginTop: '12px' }}>
+                  <TechnicalAnalysisWidget symbol={formData.asset} />
                 </div>
               </div>
             </details>
