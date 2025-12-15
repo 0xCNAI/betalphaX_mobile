@@ -7,6 +7,7 @@ import AssetList from '../components/AssetList';
 import PortfolioHistoryChart from '../components/PortfolioHistoryChart';
 import UnifiedImportModal from '../components/UnifiedImportModal';
 import TransactionForm from '../components/TransactionForm';
+import NoteForm from '../components/NoteForm';
 import Modal from '../components/Modal';
 
 import { generatePortfolioOverview, cacheOverview, getCachedOverview } from '../services/analysisService';
@@ -205,40 +206,8 @@ const Portfolio = () => {
             )}
 
             {isNoteModalOpen && (
-                <Modal isOpen={isNoteModalOpen} onClose={() => setIsNoteModalOpen(false)} title="Add Quick Note">
-                    <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <textarea
-                            placeholder="Jot down a quick thought or observation..."
-                            rows={6}
-                            style={{
-                                width: '100%',
-                                padding: '12px',
-                                backgroundColor: 'var(--bg-primary)',
-                                border: '1px solid var(--bg-tertiary)',
-                                borderRadius: '8px',
-                                color: 'var(--text-primary)',
-                                fontSize: '1rem',
-                                resize: 'vertical'
-                            }}
-                        />
-                        <button
-                            onClick={() => {
-                                // Mock save
-                                setIsNoteModalOpen(false);
-                            }}
-                            style={{
-                                padding: '14px',
-                                background: 'linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%)',
-                                border: 'none',
-                                borderRadius: '12px',
-                                color: 'white',
-                                fontWeight: '600',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            Save Note
-                        </button>
-                    </div>
+                <Modal isOpen={isNoteModalOpen} onClose={() => setIsNoteModalOpen(false)} title="Add New Note">
+                    <NoteForm onClose={() => setIsNoteModalOpen(false)} />
                 </Modal>
             )}
 
