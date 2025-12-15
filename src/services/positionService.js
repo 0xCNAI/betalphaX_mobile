@@ -134,6 +134,19 @@ export const updatePositionWithNewTx = async (positionId, tx, txId) => {
             const tradePnl = (txPrice - avg_entry_price) * txAmount;
             realized_pnl_abs += tradePnl;
 
+            // Calculate ROI %
+            const roiVal = avg_entry_price > 0 ? ((txPrice - avg_entry_price) / avg_entry_price) * 100 : 0;
+
+            // Update the Sell Transaction with these metrics (Crucial for Display/Sync)
+            const txRef = doc(db, 'transactions', txId);
+            // We use no-await here or await? Better to await to ensure consistency
+            await updateDoc(txRef, {
+                pnl: tradePnl,
+                roi: roiVal,
+                status: 'closed', // Ensure proper status
+                avg_entry_at_sale: avg_entry_price // Useful for debugging/history
+            });
+
             // Avg Entry Price remains CONSTANT on sell
         }
 
