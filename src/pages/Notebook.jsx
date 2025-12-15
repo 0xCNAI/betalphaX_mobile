@@ -73,8 +73,8 @@ const Notebook = () => {
   };
 
   const filteredNotes = notes.filter(note =>
-    note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    note.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    (note.title?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+    (note.tags || []).some(tag => tag?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (

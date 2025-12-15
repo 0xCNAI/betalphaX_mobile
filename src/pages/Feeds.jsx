@@ -165,9 +165,10 @@ const Feeds = () => {
         return all;
     }, [transactions]);
 
-    // Initialize selected assets
+    // Initialize selected assets - Only if empty to avoid overwriting user manual selection
     useEffect(() => {
         if (analyzedAssets.length > 0 && selectedAssets.length === 0) {
+            console.log('[Feeds] Initializing selected assets from holdings:', analyzedAssets);
             setSelectedAssets(analyzedAssets);
         }
     }, [analyzedAssets]);
@@ -343,8 +344,18 @@ const Feeds = () => {
                 {selectedAssets.map(asset => {
                     // Use metrics logic if available or fallback to feed analysis
                     const assetFeed = holdingsFeed.filter(f => f.asset === asset);
-                    const oppCount = assetFeed.filter(i => i.sentiment === 'bullish' || i.type === 'opportunity').length;
-                    const riskCount = assetFeed.filter(i => i.sentiment === 'bearish' || i.type === 'risk').length;
+                    // Analyze sentiment/type more robustly. Backend returns 'bullish'/'bearish' or 'opportunity'/'risk'
+                    const oppCount = assetFeed.filter(i =>
+                        (i.sentiment && i.sentiment.toLowerCase() === 'bullish') ||
+                        (i.type && i.type.toLowerCase() === 'opportunity') ||
+                        (i.classification && i.classification.toLowerCase() === 'opportunity')
+                    ).length;
+
+                    const riskCount = assetFeed.filter(i =>
+                        (i.sentiment && i.sentiment.toLowerCase() === 'bearish') ||
+                        (i.type && i.type.toLowerCase() === 'risk') ||
+                        (i.classification && i.classification.toLowerCase() === 'risk')
+                    ).length;
 
                     // Construct CoinGecko Image URL (Using simple assumption for now, can be improved with metadata map)
                     // Common pattern: https://assets.coingecko.com/coins/images/<ID>/small/<NAME>.png
