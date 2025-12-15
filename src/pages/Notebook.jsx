@@ -127,7 +127,9 @@ const Notebook = () => {
                     {/* Column 1: Title */}
                     <div className="note-title-col">
                       <div className="note-color-indicator" style={{ backgroundColor: note.color }}></div>
-                      <span className="note-title-text">{note.title || 'Untitled Note'}</span>
+                      <span className="note-title-text">
+                        {note.title || note.Title || (note.asset ? `${note.asset} Note` : 'Untitled Note')}
+                      </span>
                     </div>
 
                     {/* Column 2: Tags (Collapsed View) */}
@@ -154,7 +156,7 @@ const Notebook = () => {
                     <div className="list-item-body">
                       <div className="note-content-section">
                         <h4><FileText size={14} /> Note Content</h4>
-                        <p className="note-text">{note.content}</p>
+                        <p className="note-text">{note.content || note.Content || 'No Content'}</p>
                       </div>
 
 

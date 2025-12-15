@@ -3,6 +3,8 @@ import { useTransactions } from '../context/TransactionContext';
 import { usePrices } from '../context/PriceContext';
 import { useAuth } from '../context/AuthContext';
 import { addNote } from '../services/notebookService';
+import { getPortfolioFeeds } from '../services/twitterService';
+import { detectAssetEvents, generateWidgetData } from '../services/analysisService';
 import { RefreshCw, AlertTriangle, Activity, Zap, Check, X, ChevronDown, TrendingUp, Award, ExternalLink, ArrowRight, FileText } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
