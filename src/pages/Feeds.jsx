@@ -3,7 +3,7 @@ import { useTransactions } from '../context/TransactionContext';
 import { usePrices } from '../context/PriceContext';
 import { getPortfolioFeeds } from '../services/twitterService';
 import { detectAssetEvents, generateWidgetData } from '../services/analysisService';
-import { RefreshCw, AlertTriangle, Activity, Zap, Check, X, ChevronDown, TrendingUp, Award, ExternalLink } from 'lucide-react';
+import { RefreshCw, AlertTriangle, Activity, Zap, Check, X, ChevronDown, TrendingUp, Award, ExternalLink, ArrowRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import './Feeds.css';
@@ -352,7 +352,10 @@ const Feeds = () => {
                     // Ideally we should use coin_id from a mapping. For now, use a robust fallback UI.
 
                     return (
-                        <div key={asset} className="asset-intel-card" onClick={() => handleWidgetClick(`/asset/${asset}`)}>
+                    const isExpanded = expandedEventId === asset;
+
+                    return (
+                        <div key={asset} className={`asset-intel-card ${isExpanded ? 'active' : ''}`} onClick={() => toggleEventExpansion(asset)}>
                             <div className="asset-col">
                                 <div className="coin-icon-large">
                                     {/* Use a clear visual if no image */}
@@ -380,8 +383,71 @@ const Feeds = () => {
                                 <div className="intel-badge risk">
                                     <AlertTriangle size={14} /> {riskCount}
                                 </div>
-                                <ChevronDown size={16} className="card-arrow" />
+                                <ChevronDown size={16} className={`card-arrow ${isExpanded ? 'rotated' : ''}`} />
                             </div>
+
+                            {isExpanded && (
+                                <div className="asset-intel-details" onClick={(e) => e.stopPropagation()}>
+                                    {/* Opportunities Section */}
+                                    {oppCount > 0 && (
+                                        <div className="intel-section-block">
+                                            <h4 className="intel-section-title text-emerald-400">
+                                                <div className="w-2 h-2 rounded-full bg-emerald-500 mr-2"></div>
+                                                OPPORTUNITIES
+                                            </h4>
+                                            <div className="intel-items-list">
+                                                {assetFeed.filter(i => i.sentiment === 'bullish' || i.type === 'opportunity').map((item, idx) => (
+                                                    <div key={idx} className="intel-detail-item">
+                                                        <p className="intel-detail-text">• {item.text || item.summary}</p>
+                                                        {item.url && (
+                                                            <div className="intel-source-row">
+                                                                <span className="source-label">SOURCE:</span>
+                                                                <a href={item.url} target="_blank" rel="noopener noreferrer" className="source-link">
+                                                                    {item.author || 'News'} <ExternalLink size={10} />
+                                                                </a>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Risks Section */}
+                                    {riskCount > 0 && (
+                                        <div className="intel-section-block">
+                                            <h4 className="intel-section-title text-rose-400">
+                                                <div className="w-2 h-2 rounded-full bg-rose-500 mr-2"></div>
+                                                RISKS
+                                            </h4>
+                                            <div className="intel-items-list">
+                                                {assetFeed.filter(i => i.sentiment === 'bearish' || i.type === 'risk').map((item, idx) => (
+                                                    <div key={idx} className="intel-detail-item">
+                                                        <p className="intel-detail-text">• {item.text || item.summary}</p>
+                                                        {item.url && (
+                                                            <div className="intel-source-row">
+                                                                <span className="source-label">SOURCE:</span>
+                                                                <a href={item.url} target="_blank" rel="noopener noreferrer" className="source-link">
+                                                                    {item.author || 'News'} <ExternalLink size={10} />
+                                                                </a>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="intel-card-footer">
+                                        <button
+                                            className="go-to-asset-btn"
+                                            onClick={() => handleWidgetClick(`/asset/${asset}`)}
+                                        >
+                                            Go to Asset Page <ArrowRight size={14} className="ml-1" />
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     );
                 })}
