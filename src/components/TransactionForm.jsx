@@ -47,19 +47,20 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
   const { addTransaction, updateTransaction, transactions } = useTransactions();
   const { user } = useAuth();
   const { getPrice, getIcon, fetchPriceForTicker } = usePrices();
-  // Helper Constants for Sell Flow
+  // Helper Constants for Sell Flow (Synced with Desktop)
   const getOutcomeOptions = () => [
-    { id: 'win_big', label: 'Big Win (3R+)' },
-    { id: 'win_small', label: 'Small Win (1-2R)' },
-    { id: 'breakeven', label: 'Breakeven' },
-    { id: 'loss_small', label: 'Small Loss (<1R)' },
-    { id: 'loss_big', label: 'Big Loss (>1R)' }
+    { id: 'target_hit', label: 'Target Hit (Success)' },
+    { id: 'stop_loss', label: 'Stop Loss (Invalidated)' },
+    { id: 'narrative_failed', label: 'Narrative Failed' },
+    { id: 'market_shift', label: 'Market Shift' },
+    { id: 'time_exit', label: 'Time Based Exit' }
   ];
 
   const getExitFactors = () => ({
-    technical: ['Resistance Hit', 'Trend Reversal', 'Stop Loss Hit', 'Trailing Stop', 'Indicator Divergence'],
-    fundamental: ['Thesis Invalidated', 'News Catalyst', 'Tokenomics Change'],
-    psychology: ['Panic Sell', 'FOMO Exit', 'Profit Taking', 'Boredom', 'Need Liquidity']
+    market: ['Market Overheated', 'Sector Rotation', 'Macro Headwinds'],
+    technical: ['Trend Breakdown', 'Resistance Rejection', 'Indicator Overbought'],
+    fundamental: ['News Event (Negative)', 'Metric Deterioration', 'Team/Project Issue'],
+    strategy: ['Better Opportunity Found', 'Risk Management', 'Emotional Exit']
   });
 
   const { theses } = useBuyThesis(); // Get saved theses
