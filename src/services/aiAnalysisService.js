@@ -1,4 +1,4 @@
-import { db } from '../firebase';
+import { db } from './firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { generateGeminiContent } from './geminiService';
 import { analyzeTechnicals } from './technicalService';

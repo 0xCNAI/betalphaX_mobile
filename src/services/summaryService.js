@@ -1,4 +1,4 @@
-import { db } from '../firebase';
+import { db } from './firebase';
 import { collection, query, where, getDocs, doc, setDoc, deleteDoc, writeBatch, getDoc } from 'firebase/firestore';
 import { createAssetSummary, createUserSummary } from '../types/summary';
 import { generateAssetNoteSummary } from './geminiService';
