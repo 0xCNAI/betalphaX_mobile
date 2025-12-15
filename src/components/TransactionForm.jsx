@@ -20,7 +20,8 @@ import {
   FastForward,
   HelpCircle,
   FileText,
-  ChevronUp
+  ChevronUp,
+  Brain
 } from 'lucide-react';
 import { useBuyThesis } from '../context/BuyThesisContext';
 
@@ -2138,6 +2139,49 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
               {isAnalyzing ? 'Analyzing...' : 'Review This Trade Setup'}
             </button>
           </div>
+
+          {/* AI Coach Result Display */}
+          {aiCoachDiagnosis && (
+            <div className="ai-coach-result" style={{
+              marginTop: '16px',
+              padding: '16px',
+              backgroundColor: 'rgba(99, 102, 241, 0.1)',
+              border: '1px solid rgba(99, 102, 241, 0.3)',
+              borderRadius: '8px',
+              animation: 'fadeIn 0.5s ease-out'
+            }}>
+              <h5 style={{ margin: '0 0 12px', color: '#818cf8', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem' }}>
+                <Brain size={16} /> Coach's Diagnosis
+              </h5>
+
+              {/* Behavior Summary */}
+              <div style={{ marginBottom: '16px', fontSize: '0.9rem', lineHeight: '1.5', color: '#e2e8f0' }}>
+                {aiCoachDiagnosis.behavior_summary}
+              </div>
+
+              {/* Playbook Rules */}
+              {aiCoachDiagnosis.recommended_playbook && aiCoachDiagnosis.recommended_playbook.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {aiCoachDiagnosis.recommended_playbook.map((item, idx) => (
+                    <div key={idx} style={{
+                      display: 'flex',
+                      gap: '10px',
+                      backgroundColor: 'rgba(15, 23, 42, 0.6)',
+                      padding: '10px',
+                      borderRadius: '6px',
+                      fontSize: '0.85rem'
+                    }}>
+                      <div style={{ color: '#818cf8', fontWeight: 'bold', minWidth: '20px' }}>{idx + 1}.</div>
+                      <div>
+                        <div style={{ color: 'white', fontWeight: '600', marginBottom: '2px' }}>{item.rule}</div>
+                        <div style={{ color: '#94a3b8', fontSize: '0.8rem' }}>{item.reasoning}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* 2. Transaction Details Card */}
           <div className="details-card" style={{ marginBottom: '20px', borderRadius: '8px', overflow: 'hidden' }}>
