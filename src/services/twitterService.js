@@ -412,6 +412,7 @@ export async function getPortfolioFeeds(assets, forceRefresh = false) {
 
         // Format for Feeds UI
         const feeds = finalList.map(tweet => ({
+            ...tweet, // Preserve all analysis/mock properties (sentiment, type, summary, etc.)
             name: tweet.authorName || tweet.author || 'Unknown',
             volume: `${formatEngagement(tweet.likes)} likes`,
             text: tweet.text,

@@ -127,10 +127,10 @@ const Notebook = () => {
 
                     {/* Column 2: Tags (Collapsed View) */}
                     <div className="note-tags-col">
-                      {note.tags.slice(0, 1).map((tag, i) => ( // Show only 1 tag on mobile/collapsed
+                      {(note.tags || []).slice(0, 1).map((tag, i) => ( // Show only 1 tag on mobile/collapsed
                         <span key={i} className="mini-tag">#{tag}</span>
                       ))}
-                      {note.tags.length > 1 && <span className="mini-tag-more">+{note.tags.length - 1}</span>}
+                      {(note.tags || []).length > 1 && <span className="mini-tag-more">+{note.tags.length - 1}</span>}
                     </div>
 
                     {/* Column 3: Date */}
