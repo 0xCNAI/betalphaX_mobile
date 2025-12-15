@@ -61,6 +61,52 @@ const Feeds = () => {
     const [lastGenerated, setLastGenerated] = useState(null);
     const [showAssetSelector, setShowAssetSelector] = useState(false);
     const [selectedAssets, setSelectedAssets] = useState([]);
+    const [assetIcons, setAssetIcons] = useState({});
+
+    // --- Icon Resolution Logic ---
+    useEffect(() => {
+        const fetchIcons = async () => {
+            if (selectedAssets.length === 0) return;
+
+            // Only fetch if we have selected assets
+            // We need to check if we already have icons or if they are cached
+            let updates = {};
+            let needsUpdate = false;
+
+            // Check existing icons to avoid re-fetching
+            const missingAssets = selectedAssets.filter(a => !assetIcons[a]);
+
+            if (missingAssets.length === 0) return;
+
+            for (const asset of missingAssets) {
+                // Check local storage first
+                const cached = localStorage.getItem(`icon_${asset}`);
+                if (cached) {
+                    updates[asset] = cached;
+                    needsUpdate = true;
+                } else {
+                    // Fetch from API
+                    try {
+                        const { searchCoin } = await import('../services/coinGeckoApi');
+                        const coinData = await searchCoin(asset);
+                        if (coinData && coinData.large) {
+                            updates[asset] = coinData.large;
+                            localStorage.setItem(`icon_${asset}`, coinData.large);
+                            needsUpdate = true;
+                        }
+                    } catch (err) {
+                        console.error(`Failed to fetch icon for ${asset}`, err);
+                    }
+                }
+            }
+
+            if (needsUpdate) {
+                setAssetIcons(prev => ({ ...prev, ...updates }));
+            }
+        };
+
+        fetchIcons();
+    }, [selectedAssets]);
 
     // --- Cache Logic ---
     useEffect(() => {
@@ -356,56 +402,9 @@ const Feeds = () => {
                     const oppCount = assetFeed.filter(isOpp).length;
                     const riskCount = assetFeed.filter(isRisk).length;
 
-                    // Construct CoinGecko Image URL (Using simple assumption for now, can be improved with metadata map)
-                    // Common pattern: https://assets.coingecko.com/coins/images/<ID>/small/<NAME>.png
-                    // We will reliance on a generic placeholder with text if image fails to load, but here we just try to be more dynamic if possible
-                    // Ideally we should use coin_id from a mapping. For now, use a robust fallback UI.
-
+                    // Construct CoinGecko Image URL or use resolved icon
                     const isExpanded = expandedEventId === asset;
 
-                    // --- Icon Resolution Logic ---
-                    const [assetIcons, setAssetIcons] = useState({});
-
-                    useEffect(() => {
-                        const fetchIcons = async () => {
-                            const newIcons = { ...assetIcons };
-                            let changed = false;
-
-                            for (const asset of selectedAssets) {
-                                if (!newIcons[asset]) {
-                                    // Check local storage first
-                                    const cached = localStorage.getItem(`icon_${asset}`);
-                                    if (cached) {
-                                        newIcons[asset] = cached;
-                                        changed = true;
-                                    } else {
-                                        // Fetch from API
-                                        try {
-                                            // Import searchCoin dynamically or assume it's imported at top
-                                            // (We need to add import { searchCoin } from '../services/coinGeckoApi' at top)
-                                            const { searchCoin } = await import('../services/coinGeckoApi');
-                                            const coinData = await searchCoin(asset);
-                                            if (coinData && coinData.large) {
-                                                newIcons[asset] = coinData.large;
-                                                localStorage.setItem(`icon_${asset}`, coinData.large);
-                                                changed = true;
-                                            }
-                                        } catch (err) {
-                                            console.error(`Failed to fetch icon for ${asset}`, err);
-                                        }
-                                    }
-                                }
-                            }
-
-                            if (changed) {
-                                setAssetIcons(newIcons);
-                            }
-                        };
-
-                        if (selectedAssets.length > 0) {
-                            fetchIcons();
-                        }
-                    }, [selectedAssets]);
 
                     return (
                         <div key={asset} className={`asset-intel-card ${isExpanded ? 'active' : ''}`} onClick={() => toggleEventExpansion(asset)}>

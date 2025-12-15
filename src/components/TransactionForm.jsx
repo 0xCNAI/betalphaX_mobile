@@ -2153,229 +2153,163 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                 {formData.type}
               </span>
             </div>
-            <div style={{ backgroundColor: '#020617', padding: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem' }}>
-                <span style={{ color: '#94a3b8' }}>Asset</span>
-                <span style={{ color: 'white', fontWeight: '500' }}>{formData.asset}</span>
-              </div>
-
-              {/* Insert Review Widgets Here */}
-
-              {/* 3. Pro Technical Analysis */}
-              <div className="review-section-collapsible" style={{ marginBottom: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', overflow: 'hidden' }}>
-                <details open>
-                  <summary style={{ padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', listStyle: 'none' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600', color: 'var(--text-primary)' }}>
-                      <Activity size={16} className="text-blue-400" /> Pro Technical Analysis
-                    </div>
-                    <ChevronDown size={16} />
-                  </summary>
-                  <div style={{ padding: '0 16px 16px' }}>
-                    {/* Placeholder for now, can replace with <TechnicalAnalysisWidget /> if imported */}
-                    <div className="p-4 bg-slate-900 rounded border border-slate-800">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-slate-400 text-xs">RSI (14)</span>
-                        <span className="text-emerald-400 font-mono">42.5 (Neutral)</span>
-                      </div>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-slate-400 text-xs">MACD</span>
-                        <span className="text-rose-400 font-mono">Bearish Cross</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-400 text-xs">Trend</span>
-                        <span className="text-blue-400 font-mono">Accumulation</span>
-                      </div>
-                    </div>
-                  </div>
-                </details>
-              </div>
-
-              {/* 4. Fundamental Intelligence */}
-              <div className="review-section-collapsible" style={{ marginBottom: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', overflow: 'hidden' }}>
-                <details>
-                  <summary style={{ padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', listStyle: 'none' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600', color: 'var(--text-primary)' }}>
-                      <Target size={16} className="text-purple-400" /> Fundamental Intelligence
-                    </div>
-                    <ChevronDown size={16} />
-                  </summary>
-                  <div style={{ padding: '4px' }}>
-                    <FundamentalWidget symbol={formData.asset} />
-                  </div>
-                </details>
-              </div>
-
-              {/* 5. Important Events & Insights */}
-              <div className="review-section-collapsible" style={{ marginBottom: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', overflow: 'hidden' }}>
-                <details>
-                  <summary style={{ padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', listStyle: 'none' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600', color: 'var(--text-primary)' }}>
-                      <Newspaper size={16} className="text-amber-400" /> Important Events & Insights
-                    </div>
-                    <ChevronDown size={16} />
-                  </summary>
-                  <div style={{ padding: '4px' }}>
-                    <SocialNotificationWidget />
-                  </div>
-                </details>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem' }}>
-                <span style={{ color: '#94a3b8' }}>Amount</span>
-                <span style={{ color: 'white', fontWeight: '500' }}>{parseFloat(formData.amount).toLocaleString()}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem' }}>
-                <span style={{ color: 'white', fontWeight: '500' }}>${parseFloat(formData.price).toLocaleString()}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem' }}>
-                <span style={{ color: '#94a3b8' }}>Date</span>
-                <span style={{ color: 'white', fontWeight: '500' }}>{formData.date}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '12px', borderTop: '1px solid #1e293b', fontSize: '0.95rem' }}>
-                <span style={{ color: '#94a3b8' }}>Total Value</span>
-                <span style={{ color: 'white', fontWeight: 'bold' }}>
-                  ${((parseFloat(formData.amount || 0) * parseFloat(formData.price || 0)) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
-              </div>
-            </div>
+            <span style={{ color: 'white', fontWeight: '500' }}>{parseFloat(formData.amount).toLocaleString()}</span>
           </div>
-
-          {/* 3. Thesis & Notes Card */}
-          <div className="thesis-card" style={{ backgroundColor: '#0f172a', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
-            <h5 style={{ margin: '0 0 16px', color: 'white', fontSize: '0.95rem', fontWeight: 'bold' }}>Thesis & Notes</h5>
-
-            <div style={{ marginBottom: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: 'bold', color: '#94a3b8', marginBottom: '8px' }}>
-                <Target size={12} /> {formData.type === 'buy' ? 'BUY THESIS' : 'SELL OUTCOME'}
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                {formData.tags && formData.tags.length > 0 ? (
-                  formData.tags.map(tag => (
-                    <span key={tag} style={{ color: '#94a3b8', fontSize: '0.85rem', fontStyle: 'italic' }}>#{tag}</span>
-                  ))
-                ) : <span style={{ color: '#64748b', fontSize: '0.85rem', fontStyle: 'italic' }}>No thesis tags selected</span>}
-              </div>
-            </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem' }}>
+            <span style={{ color: 'white', fontWeight: '500' }}>${parseFloat(formData.price).toLocaleString()}</span>
           </div>
-
-          {/* 4. Collapsible Sections (Visual Only) */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-            <div style={{ backgroundColor: '#020617', borderRadius: '8px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #1e293b' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ width: '0', height: '0', borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '8px solid #94a3b8' }}></div>
-                <span style={{ color: '#e2e8f0', fontSize: '0.9rem', fontWeight: '500' }}>Pro Technical Analysis</span>
-              </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <div style={{ width: '16px', height: '16px', border: '1px solid #475569', borderRadius: '2px' }}></div>
-                <ChevronDown size={16} color="#475569" />
-              </div>
-            </div>
-            <div style={{ backgroundColor: '#020617', borderRadius: '8px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #1e293b' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ width: '0', height: '0', borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '8px solid #94a3b8' }}></div>
-                <span style={{ color: '#e2e8f0', fontSize: '0.9rem', fontWeight: '500' }}>Fundamental Intelligence</span>
-              </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <div style={{ width: '16px', height: '16px', border: '1px solid #475569', borderRadius: '2px' }}></div>
-                <ChevronDown size={16} color="#475569" />
-              </div>
-            </div>
-            <div style={{ backgroundColor: '#020617', borderRadius: '8px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #1e293b' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ width: '0', height: '0', borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '8px solid #94a3b8' }}></div>
-                <span style={{ color: '#e2e8f0', fontSize: '0.9rem', fontWeight: '500' }}>Important Events & Insights</span>
-              </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <div style={{ width: '16px', height: '16px', border: '1px solid #475569', borderRadius: '2px' }}></div>
-                <ChevronDown size={16} color="#475569" />
-              </div>
-            </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem' }}>
+            <span style={{ color: '#94a3b8' }}>Date</span>
+            <span style={{ color: 'white', fontWeight: '500' }}>{formData.date}</span>
           </div>
-
-          {/* Sell Amount Validation Error */}
-          {isOverselling && (
-            <div className="validation-error" style={{
-              padding: 'var(--spacing-md)',
-              backgroundColor: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid var(--accent-danger)',
-              borderRadius: 'var(--radius-md)',
-              color: 'var(--accent-danger)',
-              marginTop: 'var(--spacing-md)',
-              marginBottom: '20px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--spacing-sm)'
-            }}>
-              <AlertTriangle size={20} />
-              <div>
-                <strong>Insufficient Holdings:</strong> You are trying to sell {sellAmount.toFixed(4)} {formData.asset}, but you only hold {currentHoldings.toFixed(4)} {formData.asset}.
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="step-actions" style={{
-          marginTop: 'auto',
-          borderTop: '1px solid #1e293b',
-          backgroundColor: '#020617',
-          padding: '16px 24px',
-          position: 'sticky',
-          bottom: 0,
-          zIndex: 10
-        }}>
-          <button type="button" onClick={() => setStep(3)} className="btn-secondary" style={{ backgroundColor: 'transparent', border: '1px solid #334155', color: '#cbd5e1' }}>
-            <ArrowLeft size={18} /> Back
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className="btn-primary"
-            disabled={isOverselling || isSubmitting}
-            style={{
-              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-              border: 'none',
-              opacity: (isOverselling || isSubmitting) ? 0.5 : 1,
-              cursor: (isOverselling || isSubmitting) ? 'not-allowed' : 'pointer'
-            }}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 size={18} className="spin" /> Saving...
-              </>
-            ) : (
-              <>
-                <Check size={18} /> Save Transaction
-              </>
-            )}
-          </button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '12px', borderTop: '1px solid #1e293b', fontSize: '0.95rem' }}>
+            <span style={{ color: '#94a3b8' }}>Total Value</span>
+            <span style={{ color: 'white', fontWeight: 'bold' }}>
+              ${((parseFloat(formData.amount || 0) * parseFloat(formData.price || 0)) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+          </div>
         </div>
       </div>
+
+          {/* 3. Thesis & Notes Card */ }
+    <div className="thesis-card" style={{ backgroundColor: '#0f172a', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
+      <h5 style={{ margin: '0 0 16px', color: 'white', fontSize: '0.95rem', fontWeight: 'bold' }}>Thesis & Notes</h5>
+
+      <div style={{ marginBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: 'bold', color: '#94a3b8', marginBottom: '8px' }}>
+          <Target size={12} /> {formData.type === 'buy' ? 'BUY THESIS' : 'SELL OUTCOME'}
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+          {formData.tags && formData.tags.length > 0 ? (
+            formData.tags.map(tag => (
+              <span key={tag} style={{ color: '#94a3b8', fontSize: '0.85rem', fontStyle: 'italic' }}>#{tag}</span>
+            ))
+          ) : <span style={{ color: '#64748b', fontSize: '0.85rem', fontStyle: 'italic' }}>No thesis tags selected</span>}
+        </div>
+      </div>
+    </div>
+
+    {/* 4. Collapsible Sections (Visual Only) */ }
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+      <div style={{ backgroundColor: '#020617', borderRadius: '8px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #1e293b' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ width: '0', height: '0', borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '8px solid #94a3b8' }}></div>
+          <span style={{ color: '#e2e8f0', fontSize: '0.9rem', fontWeight: '500' }}>Pro Technical Analysis</span>
+        </div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ width: '16px', height: '16px', border: '1px solid #475569', borderRadius: '2px' }}></div>
+          <ChevronDown size={16} color="#475569" />
+        </div>
+      </div>
+      <div style={{ backgroundColor: '#020617', borderRadius: '8px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #1e293b' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ width: '0', height: '0', borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '8px solid #94a3b8' }}></div>
+          <span style={{ color: '#e2e8f0', fontSize: '0.9rem', fontWeight: '500' }}>Fundamental Intelligence</span>
+        </div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ width: '16px', height: '16px', border: '1px solid #475569', borderRadius: '2px' }}></div>
+          <ChevronDown size={16} color="#475569" />
+        </div>
+      </div>
+      <div style={{ backgroundColor: '#020617', borderRadius: '8px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #1e293b' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ width: '0', height: '0', borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '8px solid #94a3b8' }}></div>
+          <span style={{ color: '#e2e8f0', fontSize: '0.9rem', fontWeight: '500' }}>Important Events & Insights</span>
+        </div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ width: '16px', height: '16px', border: '1px solid #475569', borderRadius: '2px' }}></div>
+          <ChevronDown size={16} color="#475569" />
+        </div>
+      </div>
+    </div>
+
+    {/* Sell Amount Validation Error */ }
+    {
+      isOverselling && (
+        <div className="validation-error" style={{
+          padding: 'var(--spacing-md)',
+          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          border: '1px solid var(--accent-danger)',
+          borderRadius: 'var(--radius-md)',
+          color: 'var(--accent-danger)',
+          marginTop: 'var(--spacing-md)',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--spacing-sm)'
+        }}>
+          <AlertTriangle size={20} />
+          <div>
+            <strong>Insufficient Holdings:</strong> You are trying to sell {sellAmount.toFixed(4)} {formData.asset}, but you only hold {currentHoldings.toFixed(4)} {formData.asset}.
+          </div>
+        </div>
+      )
+    }
+        </div >
+
+  <div className="step-actions" style={{
+    marginTop: 'auto',
+    borderTop: '1px solid #1e293b',
+    backgroundColor: '#020617',
+    padding: '16px 24px',
+    position: 'sticky',
+    bottom: 0,
+    zIndex: 10
+  }}>
+    <button type="button" onClick={() => setStep(3)} className="btn-secondary" style={{ backgroundColor: 'transparent', border: '1px solid #334155', color: '#cbd5e1' }}>
+      <ArrowLeft size={18} /> Back
+    </button>
+    <button
+      type="button"
+      onClick={handleSubmit}
+      className="btn-primary"
+      disabled={isOverselling || isSubmitting}
+      style={{
+        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+        border: 'none',
+        opacity: (isOverselling || isSubmitting) ? 0.5 : 1,
+        cursor: (isOverselling || isSubmitting) ? 'not-allowed' : 'pointer'
+      }}
+    >
+      {isSubmitting ? (
+        <>
+          <Loader2 size={18} className="spin" /> Saving...
+        </>
+      ) : (
+        <>
+          <Check size={18} /> Save Transaction
+        </>
+      )}
+    </button>
+  </div>
+      </div >
     );
   };
 
 
 
-  return (
-    <div className="wizard-container">
-      <div className="progress-bar">
-        <div className={`progress-step ${step >= 1 ? 'active' : ''}`}>1</div>
-        <div className="progress-line"></div>
-        {formData.type === 'sell' && (
-          <>
-            <div className={`progress-step ${step >= 2 ? 'active' : ''}`}>2</div>
-            <div className="progress-line"></div>
-          </>
-        )}
-        <div className={`progress-step ${step >= 3 ? 'active' : ''}`}>{formData.type === 'sell' ? 3 : 2}</div>
-        <div className="progress-line"></div>
-        <div className={`progress-step ${step >= 4 ? 'active' : ''}`}>{formData.type === 'sell' ? 4 : 3}</div>
-      </div>
+return (
+  <div className="wizard-container">
+    <div className="progress-bar">
+      <div className={`progress-step ${step >= 1 ? 'active' : ''}`}>1</div>
+      <div className="progress-line"></div>
+      {formData.type === 'sell' && (
+        <>
+          <div className={`progress-step ${step >= 2 ? 'active' : ''}`}>2</div>
+          <div className="progress-line"></div>
+        </>
+      )}
+      <div className={`progress-step ${step >= 3 ? 'active' : ''}`}>{formData.type === 'sell' ? 3 : 2}</div>
+      <div className="progress-line"></div>
+      <div className={`progress-step ${step >= 4 ? 'active' : ''}`}>{formData.type === 'sell' ? 4 : 3}</div>
+    </div>
 
-      {step === 1 && renderMergedStep1()}
-      {step === 2 && renderAnalysisStep()}
-      {step === 3 && renderStep3()}
-      {step === 4 && renderStep4()}
+    {step === 1 && renderMergedStep1()}
+    {step === 2 && renderAnalysisStep()}
+    {step === 3 && renderStep3()}
+    {step === 4 && renderStep4()}
 
-      <style>{`
+    <style>{`
         .analysis-step {
           max-width: 800px;
           margin: 0 auto;
@@ -3189,8 +3123,8 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             }
         }
       `}</style>
-    </div>
-  );
+  </div>
+);
 };
 
 export default TransactionForm;
