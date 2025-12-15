@@ -351,7 +351,6 @@ const Feeds = () => {
                     // We will reliance on a generic placeholder with text if image fails to load, but here we just try to be more dynamic if possible
                     // Ideally we should use coin_id from a mapping. For now, use a robust fallback UI.
 
-                    return (
                     const isExpanded = expandedEventId === asset;
 
                     return (
