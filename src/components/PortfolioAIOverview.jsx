@@ -89,12 +89,16 @@ const PortfolioAIOverview = ({ transactions, prices, user }) => {
                                 <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-secondary)' }}>Action Plan</h4>
                             </div>
                             <div className="checklist-preview">
-                                {report.actionableChecklist.slice(0, 3).map((item, idx) => (
-                                    <div key={idx} className="checklist-item-compact">
-                                        <CheckCircle size={16} className="text-accent-success" style={{ flexShrink: 0 }} />
-                                        <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>{item}</span>
-                                    </div>
-                                ))}
+                                {report.actionableChecklist && Array.isArray(report.actionableChecklist) ? (
+                                    report.actionableChecklist.slice(0, 3).map((item, idx) => (
+                                        <div key={idx} className="checklist-item-compact">
+                                            <CheckCircle size={16} className="text-accent-success" style={{ flexShrink: 0 }} />
+                                            <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>{item}</span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-sm text-slate-400">No actionable insights available.</div>
+                                )}
                             </div>
 
                             <button
@@ -145,7 +149,7 @@ const PortfolioAIOverview = ({ transactions, prices, user }) => {
                         <div className="modal-body">
                             {/* Executive Summary */}
                             <div className="report-section summary-card" style={{
-                                borderLeft: `4px solid ${report.executiveSummary.healthScore >= 70 ? 'var(--accent-success)' : report.executiveSummary.healthScore >= 40 ? 'var(--accent-warning)' : 'var(--accent-danger)'}`
+                                borderLeft: `4px solid ${report.executiveSummary?.healthScore >= 70 ? 'var(--accent-success)' : report.executiveSummary?.healthScore >= 40 ? 'var(--accent-warning)' : 'var(--accent-danger)'}`
                             }}>
                                 <div className="summary-header">
                                     <h3>Executive Summary</h3>
@@ -167,7 +171,7 @@ const PortfolioAIOverview = ({ transactions, prices, user }) => {
                             {/* Asset Strategy */}
                             <h3>Asset Strategy</h3>
                             <div className="assets-grid">
-                                {report.assets.map((asset) => (
+                                {report.assets && Array.isArray(report.assets) && report.assets.map((asset) => (
                                     <div key={asset.symbol} className="asset-card">
                                         <div className="asset-card-header">
                                             <strong>{asset.symbol}</strong>
@@ -195,7 +199,7 @@ const PortfolioAIOverview = ({ transactions, prices, user }) => {
                             {/* Checklist */}
                             <h3>Action Plan</h3>
                             <div className="checklist-container">
-                                {report.actionableChecklist.map((item, idx) => (
+                                {report.actionableChecklist && Array.isArray(report.actionableChecklist) && report.actionableChecklist.map((item, idx) => (
                                     <div key={idx} className="checklist-item">
                                         <CheckCircle size={18} className="text-accent-success" />
                                         <span>{item}</span>

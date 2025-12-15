@@ -257,9 +257,22 @@ Generate a JSON report with the following structure:
 function parseAIResponse(text) {
     try {
         const cleaned = text.replace(/```json\n?|\n?```/g, '').trim();
-        return JSON.parse(cleaned);
+        const parsed = JSON.parse(cleaned);
+
+        // Validate structure and fill defaults
+        return {
+            executiveSummary: {
+                healthScore: parsed.executiveSummary?.healthScore || 0,
+                overview: parsed.executiveSummary?.overview || "No overview available.",
+                topPriorityAction: parsed.executiveSummary?.topPriorityAction || "No priority action available."
+            },
+            assets: Array.isArray(parsed.assets) ? parsed.assets : [],
+            actionableChecklist: Array.isArray(parsed.actionableChecklist) ? parsed.actionableChecklist : []
+        };
     } catch (e) {
         console.error('Failed to parse AI report:', text);
+        console.error(e);
+        // Fallback or rethrow
         return null;
     }
 }
