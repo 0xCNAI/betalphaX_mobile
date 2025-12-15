@@ -363,22 +363,69 @@ const Feeds = () => {
 
                     const isExpanded = expandedEventId === asset;
 
+                    // --- Icon Resolution Logic ---
+                    const [assetIcons, setAssetIcons] = useState({});
+
+                    useEffect(() => {
+                        const fetchIcons = async () => {
+                            const newIcons = { ...assetIcons };
+                            let changed = false;
+
+                            for (const asset of selectedAssets) {
+                                if (!newIcons[asset]) {
+                                    // Check local storage first
+                                    const cached = localStorage.getItem(`icon_${asset}`);
+                                    if (cached) {
+                                        newIcons[asset] = cached;
+                                        changed = true;
+                                    } else {
+                                        // Fetch from API
+                                        try {
+                                            // Import searchCoin dynamically or assume it's imported at top
+                                            // (We need to add import { searchCoin } from '../services/coinGeckoApi' at top)
+                                            const { searchCoin } = await import('../services/coinGeckoApi');
+                                            const coinData = await searchCoin(asset);
+                                            if (coinData && coinData.large) {
+                                                newIcons[asset] = coinData.large;
+                                                localStorage.setItem(`icon_${asset}`, coinData.large);
+                                                changed = true;
+                                            }
+                                        } catch (err) {
+                                            console.error(`Failed to fetch icon for ${asset}`, err);
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (changed) {
+                                setAssetIcons(newIcons);
+                            }
+                        };
+
+                        if (selectedAssets.length > 0) {
+                            fetchIcons();
+                        }
+                    }, [selectedAssets]);
+
                     return (
                         <div key={asset} className={`asset-intel-card ${isExpanded ? 'active' : ''}`} onClick={() => toggleEventExpansion(asset)}>
                             <div className="asset-col">
                                 <div className="coin-icon-large">
                                     <img
-                                        src={`https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a63530be6e374711a8554f31b17e4cb92c25fa5/128/color/${asset.toLowerCase()}.png`}
+                                        src={assetIcons[asset] || `https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a63530be6e374711a8554f31b17e4cb92c25fa5/128/color/${asset.toLowerCase()}.png`}
                                         alt={asset}
                                         className="coin-icon-img"
                                         style={{ display: 'block' }}
                                         onError={(e) => {
-                                            // Try second source: LiveCoinWatch
                                             const target = e.target;
-                                            if (target.src.includes('atomiclabs')) {
+                                            // Fallback chain
+                                            if (target.src === assetIcons[asset]) {
+                                                // Resolved icon failed, try generic CDN
+                                                target.src = `https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a63530be6e374711a8554f31b17e4cb92c25fa5/128/color/${asset.toLowerCase()}.png`;
+                                            } else if (target.src.includes('atomiclabs')) {
+                                                // AtomicLabs failed, try LiveCoinWatch
                                                 target.src = `https://lcw.nyc3.cdn.digitaloceanspaces.com/production/currencies/64/${asset.toLowerCase()}.png`;
                                             } else {
-                                                // If second source fails, show fallback
                                                 target.style.display = 'none';
                                                 target.nextSibling.style.display = 'flex';
                                             }

@@ -33,6 +33,9 @@ import { generateTagsFromNote } from '../services/geminiService';
 import { generatePortfolioOverview, getTradeDiagnosis, getCachedOverview } from '../services/analysisService';
 import { captureContextSnapshot, getOutcomeOptions, getExitFactors } from '../services/contextService';
 import { getCoachAdvice } from '../services/aiCoachService'; // Import AI Coach
+import FundamentalWidget from './FundamentalWidget';
+import SocialNotificationWidget from './SocialNotificationWidget'; // For Events/Insights
+import { ChevronUp } from 'lucide-react'; // Helper Component/Icon
 
 // ...
 
