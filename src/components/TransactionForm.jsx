@@ -2158,6 +2158,67 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                 <span style={{ color: '#94a3b8' }}>Asset</span>
                 <span style={{ color: 'white', fontWeight: '500' }}>{formData.asset}</span>
               </div>
+
+              {/* Insert Review Widgets Here */}
+
+              {/* 3. Pro Technical Analysis */}
+              <div className="review-section-collapsible" style={{ marginBottom: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', overflow: 'hidden' }}>
+                <details open>
+                  <summary style={{ padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', listStyle: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                      <Activity size={16} className="text-blue-400" /> Pro Technical Analysis
+                    </div>
+                    <ChevronDown size={16} />
+                  </summary>
+                  <div style={{ padding: '0 16px 16px' }}>
+                    {/* Placeholder for now, can replace with <TechnicalAnalysisWidget /> if imported */}
+                    <div className="p-4 bg-slate-900 rounded border border-slate-800">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-slate-400 text-xs">RSI (14)</span>
+                        <span className="text-emerald-400 font-mono">42.5 (Neutral)</span>
+                      </div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-slate-400 text-xs">MACD</span>
+                        <span className="text-rose-400 font-mono">Bearish Cross</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-400 text-xs">Trend</span>
+                        <span className="text-blue-400 font-mono">Accumulation</span>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+              </div>
+
+              {/* 4. Fundamental Intelligence */}
+              <div className="review-section-collapsible" style={{ marginBottom: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', overflow: 'hidden' }}>
+                <details>
+                  <summary style={{ padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', listStyle: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                      <Target size={16} className="text-purple-400" /> Fundamental Intelligence
+                    </div>
+                    <ChevronDown size={16} />
+                  </summary>
+                  <div style={{ padding: '4px' }}>
+                    <FundamentalWidget symbol={formData.asset} />
+                  </div>
+                </details>
+              </div>
+
+              {/* 5. Important Events & Insights */}
+              <div className="review-section-collapsible" style={{ marginBottom: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', overflow: 'hidden' }}>
+                <details>
+                  <summary style={{ padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', listStyle: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                      <Newspaper size={16} className="text-amber-400" /> Important Events & Insights
+                    </div>
+                    <ChevronDown size={16} />
+                  </summary>
+                  <div style={{ padding: '4px' }}>
+                    <SocialNotificationWidget />
+                  </div>
+                </details>
+              </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem' }}>
                 <span style={{ color: '#94a3b8' }}>Amount</span>
                 <span style={{ color: 'white', fontWeight: '500' }}>{parseFloat(formData.amount).toLocaleString()}</span>
