@@ -15,6 +15,10 @@ import { useAuth } from './AuthContext';
 import { clearOverviewCache } from '../services/analysisService';
 import { getTokenFundamentals } from '../services/fundamentalService';
 import { createTransaction } from '../types/transaction';
+import { createPositionDoc, getOpenPositionForAsset, updatePositionWithNewTx, recalculatePosition } from '../services/positionService';
+import { addNote } from '../services/notebookService';
+import { recalculateAssetSummary, recalculateUserSummary, recalculateAllSummaries } from '../services/summaryService';
+import { runPostTransactionAnalysis } from '../services/aiAnalysisService';
 
 const TransactionContext = createContext();
 
@@ -191,13 +195,45 @@ export const TransactionProvider = ({ children }) => {
             console.warn("Failed to fetch market snapshot:", err);
         }
 
+        // --- Position Logic Start ---
+        let positionId = null;
+        let entryIndex = null;
+
+        try {
+            // 1. Check for open position
+            const openPosition = await getOpenPositionForAsset(user.uid, transaction.asset);
+
+            if (!openPosition && transaction.type === 'buy') {
+                // 2. Create new position if none exists and it's a buy
+                // We need a draft tx object for createPositionDoc to calculate initials
+                const draftTx = { ...transaction, userId: user.uid };
+                const newPosition = await createPositionDoc(user.uid, transaction.asset, draftTx);
+                positionId = newPosition.id;
+                entryIndex = 1;
+                console.log(`Created new position ${positionId} for ${transaction.asset}`);
+            } else if (openPosition) {
+                // 3. Link to existing position
+                positionId = openPosition.id;
+                entryIndex = (openPosition.transactionIds?.length || 0) + 1;
+                console.log(`Linked to existing position ${positionId} for ${transaction.asset}`);
+            }
+            // If sell and no open position, we might treat it as isolated or error. 
+            // For now, let's allow it but with null positionId (orphan sell).
+        } catch (posError) {
+            console.error("Error handling position logic:", posError);
+            // Fallback: proceed without position linking to avoid blocking the transaction
+        }
+        // --- Position Logic End ---
+
         const newTx = createTransaction({
             ...transaction,
             userId: user.uid,
             createdAt: new Date().toISOString(),
             market_context_snapshot: marketSnapshot,
             coinId: transaction.coinId || null,
-            coinName: transaction.coinName || null
+            coinName: transaction.coinName || null,
+            positionId: positionId, // Add positionId
+            entryIndex: entryIndex  // Add entryIndex
         });
 
         try {
@@ -206,10 +242,43 @@ export const TransactionProvider = ({ children }) => {
                 setTimeout(() => reject(new Error("Firestore timeout")), 5000)
             );
 
-            await Promise.race([
+            const docRef = await Promise.race([
                 addDoc(collection(db, "transactions"), newTx),
                 timeoutPromise
             ]);
+
+            // If successful, update position with the new transaction ID and recalculate metrics
+            if (positionId && docRef.id) {
+                await updatePositionWithNewTx(positionId, newTx, docRef.id);
+            }
+
+            // 5. Trigger Real-time AI Analysis (Fire and Forget)
+            runPostTransactionAnalysis(user.uid, docRef.id, newTx, { id: positionId, current_size: 0 });
+
+            // 6. Trigger Summary Recalculation (Fire and Forget)
+            const priceForSummary = Number(newTx.price) || 0;
+            recalculateAssetSummary(user.uid, newTx.asset, priceForSummary)
+                .then(() => recalculateUserSummary(user.uid))
+                .catch(err => console.error("Summary update failed:", err));
+
+            // 7. Save Investment Note if present (Fire and Forget)
+            const noteContent = transaction.memo;
+            if (noteContent && typeof noteContent === 'string' && noteContent.trim().length > 0) {
+                console.log('Saving investment note from transaction:', noteContent.substring(0, 20) + '...');
+                addNote(user.uid, {
+                    asset: newTx.asset,
+                    coinId: newTx.coinId,
+                    type: 'journal',
+                    title: `Investment Note: ${newTx.type.toUpperCase()} ${newTx.asset}`,
+                    content: noteContent,
+                    txId: docRef.id, // Link to this transaction
+                    tags: ['Transaction Note'],
+                    source: 'manual'
+                }).catch(err => console.error("Failed to save transaction note:", err));
+            }
+
+            return docRef.id;
+
         } catch (error) {
             console.warn("Firestore failed/timed out, saving locally:", error);
             setIsOffline(true);
@@ -219,7 +288,7 @@ export const TransactionProvider = ({ children }) => {
             const updatedTransactions = [localTx, ...transactions];
             setTransactions(updatedTransactions);
             localStorage.setItem(`transactions_${user.uid}`, JSON.stringify(updatedTransactions));
-            return; // Return successfully even if offline
+            return localTx.id; // Return successfully even if offline
         }
     };
 
