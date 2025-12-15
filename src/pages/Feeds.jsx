@@ -341,34 +341,22 @@ const Feeds = () => {
             {/* 4. Asset Intelligence List */}
             <div className="asset-intel-list">
                 {selectedAssets.map(asset => {
-                    // Calculate basic stats for this asset from existing logic
-                    // We need to filter 'allEvents' from metrics if available, or simpler counts
-                    // Since 'metrics' is memoized, we can access it.
-                    // However, metrics is derived from selectedAssets.
-                    // Let's re-derive basic counts here for display.
-
-                    const assetEvents = metrics.boardEvents ? metrics.boardEvents.filter(e => e.asset === asset) : [];
-                    // This is imperfect because boardEvents is filtered top 7.
-                    // Better to look at the raw 'holdingsFeed' or regenerate localized event counts.
-                    // For the UI visuals requested, we'll try to find counts.
-
-                    // Simple heuristic for demo based on feed data
+                    // Use metrics logic if available or fallback to feed analysis
                     const assetFeed = holdingsFeed.filter(f => f.asset === asset);
-                    // Mocking opps/risks count logic based on sentiment/type for now if specific event data isn't exposed raw
-                    // In real app, 'detectAssetEvents' output for ALL assets should be accessible.
-                    // The 'metrics' object in the original code logic filtered 'allEvents'.
-                    // Let's trust 'metrics.widgets' data if possible, or just mock for visual step if logic is complex.
-                    // Actually, let's use a simpler heuristic available:
                     const oppCount = assetFeed.filter(i => i.sentiment === 'bullish' || i.type === 'opportunity').length;
                     const riskCount = assetFeed.filter(i => i.sentiment === 'bearish' || i.type === 'risk').length;
 
+                    // Construct CoinGecko Image URL (Using simple assumption for now, can be improved with metadata map)
+                    // Common pattern: https://assets.coingecko.com/coins/images/<ID>/small/<NAME>.png
+                    // We will reliance on a generic placeholder with text if image fails to load, but here we just try to be more dynamic if possible
+                    // Ideally we should use coin_id from a mapping. For now, use a robust fallback UI.
+
                     return (
-                        <div key={asset} className="asset-intel-card" onClick={() => handleWidgetClick('/asset-details')}>
+                        <div key={asset} className="asset-intel-card" onClick={() => handleWidgetClick(`/asset/${asset}`)}>
                             <div className="asset-col">
                                 <div className="coin-icon-large">
-                                    {/* Placeholder for real icon */}
-                                    <div className="coin-icon-img" style={{ backgroundImage: `url(https://assets.coingecko.com/coins/images/1/small/bitcoin.png)` }}>
-                                        {/* In reality we need to fetch the icon url or use a Component, using initial for now if no generic component */}
+                                    {/* Use a clear visual if no image */}
+                                    <div className="coin-icon-img flex items-center justify-center bg-slate-800 text-slate-200 font-bold rounded-full border border-slate-700">
                                         {asset[0]}
                                     </div>
                                 </div>

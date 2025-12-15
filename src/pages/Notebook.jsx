@@ -3,6 +3,8 @@ import { Search, Plus, StickyNote, ArrowRight, FileText, Tag, Calendar } from 'l
 import { formatDistanceToNow } from 'date-fns';
 
 import Modal from '../components/Modal';
+import { useAuth } from '../context/AuthContext';
+import { getNotes, addNote } from '../services/notebookService';
 
 const Notebook = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -12,57 +14,56 @@ const Notebook = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newNote, setNewNote] = useState({ title: '', content: '', tags: '' });
 
-  // Mock Data for Notebook
-  const [notes, setNotes] = useState([
-    {
-      id: 1,
-      title: "Solana Breakout Analysis",
-      content: "Watching the $150 level closely. Volume is accumulating on the 4H chart. If we reclaim previous ATH support, the next target is $175. Key resistance at $162 needs to flip to support. RSI is resetting on the daily, suggesting hidden bullish divergence.",
-      tags: ["SOL", "Breakout", "High Conviction"],
-      date: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-      color: "var(--accent-primary)"
-    },
-    {
-      id: 2,
-      title: "Macro Environment Q1",
-      content: "Inflation data coming in hotter than expected. CPI +0.4% MoM vs +0.3% exp. Might see a rotation back into risk-off assets temporarily. Treasuries yield curve slightly steepening. Will reduce leverage on long positions until FOMC meeting minutes are digested.",
-      tags: ["Macro", "Risk Management"],
-      date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
-      color: "var(--accent-warning)"
-    },
-    {
-      id: 3,
-      title: "DeFi Yield Farming Strategy",
-      content: "New pools on Orca are offering >20% APY on stable pairs. Need to check impermanent risk calculators before deploying deeper liquidity. The incentives are mainly in the protocol token, so selling pressure might increase. Strategy: Compound daily and hedge exposure.",
-      tags: ["DeFi", "Yield", "Research"],
-      date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5), // 5 days ago
-      color: "var(--accent-success)"
-    },
-    {
-      id: 4,
-      title: "Layer 2 Narrative Watch",
-      content: "Arbitrum vs Optimism. Assessing the activity post-upgrade. User metrics shifting slightly towards Base due to social fi apps. Keeping an eye on bridging volume. The 'Superchain' thesis is gaining traction among dev communities.",
-      tags: ["L2", "Research"],
-      date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7), // 1 week ago
-      color: "#8b5cf6"
+  // Auth
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+
+  // Notes State
+  const [notes, setNotes] = useState([]);
+
+  // Fetch Notes on Mount
+  useEffect(() => {
+    if (user) {
+      loadNotes();
+    } else {
+      setNotes([]); // Clear notes if no user
+      setLoading(false);
     }
-  ]);
+  }, [user]);
 
-  const handleSaveNote = () => {
-    if (!newNote.title || !newNote.content) return;
+  const loadNotes = async () => {
+    setLoading(true);
+    try {
+      const fetchedNotes = await getNotes(user.uid);
+      setNotes(fetchedNotes);
+    } catch (err) {
+      console.error("Failed to load notes", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const noteToAdd = {
-      id: Date.now(),
-      title: newNote.title,
-      content: newNote.content,
-      tags: newNote.tags.split(',').map(t => t.trim()).filter(t => t),
-      date: new Date(),
-      color: "var(--accent-primary)" // Default color
-    };
+  const handleSaveNote = async () => {
+    if (!newNote.title || !newNote.content || !user) return;
 
-    setNotes([noteToAdd, ...notes]);
-    setNewNote({ title: '', content: '', tags: '' });
-    setIsModalOpen(false);
+    try {
+      const noteToAdd = {
+        title: newNote.title,
+        content: newNote.content,
+        tags: newNote.tags.split(',').map(t => t.trim()).filter(t => t),
+        color: "var(--accent-primary)"
+      };
+
+      await addNote(user.uid, noteToAdd);
+
+      // Reload to get fresh list order from server or update locally
+      await loadNotes();
+
+      setNewNote({ title: '', content: '', tags: '' });
+      setIsModalOpen(false);
+    } catch (e) {
+      alert("Failed to save note");
+    }
   };
 
   const toggleExpand = (id) => {
