@@ -122,7 +122,7 @@ const Notebook = () => {
                     {/* Column 1: Title */}
                     <div className="note-title-col">
                       <div className="note-color-indicator" style={{ backgroundColor: note.color }}></div>
-                      <span className="note-title-text">{note.title}</span>
+                      <span className="note-title-text">{note.title || 'Untitled Note'}</span>
                     </div>
 
                     {/* Column 2: Tags (Collapsed View) */}
@@ -155,7 +155,7 @@ const Notebook = () => {
                       <div className="note-meta-section">
                         <h4><Tag size={14} /> Tags</h4>
                         <div className="tags-display">
-                          {note.tags.map((tag, i) => (
+                          {(note.tags || []).map((tag, i) => (
                             <span key={i} className="full-tag">{tag}</span>
                           ))}
                         </div>
