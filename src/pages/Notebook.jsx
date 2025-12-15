@@ -56,6 +56,9 @@ const Notebook = () => {
         title: newNote.title,
         content: newNote.content,
         tags: newNote.tags.split(',').map(t => t.trim()).filter(t => t),
+        asset: 'Global', // Default for manual notes
+        type: 'note',
+        noteCategory: 'general',
         color: "var(--accent-primary)"
       };
 

@@ -29,15 +29,23 @@ const Feeds = () => {
             return;
         }
 
-        const noteContent = `[${type} Insight] ${text}\n\nSource: Market Intelligence Feed`;
-        const noteTitle = `${asset} ${type}: ${text.substring(0, 20)}...`;
+        const isOpp = type === 'Opportunity';
+        const noteTitle = `${type}: ${asset} – ${isOpp ? 'Opportunity' : 'Risk'}`;
 
         try {
             await addNote(user.uid, {
                 title: noteTitle,
-                content: noteContent,
-                tags: [asset, type, 'Feed'],
-                color: type === 'Opportunity' ? 'var(--accent-primary)' : '#ef4444' // Green or Redish
+                content: text,
+                tags: [type.toLowerCase(), asset],
+                asset: asset,
+                type: 'token',
+                noteCategory: 'highlight', // Matches desktop category for these
+                color: isOpp ? 'var(--accent-primary)' : '#ef4444',
+                sourceRef: {
+                    asset: asset,
+                    group: type.toLowerCase(),
+                    sourceType: `feed_mobile_${type.toLowerCase()}`
+                }
             });
             alert("✅ Insight saved to Notebook!");
         } catch (error) {
