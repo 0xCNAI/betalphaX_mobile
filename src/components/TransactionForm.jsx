@@ -2177,24 +2177,56 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
         transactionData.diagnosis = formData.diagnosis;
       }
 
-      // Capture context snapshot for Sell transactions
+      // Capture context snapshot for Sell transactions and Pre-calculate PnL
       if (formData.type === 'sell') {
         try {
-          // Note: captureContextSnapshot needs to be defined or imported if used.
-          // Assuming it's a helper function available in scope or imports.
-          // If not, we should probably remove it or ensure it's safe.
-          // Checking previous code, it wasn't imported. It might be another missing function.
-          // For now, let's wrap it safely.
           if (typeof captureContextSnapshot === 'function') {
             const snapshot = await captureContextSnapshot();
             transactionData.contextSnapshot = snapshot;
           }
-          transactionData.status = 'closed'; // Mark as closed if it's a sell (simplified logic)
-          transactionData.linkedBuyReasons = formData.linkedBuyReasons; // V2: Link to reasons
+
+          // Pre-calculate PnL/ROI from client-side state to ensure data integrity
+          // This serves as a robust fallback/primary source for the transaction record
+          const relevantTxs = transactions.filter(t => t.asset === formData.asset.toUpperCase() && t.date <= formData.date);
+          let currentQty = 0;
+          let totalCost = 0;
+
+          relevantTxs.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+          for (const tx of relevantTxs) {
+            const tAmount = parseFloat(tx.amount || 0);
+            const tPrice = parseFloat(tx.price || 0);
+            if (tx.type === 'buy') {
+              currentQty += tAmount;
+              totalCost += (tAmount * tPrice);
+            } else if (tx.type === 'sell') {
+              const avgC = currentQty > 0 ? totalCost / currentQty : 0;
+              currentQty -= tAmount;
+              totalCost -= (tAmount * avgC);
+            }
+          }
+
+          // Current Avg Entry Price
+          const avgEntryPrice = currentQty > 0 ? totalCost / currentQty : 0;
+
+          // Correctly handle small float errors or empty positions
+          if (avgEntryPrice > 0) {
+            const sellAmt = parseFloat(formData.amount);
+            const sellPx = parseFloat(formData.price);
+            const tradePnl = (sellPx - avgEntryPrice) * sellAmt;
+            const roiVal = ((sellPx - avgEntryPrice) / avgEntryPrice) * 100;
+
+            transactionData.pnl = tradePnl;
+            transactionData.roi = roiVal;
+            transactionData.avg_entry_at_sale = avgEntryPrice;
+          }
+
+          transactionData.status = 'closed'; // Mark as closed
+          transactionData.linkedBuyReasons = formData.linkedBuyReasons;
           transactionData.outcomeStatus = formData.outcomeStatus;
           transactionData.exitFactors = formData.exitFactors;
         } catch (e) {
-          console.error("Failed to capture context:", e);
+          console.error("Failed to capture context or calculate PnL:", e);
         }
       }
 

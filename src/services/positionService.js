@@ -1,6 +1,6 @@
 import { db } from './firebase';
 import { collection, addDoc, doc, getDoc, updateDoc, arrayUnion, query, where, getDocs } from 'firebase/firestore';
-import { calculateAssetPnL } from '../utils/pnlCalculator'; // Ensure this utility exists or import logic
+import { calculateAssetPnL } from '../utils/pnlCalculator';
 
 const POSITIONS_COLLECTION = 'positions';
 
@@ -53,6 +53,9 @@ export const getOpenPositionForAsset = async (userId, asset) => {
  * Create a new position document
  */
 export const createPositionDoc = async (userId, asset, firstTx) => {
+    const price = Number(firstTx.price) || 0;
+    const isBuy = firstTx.type === 'buy';
+
     const positionData = createPosition({
         userId,
         asset: asset.toUpperCase(),
@@ -134,19 +137,6 @@ export const updatePositionWithNewTx = async (positionId, tx, txId) => {
             const tradePnl = (txPrice - avg_entry_price) * txAmount;
             realized_pnl_abs += tradePnl;
 
-            // Calculate ROI %
-            const roiVal = avg_entry_price > 0 ? ((txPrice - avg_entry_price) / avg_entry_price) * 100 : 0;
-
-            // Update the Sell Transaction with these metrics (Crucial for Display/Sync)
-            const txRef = doc(db, 'transactions', txId);
-            // We use no-await here or await? Better to await to ensure consistency
-            await updateDoc(txRef, {
-                pnl: tradePnl,
-                roi: roiVal,
-                status: 'closed', // Ensure proper status
-                avg_entry_at_sale: avg_entry_price // Useful for debugging/history
-            });
-
             // Avg Entry Price remains CONSTANT on sell
         }
 
@@ -191,6 +181,25 @@ export const updatePositionWithNewTx = async (positionId, tx, txId) => {
         throw error;
     }
 };
+
+/**
+ * Add transaction ID to position's transactionIds array.
+ * @deprecated Use updatePositionWithNewTx instead for full logic
+ * 
+ * @param {string} positionId 
+ * @param {string} txId 
+ */
+export const addTxToPosition = async (positionId, txId) => {
+    try {
+        const positionRef = doc(db, POSITIONS_COLLECTION, positionId);
+        await updateDoc(positionRef, {
+            transactionIds: arrayUnion(txId),
+            updatedAt: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error("Error adding tx to position:", error);
+    }
+}
 
 /**
  * Recalculate position metrics from scratch based on its transactions.
@@ -243,39 +252,21 @@ export const recalculatePosition = async (positionId) => {
         // Update the position's transactionIds list to match reality
         const freshTransactionIds = txs.map(t => t.id);
 
+        // Sort by date/timestamp
+        txs.sort((a, b) => new Date(a.date) - new Date(b.date));
+
         // Replay metrics using standard WAC calculator
-        // Assuming calculateAssetPnL import works or we mock it.
-        // For mobile, we might simply skip PnL Calculator usage if strict complex logic not needed yet,
-        // but it is recommended to keep it consistent.
+        let {
+            holdings: current_size,
+            totalCost: total_cost,
+            avgBuyPrice: avg_entry_price,
+            realizedPnL: realized_pnl_abs
+        } = calculateAssetPnL(txs, 0); // Price 0 is fine, we don't need unrealized here
 
-        let current_size = 0;
-        let total_cost = 0;
-        let realized_pnl_abs = 0;
-        let avg_entry_price = 0;
-        let total_buy_amount = 0;
-
-        txs.forEach(tx => {
-            const amount = Number(tx.amount) || 0;
-            const price = Number(tx.price) || 0;
-
-            if (tx.type === 'buy') {
-                total_cost += amount * price;
-                current_size += amount;
-                total_buy_amount += amount;
-                avg_entry_price = current_size > 0 ? total_cost / current_size : 0;
-            } else if (tx.type === 'sell') {
-                const costRemoved = amount * avg_entry_price;
-                total_cost -= costRemoved;
-                current_size -= amount;
-                realized_pnl_abs += (price - avg_entry_price) * amount;
-            }
-        });
-
-        if (current_size < 1e-8) {
-            current_size = 0;
-            total_cost = 0;
-            avg_entry_price = 0;
-        }
+        // Calculate total buy amount (lifetime volume) manually as it's not in PnL calculator
+        const total_buy_amount = txs.reduce((acc, tx) => {
+            return tx.type === 'buy' ? acc + (Number(tx.amount) || 0) : acc;
+        }, 0);
 
         // Determine status
         let status = 'open';
@@ -283,6 +274,7 @@ export const recalculatePosition = async (positionId) => {
         if (current_size <= 1e-8) {
             current_size = 0;
             status = 'closed';
+            // Use the last transaction's date as closedAt
             const lastTx = txs[txs.length - 1];
             closedAt = lastTx?.createdAt || new Date().toISOString();
         }
@@ -296,7 +288,7 @@ export const recalculatePosition = async (positionId) => {
             realized_pnl_abs,
             status,
             closedAt,
-            transactionIds: freshTransactionIds,
+            transactionIds: freshTransactionIds, // Update the list with validation
             updatedAt: new Date().toISOString()
         });
 

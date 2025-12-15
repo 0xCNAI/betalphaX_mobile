@@ -9,16 +9,22 @@ import {
     where,
     onSnapshot,
     orderBy,
-    writeBatch
+    writeBatch,
+    deleteDoc
 } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
 import { clearOverviewCache } from '../services/analysisService';
 import { getTokenFundamentals } from '../services/fundamentalService';
 import { createTransaction } from '../types/transaction';
-import { createPositionDoc, getOpenPositionForAsset, updatePositionWithNewTx, recalculatePosition } from '../services/positionService';
-import { addNote } from '../services/notebookService';
-import { recalculateAssetSummary, recalculateUserSummary, recalculateAllSummaries } from '../services/summaryService';
+import {
+    getOpenPositionForAsset,
+    createPositionDoc,
+    updatePositionWithNewTx,
+    recalculatePosition
+} from '../services/positionService';
 import { runPostTransactionAnalysis } from '../services/aiAnalysisService';
+import { recalculateAssetSummary, recalculateUserSummary, recalculateAllSummaries } from '../services/summaryService';
+import { addNote } from '../services/notebookService';
 
 const TransactionContext = createContext();
 
@@ -29,68 +35,15 @@ export const TransactionProvider = ({ children }) => {
     const { user } = useAuth();
     const [isOffline, setIsOffline] = useState(false);
 
-    // Mock Data for Dev/Testing if empty
-    const MOCK_DATA = [
-        {
-            id: 'local_mock_1',
-            asset: 'BTC',
-            type: 'buy',
-            amount: 0.15,
-            price: 65000,
-            date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString().split('T')[0], // 10 days ago
-            status: 'open',
-            memo: "Accumulating spot BTC as a long-term hedge. Analyzing the 4-year cycle indicators which suggest we are in the early bull phase. Will look to add more on dips below 62k.",
-            tags: ["Hedge", "Cycle", "Long Term"],
-            userId: user?.uid || 'mock_user'
-        },
-        {
-            id: 'local_mock_2',
-            asset: 'ETH',
-            type: 'buy',
-            amount: 2.5,
-            price: 3200,
-            date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString().split('T')[0], // 5 days ago
-            status: 'open',
-            memo: "Entry for yield farming strategy on Aave. Expecting ETH ETF narrative to pick up steam in Q2. Risk/Reward looks favorable here with invalidation below 2800.",
-            tags: ["DeFi", "Yield", "Narrative"],
-            userId: user?.uid || 'mock_user'
-        },
-        {
-            id: 'local_mock_3',
-            asset: 'SOL',
-            type: 'buy',
-            amount: 150,
-            price: 145,
-            date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString().split('T')[0], // 2 days ago
-            status: 'open',
-            memo: "Momentum trade. Solana showing relative strength against both BTC and ETH. Breakout above 140 was efficient. Targeting 180 short term.",
-            tags: ["Momentum", "Breakout", "L1"],
-            userId: user?.uid || 'mock_user'
-        }
-    ];
-
-    // Load from local storage if offline or init mock data
+    // Load from local storage if offline
     useEffect(() => {
-        if (user) {
+        if (isOffline && user) {
             const localData = localStorage.getItem(`transactions_${user.uid}`);
             if (localData) {
-                const parsed = JSON.parse(localData);
-                if (parsed.length > 0) {
-                    setTransactions(parsed);
-                } else {
-                    // Seed mock data if empty
-                    console.log("Seeding mock data for empty portfolio...");
-                    setTransactions(MOCK_DATA);
-                    localStorage.setItem(`transactions_${user.uid}`, JSON.stringify(MOCK_DATA));
-                }
-            } else {
-                // Seed mock data if no local storage found
-                console.log("Seeding mock data (first init)...");
-                setTransactions(MOCK_DATA);
-                localStorage.setItem(`transactions_${user.uid}`, JSON.stringify(MOCK_DATA));
+                setTransactions(JSON.parse(localData));
             }
         }
-    }, [user]);
+    }, [isOffline, user]);
 
     useEffect(() => {
         if (!user) {
@@ -153,6 +106,55 @@ export const TransactionProvider = ({ children }) => {
         return () => unsubscribe();
     }, [user]);
 
+    // Sync local transactions to Firestore when connection is restored
+    useEffect(() => {
+        const syncLocalTransactions = async () => {
+            if (!user || isOffline) return;
+
+            const localData = localStorage.getItem(`transactions_${user.uid}`);
+            if (!localData) return;
+
+            let parsed = [];
+            try {
+                parsed = JSON.parse(localData);
+            } catch (e) {
+                console.error("Error parsing local transactions:", e);
+                return;
+            }
+
+            const localTxs = parsed.filter(tx => tx.id && tx.id.toString().startsWith('local_'));
+
+            if (localTxs.length === 0) return;
+
+            console.log(`Attempting to sync ${localTxs.length} local transactions...`);
+            let syncedCount = 0;
+            const remainingLocalTxs = [];
+
+            for (const tx of localTxs) {
+                try {
+                    // Remove local ID before sending to Firestore
+                    const { id, ...txData } = tx;
+                    await addDoc(collection(db, "transactions"), txData);
+                    syncedCount++;
+                } catch (error) {
+                    console.error("Failed to sync transaction:", tx.id, error);
+                    remainingLocalTxs.push(tx);
+                }
+            }
+
+            if (syncedCount > 0) {
+                // Update local storage: keep server txs + failed local txs
+                const serverTxs = parsed.filter(tx => !tx.id || !tx.id.toString().startsWith('local_'));
+                const updatedCache = [...serverTxs, ...remainingLocalTxs];
+                localStorage.setItem(`transactions_${user.uid}`, JSON.stringify(updatedCache));
+                console.log(`Successfully synced ${syncedCount} transactions.`);
+            }
+        };
+
+        // Run sync when user is present and we are NOT in offline mode (meaning onSnapshot is working)
+        syncLocalTransactions();
+    }, [user, isOffline]);
+
     const addTransaction = async (transaction) => {
         if (!user) return;
 
@@ -165,6 +167,7 @@ export const TransactionProvider = ({ children }) => {
             if (fundResult) {
                 marketSnapshot = {
                     timestamp: Date.now(),
+
                     // Price / TA (Placeholder)
                     price: null,
                     price_change_24h: null,
@@ -183,12 +186,14 @@ export const TransactionProvider = ({ children }) => {
                     fdv_ratio: fundResult.valuation?.fdv_mcap_ratio || null,
                     tvl: fundResult.growth?.tvl_current || null,
                     tvl_trend_30d: fundResult.growth?.tvl_30d_change_percent || null,
+                    revenue_30d: null,
+                    ps_ratio: null,
                     sector_tags: fundResult.tags || [],
 
-                    // Narrative
+                    // Narrative / Social (Placeholder)
                     narratives: [],
                     news_sentiment: null,
-                    social_buzz_level: null
+                    social_buzz_level: null,
                 };
             }
         } catch (err) {
@@ -216,6 +221,9 @@ export const TransactionProvider = ({ children }) => {
                 positionId = openPosition.id;
                 entryIndex = (openPosition.transactionIds?.length || 0) + 1;
                 console.log(`Linked to existing position ${positionId} for ${transaction.asset}`);
+
+                // If this is a buy, we should check reasonable entryIndex
+
             }
             // If sell and no open position, we might treat it as isolated or error. 
             // For now, let's allow it but with null positionId (orphan sell).
@@ -262,6 +270,7 @@ export const TransactionProvider = ({ children }) => {
                 .catch(err => console.error("Summary update failed:", err));
 
             // 7. Save Investment Note if present (Fire and Forget)
+            // 'memo' is the processed string from TransactionForm (investmentNotes joined)
             const noteContent = transaction.memo;
             if (noteContent && typeof noteContent === 'string' && noteContent.trim().length > 0) {
                 console.log('Saving investment note from transaction:', noteContent.substring(0, 20) + '...');
@@ -277,18 +286,24 @@ export const TransactionProvider = ({ children }) => {
                 }).catch(err => console.error("Failed to save transaction note:", err));
             }
 
-            return docRef.id;
-
+            return docRef; // Return the document reference on success
         } catch (error) {
             console.warn("Firestore failed/timed out, saving locally:", error);
             setIsOffline(true);
 
-            // Local Fallback
+            // Add to local storage immediately for optimistic UI
             const localTx = { ...newTx, id: `local_${Date.now()}` };
             const updatedTransactions = [localTx, ...transactions];
             setTransactions(updatedTransactions);
             localStorage.setItem(`transactions_${user.uid}`, JSON.stringify(updatedTransactions));
-            return localTx.id; // Return successfully even if offline
+
+            // 4. Update Position with new Tx ID (if applicable)
+            // For offline, we use the local ID for now. The sync process will update it later.
+            if (positionId && localTx.id) {
+                await updatePositionWithNewTx(positionId, localTx, localTx.id);
+            }
+
+            return; // Return successfully even if offline
         }
     };
 
@@ -309,6 +324,17 @@ export const TransactionProvider = ({ children }) => {
                 updateDoc(txRef, data),
                 timeoutPromise
             ]);
+
+            // Recalculate position if applicable
+            if (updatedTransaction.positionId) {
+                console.log(`Recalculating position ${updatedTransaction.positionId} after update...`);
+                await recalculatePosition(updatedTransaction.positionId);
+            }
+
+            // Trigger Summary Recalculation (Fire and Forget)
+            recalculateAssetSummary(user.uid, updatedTransaction.asset)
+                .then(() => recalculateUserSummary(user.uid))
+                .catch(err => console.error("Summary update failed:", err));
         } catch (error) {
             console.warn("Firestore update failed/timed out, saving locally:", error);
             setIsOffline(true);
@@ -343,7 +369,9 @@ export const TransactionProvider = ({ children }) => {
                     holdings_breakdown: tx.holdings_breakdown || null,
                     narrative: tx.narrative || null,
                     userId: user.uid,
-                    createdAt: new Date().toISOString()
+                    createdAt: new Date().toISOString(),
+                    coinId: tx.coinId || null,
+                    coinName: tx.coinName || null
                 });
             });
             await batch.commit();
@@ -388,8 +416,64 @@ export const TransactionProvider = ({ children }) => {
         }
     };
 
+    const deleteTransaction = async (transactionId) => {
+        if (!user) return;
+
+        try {
+            // 1. Find the transaction to get details before deleting
+            const txToDelete = transactions.find(t => t.id === transactionId);
+            if (!txToDelete) {
+                console.warn("Transaction not found for deletion:", transactionId);
+                return;
+            }
+
+            console.log(`Deleting transaction ${transactionId}...`);
+
+            // 2. Delete from Firestore (if online/valid ID)
+            if (!transactionId.toString().startsWith('local_')) {
+                await deleteDoc(doc(db, "transactions", transactionId));
+            }
+
+            // 3. Update Local State (Optimistic)
+            const updatedTransactions = transactions.filter(t => t.id !== transactionId);
+            setTransactions(updatedTransactions);
+            localStorage.setItem(`transactions_${user.uid}`, JSON.stringify(updatedTransactions));
+
+            // 4. Update Position ID if applicable
+            if (txToDelete.positionId) {
+                console.log(`Recalculating position ${txToDelete.positionId} after deletion...`);
+                // Use a short delay or await to ensure data consistency if needed
+                await recalculatePosition(txToDelete.positionId);
+            }
+
+            // 5. Trigger Summary Recalculation
+            recalculateAssetSummary(user.uid, txToDelete.asset)
+                .then(() => recalculateUserSummary(user.uid))
+                .catch(err => console.error("Summary update failed:", err));
+
+            console.log("Transaction deleted successfully.");
+
+        } catch (error) {
+            console.error("Error deleting transaction:", error);
+            // Revert state if needed? For now, we assume Firestore error shouldn't revert local state if we want to be responsive.
+            // But strict consistency might require re-fetching.
+            setIsOffline(true);
+            throw error;
+        }
+    };
+
+    const repairDatabase = async () => {
+        if (!user) return;
+        if (window.confirm("This will recalculate all statistics and clean up ghost data. It may take a few seconds. Continue?")) {
+            console.log("Starting DB Repair...");
+            await recalculateAllSummaries(user.uid);
+            alert("Database repaired successfully!");
+            // Refresh logic if needed
+        }
+    };
+
     return (
-        <TransactionContext.Provider value={{ transactions, addTransaction, updateTransaction, bulkAddTransactions, clearTransactions }}>
+        <TransactionContext.Provider value={{ transactions, addTransaction, updateTransaction, deleteTransaction, bulkAddTransactions, clearTransactions, repairDatabase }}>
             {children}
         </TransactionContext.Provider>
     );

@@ -123,7 +123,4 @@ export const createTransaction = (data) => {
         // Force schema version (override any passed version)
         schemaVersion: 2
     };
-
-    // Sanitize: Remove undefined values to prevent Firestore errors
-    return JSON.parse(JSON.stringify(tx));
 };
