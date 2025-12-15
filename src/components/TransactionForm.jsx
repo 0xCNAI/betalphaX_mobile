@@ -2162,6 +2162,98 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             <span style={{ color: '#94a3b8' }}>Date</span>
             <span style={{ color: 'white', fontWeight: '500' }}>{formData.date}</span>
           </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem' }}>
+            <span style={{ color: '#94a3b8' }}>Asset</span>
+            <span style={{ color: 'white', fontWeight: '500' }}>{formData.asset}</span>
+          </div>
+
+          {/* Review Sections */}
+
+          {/* 3. Pro Technical Analysis */}
+          <div className="review-section-collapsible" style={{ marginBottom: '16px', background: '#020617', borderRadius: '8px', border: '1px solid #1e293b', overflow: 'hidden' }}>
+            <details onToggle={(e) => {
+              // Logic to ensure we don't accidentally close when clicking checkbox is handled by stopPropagation on checkbox
+            }}>
+              <summary style={{ padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', listStyle: 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <ChevronRight size={16} className="summary-arrow" style={{ transition: 'transform 0.2s' }} />
+                  <span style={{ fontWeight: '500', color: 'white' }}>Pro Technical Analysis</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    checked={formData.includeTechnicalAnalysis || false}
+                    onChange={(e) => setFormData(prev => ({ ...prev, includeTechnicalAnalysis: e.target.checked }))}
+                    style={{ width: '18px', height: '18px', accentColor: '#6366f1', cursor: 'pointer' }}
+                  />
+                </div>
+              </summary>
+              <div style={{ padding: '0 16px 16px', borderTop: '1px solid #1e293b' }}>
+                <div className="p-4" style={{ marginTop: '12px' }}>
+                  <div className="bg-slate-900 rounded p-4 border border-slate-800">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-slate-400 text-sm">RSI (14)</span>
+                      <span className="text-emerald-400 font-mono">42.5 (Neutral)</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-slate-400 text-sm">MACD</span>
+                      <span className="text-rose-400 font-mono">Bearish Cross</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400 text-sm">Trend</span>
+                      <span className="text-blue-400 font-mono">Accumulation</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </details>
+          </div>
+
+          {/* 4. Fundamental Intelligence */}
+          <div className="review-section-collapsible" style={{ marginBottom: '16px', background: '#020617', borderRadius: '8px', border: '1px solid #1e293b', overflow: 'hidden' }}>
+            <details>
+              <summary style={{ padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', listStyle: 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <ChevronRight size={16} className="summary-arrow" style={{ transition: 'transform 0.2s' }} />
+                  <span style={{ fontWeight: '500', color: 'white' }}>Fundamental Intelligence</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    checked={formData.includeFundamental || false}
+                    onChange={(e) => setFormData(prev => ({ ...prev, includeFundamental: e.target.checked }))}
+                    style={{ width: '18px', height: '18px', accentColor: '#6366f1', cursor: 'pointer' }}
+                  />
+                </div>
+              </summary>
+              <div style={{ padding: '4px', borderTop: '1px solid #1e293b' }}>
+                <FundamentalWidget symbol={formData.asset} />
+              </div>
+            </details>
+          </div>
+
+          {/* 5. Important Events & Insights */}
+          <div className="review-section-collapsible" style={{ marginBottom: '16px', background: '#020617', borderRadius: '8px', border: '1px solid #1e293b', overflow: 'hidden' }}>
+            <details>
+              <summary style={{ padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', listStyle: 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <ChevronRight size={16} className="summary-arrow" style={{ transition: 'transform 0.2s' }} />
+                  <span style={{ fontWeight: '500', color: 'white' }}>Important Events & Insights</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    checked={formData.includeEvents || false}
+                    onChange={(e) => setFormData(prev => ({ ...prev, includeEvents: e.target.checked }))}
+                    style={{ width: '18px', height: '18px', accentColor: '#6366f1', cursor: 'pointer' }}
+                  />
+                </div>
+              </summary>
+              <div style={{ padding: '4px', borderTop: '1px solid #1e293b' }}>
+                <SocialNotificationWidget />
+              </div>
+            </details>
+          </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '12px', borderTop: '1px solid #1e293b', fontSize: '0.95rem' }}>
             <span style={{ color: '#94a3b8' }}>Total Value</span>
             <span style={{ color: 'white', fontWeight: 'bold' }}>
