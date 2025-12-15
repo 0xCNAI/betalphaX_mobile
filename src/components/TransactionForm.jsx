@@ -645,7 +645,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
       // Trigger AI Coach Analysis
       if (!aiCoachDiagnosis && !isAnalyzing) {
         setIsAnalyzing(true);
-        getCoachAdvice(formData.asset, formData.type)
+        getCoachAdvice(formData.asset, formData.type, transactions, formData)
           .then(advice => {
             setAiCoachDiagnosis(advice);
           })
@@ -2113,7 +2113,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             <button
               onClick={() => {
                 setIsAnalyzing(true);
-                getCoachAdvice(formData.asset, formData.type)
+                getCoachAdvice(formData.asset, formData.type, transactions, formData)
                   .then(advice => setAiCoachDiagnosis(advice))
                   .catch(err => console.error("AI Coach Error:", err))
                   .finally(() => setIsAnalyzing(false));

@@ -1,66 +1,122 @@
 
 import { fetchOHLC } from './marketDataServiceNew';
-
+import { generateGeminiContent } from './geminiService';
 
 /**
- * Get AI Coach advice for a trade
- * @param {string} symbol - Asset symbol (e.g., 'BTC')
- * @param {string} action - Intended action ('BUY' or 'SELL')
- * @returns {Promise<Object>} Diagnosis object
+ * Generates the AI Coach Review using the Desktop Prompt Logic.
+ * Matches desktop: src/services/geminiService.js -> generateCoachReview
  */
-export async function getCoachAdvice(symbol, action) {
+async function generateCoachReview(userSummary, assetSummary, currentTransaction) {
+    const prompt = `
+Role: Professional Crypto Trading Coach (Persona: Strict, data-driven, focused on behavioral psychology and system discipline).
+Task: Review the user's trading pattern for ${assetSummary?.assetSymbol || 'this asset'} and provide a critical "Review & Adjustments" assessment.
+${currentTransaction ? `Wait! The user is about to SAVE A NEW TRANSACTION for ${currentTransaction.asset}. Review this SPECIFIC trade setup against their history.` : ''}
+
+Input Data:
+1. User Profile (Global Stats & Psychology):
+${JSON.stringify(userSummary || {}, null, 2)}
+
+2. Asset Context (History for ${assetSummary?.assetSymbol}):
+${JSON.stringify(assetSummary || {}, null, 2)}
+
+3. CURRENT TRANSACTION DRAFT (PRE-TRADE):
+${JSON.stringify(currentTransaction, null, 2)}
+
+Output Format (Strict JSON):
+{
+    "behavior_summary": "A single, conversational paragraph (approx 3-5 sentences) acting as a direct human coach. Critique the trade setup or validate it based on the data. Be natural, insightful, and direct ('说人话'). Do NOT use bullet points here. Focus on the psychology and system alignment. Example: 'Looking at your history, this setup seems solid. You usually hesitate here, but the data supports a long. Just watch out for that stop loss level as you tend to set it too tight.'",
+    "recommended_playbook": [
+        {
+            "rule": "Short, actionable rule title (e.g. 'Define Invalidation Point')",
+            "reasoning": "Brief explanation of why this applies now."
+        },
+        {
+            "rule": "Another rule...",
+            "reasoning": "..."
+        }
+    ]
+}
+`;
+
     try {
-        // 1. Fetch Context (OHLC)
-        // Get 1D, 4H, and 1H candles for multi-timeframe analysis
-        const [ohlcResult, ohlc4hResult, ohlc1hResult] = await Promise.all([
-            fetchOHLC(symbol, '1d'),
-            fetchOHLC(symbol, '4h'),
-            fetchOHLC(symbol, '1h')
-        ]);
+        console.log(`[AI Coach] Calling Gemini...`);
+        const generatedText = await generateGeminiContent(prompt);
+        if (!generatedText) return null;
 
-        const ohlcData = ohlcResult?.data || [];
-        const ohlc4hData = ohlc4hResult?.data || [];
-        const ohlc1hData = ohlc1hResult?.data || [];
+        const jsonString = generatedText.replace(/```json\n?|\n?```/g, '').trim();
+        return JSON.parse(jsonString);
 
-        if (!ohlcData || ohlcData.length === 0) {
-            throw new Error('Insufficient market data');
+    } catch (error) {
+        console.error("AI Coach Generation Failed:", error);
+        return {
+            behavior_summary: "AI Coach is currently offline. Please stick to your trading layout.",
+            recommended_playbook: []
+        };
+    }
+}
+
+/**
+ * Get AI Coach advice for a trade (Client-Side Logic)
+ * @param {string} symbol - Asset symbol
+ * @param {string} action - 'BUY' or 'SELL'
+ * @param {Array} transactions - User's full transaction history
+ * @param {Object} formData - Current form data (price, amount, notes)
+ * @returns {Promise<Object>} Diagnosis object matching desktop schema
+ */
+export async function getCoachAdvice(symbol, action, transactions = [], formData = {}) {
+    try {
+        // 1. Calculate Statistics (Emulate User/Asset Summary)
+        const allTrades = transactions || [];
+        const assetTrades = allTrades.filter(t => t.asset === symbol);
+
+        // Global Stats
+        const totalRealizedPnL = allTrades.reduce((acc, t) => acc + (parseFloat(t.realizedPnL) || 0), 0);
+        const winCount = allTrades.filter(t => (parseFloat(t.realizedPnL) || 0) > 0).length;
+        const lossCount = allTrades.filter(t => (parseFloat(t.realizedPnL) || 0) < 0).length;
+
+        const userSummary = {
+            totalTrades: allTrades.length,
+            totalRealizedPnL: totalRealizedPnL,
+            winRate: allTrades.length > 0 ? winCount / allTrades.length : 0,
+            winCount,
+            lossCount
+        };
+
+        // Asset Stats
+        const assetRealizedPnL = assetTrades.reduce((acc, t) => acc + (parseFloat(t.realizedPnL) || 0), 0);
+        const assetWins = assetTrades.filter(t => (parseFloat(t.realizedPnL) || 0) > 0).length;
+
+        const assetSummary = {
+            assetSymbol: symbol,
+            totalTrades: assetTrades.length,
+            realizedPnL: assetRealizedPnL,
+            winRate: assetTrades.length > 0 ? assetWins / assetTrades.length : 0,
+            lastTradeDate: assetTrades.length > 0 ? assetTrades[assetTrades.length - 1].date : null
+        };
+
+        // Current Transaction Context
+        const currentTransaction = {
+            asset: symbol,
+            action: action,
+            price: formData.price,
+            amount: formData.amount,
+            notes: formData.investmentNotes,
+            tags: formData.tags
+        };
+
+        // 2. Generate Advice
+        const advice = await generateCoachReview(userSummary, assetSummary, currentTransaction);
+
+        if (advice) {
+            // Map to expected format if needed, or return as is
+            // Desktop returns { behavior_summary, recommended_playbook }
+            return advice;
         }
 
-        // 2. Get Current Price & ATR (Simplified ATR calc)
-        // ATR = Average of True Ranges over N periods
-        // True Range = Max(High-Low, Abs(High-ClosePrev), Abs(Low-ClosePrev))
-        // We'll calculate a simple 14-period ATR here or pass raw data to backend
-        const atr = calculateATR(ohlcData, 14);
-        const currentPrice = ohlcData[ohlcData.length - 1][4]; // Close price of last candle
-
-        // 3. Call Backend API
-        const response = await fetch('/api/ai-coach', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                symbol,
-                action,
-                ohlc: ohlcData.slice(-30), // Send last 30 daily candles
-                ohlc_4h: ohlc4hData.slice(-30), // Send last 30 4h candles
-                ohlc_1h: ohlc1hData.slice(-30), // Send last 30 1h candles
-                currentPrice,
-                atr
-            }),
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error('AI Coach API Error Details:', errorData);
-            throw new Error(`${errorData.error} - ${errorData.details}` || 'Failed to fetch advice');
-        }
-
-        return await response.json();
+        return null;
 
     } catch (error) {
         console.error('Error getting coach advice:', error);
-        // Return a fallback/null diagnosis so UI doesn't crash
         return null;
     }
 }
