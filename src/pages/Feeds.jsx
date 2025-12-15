@@ -1,63 +1,48 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTransactions } from '../context/TransactionContext';
 import { usePrices } from '../context/PriceContext';
-import { getPortfolioFeeds } from '../services/twitterService';
-import { detectAssetEvents, generateWidgetData } from '../services/analysisService';
-import { RefreshCw, AlertTriangle, Activity, Zap, Check, X, ChevronDown, TrendingUp, Award, ExternalLink, ArrowRight } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { addNote } from '../services/notebookService';
+import { RefreshCw, AlertTriangle, Activity, Zap, Check, X, ChevronDown, TrendingUp, Award, ExternalLink, ArrowRight, FileText } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import './Feeds.css';
 
 const TweetItem = ({ tweet }) => {
-    const [expanded, setExpanded] = useState(false);
-    const maxLength = 150;
-    const isLong = tweet.text.length > maxLength;
-    const displayText = expanded || !isLong ? tweet.text : `${tweet.text.slice(0, maxLength)}...`;
-
-    return (
-        <div className="tweet-item">
-            <div className="tweet-header">
-                <span className={`tweet-sentiment ${tweet.sentiment}`}>
-                    {tweet.sentiment}
-                </span>
-                <span className="tweet-date">
-                    {formatDistanceToNow(new Date(tweet.timestamp))} ago
-                </span>
-            </div>
-            <p className="tweet-text">
-                {displayText}
-                {isLong && (
-                    <button className="show-more-btn" onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}>
-                        {expanded ? 'Show less' : 'Show more'}
-                    </button>
-                )}
-            </p>
-            <div className="tweet-footer">
-                <div className="tweet-metrics">
-                    <span title="Likes">❤️ {tweet.likes || 0}</span>
-                    <span title="Retweets">↻ {tweet.retweets || 0}</span>
-                    <span title="Replies">💬 {tweet.replies || 0}</span>
-                </div>
-                {tweet.url && (
-                    <a
-                        href={tweet.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="tweet-link"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        View Tweet <ExternalLink size={12} style={{ marginLeft: '4px' }} />
-                    </a>
-                )}
-            </div>
-        </div>
-    );
+    // ... existing code ...
+    return null; // Functionality moved to cards, keeping for consistent clean up if needed
 };
 
 const Feeds = () => {
+    const { user } = useAuth(); // Add Auth Context
     const { transactions } = useTransactions();
     const { prices, refreshPrices } = usePrices();
     const navigate = useNavigate();
+
+    // ... existing state ...
+
+    const handleAddToNote = async (text, asset, type) => {
+        if (!user) {
+            alert("Please login to save notes.");
+            return;
+        }
+
+        const noteContent = `[${type} Insight] ${text}\n\nSource: Market Intelligence Feed`;
+        const noteTitle = `${asset} ${type}: ${text.substring(0, 20)}...`;
+
+        try {
+            await addNote(user.uid, {
+                title: noteTitle,
+                content: noteContent,
+                tags: [asset, type, 'Feed'],
+                color: type === 'Opportunity' ? 'var(--accent-primary)' : '#ef4444' // Green or Redish
+            });
+            alert("✅ Insight saved to Notebook!");
+        } catch (error) {
+            console.error("Failed to save note", error);
+            alert("Failed to save note.");
+        }
+    };
 
     // State
     const [holdingsFeed, setHoldingsFeed] = useState([]);
@@ -422,15 +407,28 @@ const Feeds = () => {
                                             <div className="intel-items-list">
                                                 {assetFeed.filter(isOpp).map((item, idx) => (
                                                     <div key={idx} className="intel-detail-item">
-                                                        <p className="intel-detail-text">• {item.text || item.summary}</p>
-                                                        {item.url && (
-                                                            <div className="intel-source-row">
-                                                                <span className="source-label">SOURCE:</span>
-                                                                <a href={item.url} target="_blank" rel="noopener noreferrer" className="source-link">
-                                                                    {item.author || 'News'} <ExternalLink size={10} />
-                                                                </a>
+                                                        <div className="intel-content-row">
+                                                            <div className="intel-text-wrapper">
+                                                                <p className="intel-detail-text">• {item.text || item.summary}</p>
+                                                                {item.url && (
+                                                                    <div className="intel-source-row">
+                                                                        <span className="source-label">SOURCE:</span>
+                                                                        <a href={item.url} target="_blank" rel="noopener noreferrer" className="source-link">
+                                                                            {item.author || 'News'} <ExternalLink size={10} />
+                                                                        </a>
+                                                                    </div>
+                                                                )}
                                                             </div>
-                                                        )}
+                                                            <button
+                                                                className="add-to-note-btn-icon"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleAddToNote(item.text || item.summary, asset, 'Opportunity');
+                                                                }}
+                                                            >
+                                                                <FileText size={16} />
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>
@@ -447,15 +445,28 @@ const Feeds = () => {
                                             <div className="intel-items-list">
                                                 {assetFeed.filter(isRisk).map((item, idx) => (
                                                     <div key={idx} className="intel-detail-item">
-                                                        <p className="intel-detail-text">• {item.text || item.summary}</p>
-                                                        {item.url && (
-                                                            <div className="intel-source-row">
-                                                                <span className="source-label">SOURCE:</span>
-                                                                <a href={item.url} target="_blank" rel="noopener noreferrer" className="source-link">
-                                                                    {item.author || 'News'} <ExternalLink size={10} />
-                                                                </a>
+                                                        <div className="intel-content-row">
+                                                            <div className="intel-text-wrapper">
+                                                                <p className="intel-detail-text">• {item.text || item.summary}</p>
+                                                                {item.url && (
+                                                                    <div className="intel-source-row">
+                                                                        <span className="source-label">SOURCE:</span>
+                                                                        <a href={item.url} target="_blank" rel="noopener noreferrer" className="source-link">
+                                                                            {item.author || 'News'} <ExternalLink size={10} />
+                                                                        </a>
+                                                                    </div>
+                                                                )}
                                                             </div>
-                                                        )}
+                                                            <button
+                                                                className="add-to-note-btn-icon"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleAddToNote(item.text || item.summary, asset, 'Risk');
+                                                                }}
+                                                            >
+                                                                <FileText size={16} />
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>

@@ -34,7 +34,12 @@ const Notebook = () => {
   const loadNotes = async () => {
     setLoading(true);
     try {
+      console.log("[Notebook] Fetching notes for user:", user.uid);
       const fetchedNotes = await getNotes(user.uid);
+      console.log("[Notebook] Fetched notes count:", fetchedNotes.length);
+      if (fetchedNotes.length > 0) {
+        console.log("[Notebook] Sample note:", fetchedNotes[0]);
+      }
       setNotes(fetchedNotes);
     } catch (err) {
       console.error("Failed to load notes", err);
