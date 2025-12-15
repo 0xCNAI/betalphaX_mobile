@@ -1214,68 +1214,114 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
 
 
 
+  /* Step 2: SELL Outcome & Factors (Replaces old Link Narrative) */
   const renderSellStep2 = () => {
-    // Aggregate Buy Reasons from open positions
-    const openBuys = transactions.filter(
-      tx => tx.asset === formData.asset && tx.type === 'buy' && tx.status === 'open'
-    );
+    const outcomeOptions = getOutcomeOptions();
+    const exitFactors = getExitFactors();
 
-    // Extract unique reasons and sort by date (newest first)
-    const uniqueReasons = openBuys
-      .flatMap(tx => (tx.reasons || []).map(r => ({ reason: r, date: tx.date })))
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .reduce((acc, curr) => {
-        if (!acc.find(item => item.reason === curr.reason)) {
-          acc.push(curr);
-        }
-        return acc;
-      }, []);
+    const handleAddCustomTag = (type) => {
+      if (type === 'outcome' && formData.customOutcome) {
+        const customId = formData.customOutcome.toLowerCase().replace(/\s+/g, '_');
+        setFormData(prev => ({ ...prev, outcomeStatus: customId, customOutcome: '' }));
+      } else if (type === 'factor' && formData.customExitFactor) {
+        setFormData(prev => ({
+          ...prev,
+          exitFactors: [...prev.exitFactors, formData.customExitFactor],
+          customExitFactor: ''
+        }));
+      }
+    };
 
     return (
       <div className="step-container" style={{ padding: '24px' }}>
         <div className="step-header" style={{ marginBottom: '24px' }}>
-          <h4 style={{ color: '#818cf8', margin: 0, fontSize: '1.25rem' }}>Step 2: Link Narrative</h4>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>What original thesis are you closing? (Sorted by recent)</p>
+          <h4 style={{ color: '#818cf8', margin: 0, fontSize: '1.25rem' }}>Step 2: Outcome & Factors</h4>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>Classify the result and document the cause.</p>
         </div>
 
-        {uniqueReasons.length > 0 ? (
-          <div className="reasons-list" style={{ display: 'grid', gap: '8px', marginBottom: '24px' }}>
-            {uniqueReasons.map(({ reason, date }) => {
-              const isSelected = formData.linkedBuyReasons && formData.linkedBuyReasons.includes(reason);
-              return (
-                <div
-                  key={reason}
-                  className={`buy-tx-card ${isSelected ? 'selected' : ''}`}
-                  onClick={() => {
-                    setFormData(prev => {
-                      const currentLinks = prev.linkedBuyReasons || [];
-                      const newReasons = isSelected
-                        ? currentLinks.filter(r => r !== reason)
-                        : [...currentLinks, reason];
-                      return { ...prev, linkedBuyReasons: newReasons };
-                    });
-                  }}
-                  style={{
-                    backgroundColor: isSelected ? 'rgba(99, 102, 241, 0.1)' : 'var(--bg-secondary)',
-                    border: isSelected ? '1px solid var(--accent-primary)' : '1px solid var(--bg-tertiary)',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <div className="reason-text" style={{ color: 'white', fontSize: '0.9rem', marginBottom: '4px' }}>{reason}</div>
-                  <div className="reason-date" style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>First active: {date}</div>
-                </div>
-              );
-            })}
+        {/* 1. Outcome Status (Tags) */}
+        <div className="form-group" style={{ marginBottom: '24px' }}>
+          <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Outcome Status</label>
+          <div className="tags-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {outcomeOptions.map(opt => (
+              <button
+                key={opt.id}
+                type="button"
+                className={`tag-pill ${formData.outcomeStatus === opt.id ? 'active' : ''}`}
+                onClick={() => setFormData(prev => ({ ...prev, outcomeStatus: opt.id }))}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '20px',
+                  border: formData.outcomeStatus === opt.id ? '2px solid var(--accent-primary)' : '1px solid var(--bg-tertiary)',
+                  backgroundColor: formData.outcomeStatus === opt.id ? 'rgba(99, 102, 241, 0.1)' : 'var(--bg-secondary)',
+                  color: formData.outcomeStatus === opt.id ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem',
+                  fontWeight: formData.outcomeStatus === opt.id ? '600' : '400',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
-        ) : (
-          <div className="no-positions-warning" style={{ padding: '20px', textAlign: 'center', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--accent-danger)', borderRadius: '8px', marginBottom: '24px' }}>
-            <AlertTriangle size={24} style={{ color: 'var(--accent-danger)', marginBottom: '8px' }} />
-            <p style={{ color: 'var(--accent-danger)', fontSize: '0.9rem', margin: 0 }}>No active buy narratives found for {formData.asset}.</p>
+        </div>
+
+        {/* 2. Exit Factors (Tags) */}
+        <div className="form-group" style={{ marginBottom: '24px' }}>
+          <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Exit Factors</label>
+          <div className="tags-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {Object.values(exitFactors).flat().map(factor => (
+              <button
+                key={factor}
+                type="button"
+                className={`tag-pill ${formData.exitFactors && formData.exitFactors.includes(factor) ? 'active' : ''}`}
+                onClick={() => {
+                  setFormData(prev => {
+                    const currentFactors = prev.exitFactors || [];
+                    const newFactors = currentFactors.includes(factor)
+                      ? currentFactors.filter(f => f !== factor)
+                      : [...currentFactors, factor];
+                    return { ...prev, exitFactors: newFactors };
+                  });
+                }}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '16px',
+                  border: formData.exitFactors && formData.exitFactors.includes(factor) ? '1px solid var(--accent-primary)' : '1px solid var(--bg-tertiary)',
+                  backgroundColor: formData.exitFactors && formData.exitFactors.includes(factor) ? 'rgba(99, 102, 241, 0.1)' : 'var(--bg-secondary)',
+                  color: formData.exitFactors && formData.exitFactors.includes(factor) ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem',
+                  fontWeight: formData.exitFactors && formData.exitFactors.includes(factor) ? '500' : '400',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {factor}
+              </button>
+            ))}
           </div>
-        )}
+        </div>
+
+        {/* 3. Exit Note (Prominent) */}
+        <div className="form-group" style={{ marginBottom: '24px' }}>
+          <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Exit Note</label>
+          <textarea
+            value={(formData.exitNotes && formData.exitNotes.length > 0) ? formData.exitNotes[0] : ''}
+            onChange={(e) => {
+              const val = e.target.value;
+              setFormData(prev => {
+                const newNotes = [...(prev.exitNotes || [])];
+                newNotes[0] = val;
+                return { ...prev, exitNotes: newNotes };
+              });
+            }}
+            placeholder="Detailed thoughts on this exit..."
+            className="form-textarea large-memo"
+            rows={4}
+            style={{ width: '100%', padding: '12px', borderRadius: '8px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--bg-tertiary)', color: 'white' }}
+          />
+        </div>
 
         <div className="step-actions" style={{ display: 'flex', justifyContent: 'space-between', marginTop: 'auto' }}>
           <button type="button" onClick={() => setStep(1)} className="btn-secondary">
@@ -1283,11 +1329,12 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
           </button>
           <button
             type="button"
-            onClick={() => setStep(3)}
+            onClick={() => setStep(3)} // Go to Step 3 (Review)
             className="btn-primary"
-            disabled={(!formData.linkedBuyReasons || formData.linkedBuyReasons.length === 0) && uniqueReasons.length > 0} // Optional enforcement
+            disabled={!formData.outcomeStatus}
+            style={{ opacity: formData.outcomeStatus ? 1 : 0.5 }}
           >
-            Next: Outcome <ArrowRight size={18} />
+            Next: Review <ArrowRight size={18} />
           </button>
         </div>
       </div>
@@ -1428,6 +1475,11 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
   };
 
   const renderStep3 = () => {
+    // If Sell, this step 3 is actually the REVIEW step (step=3 maps to Review UI)
+    // We handle this by checking type and returning renderStep4() which is typically the review step
+    if (formData.type === 'sell') {
+      return renderStep4();
+    }
     // If specific sell type step logic is needed (e.g. for linking reasons), handle here.
     // For now, mirroring desktop "Exit Strategy" design which seems universal or buy-centric.
 
@@ -2467,7 +2519,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
           bottom: 0,
           zIndex: 10
         }}>
-          <button type="button" onClick={() => setStep(3)} className="btn-secondary" style={{ backgroundColor: 'transparent', border: '1px solid #334155', color: '#cbd5e1' }}>
+          <button type="button" onClick={() => formData.type === 'sell' ? setStep(2) : setStep(3)} className="btn-secondary" style={{ backgroundColor: 'transparent', border: '1px solid #334155', color: '#cbd5e1' }}>
             <ArrowLeft size={18} /> Back
           </button>
           <button
