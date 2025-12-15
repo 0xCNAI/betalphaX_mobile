@@ -373,8 +373,15 @@ const Feeds = () => {
                                         className="coin-icon-img"
                                         style={{ display: 'block' }}
                                         onError={(e) => {
-                                            e.target.style.display = 'none';
-                                            e.target.nextSibling.style.display = 'flex';
+                                            // Try second source: LiveCoinWatch
+                                            const target = e.target;
+                                            if (target.src.includes('atomiclabs')) {
+                                                target.src = `https://lcw.nyc3.cdn.digitaloceanspaces.com/production/currencies/64/${asset.toLowerCase()}.png`;
+                                            } else {
+                                                // If second source fails, show fallback
+                                                target.style.display = 'none';
+                                                target.nextSibling.style.display = 'flex';
+                                            }
                                         }}
                                     />
                                     {/* Fallback Placeholder */}

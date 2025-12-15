@@ -2105,20 +2105,32 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
               Check how this trade fits your system rules before saving.
             </p>
 
-            <button style={{
-              background: 'linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%)',
-              border: 'none',
-              borderRadius: '4px',
-              padding: '6px 16px',
-              color: 'white',
-              fontSize: '0.8rem',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              cursor: 'pointer'
-            }}>
-              <Sparkles size={14} /> Review This Trade Setup
+            <button
+              onClick={() => {
+                setIsAnalyzing(true);
+                getCoachAdvice(formData.asset, formData.type)
+                  .then(advice => setAiCoachDiagnosis(advice))
+                  .catch(err => console.error("AI Coach Error:", err))
+                  .finally(() => setIsAnalyzing(false));
+              }}
+              disabled={isAnalyzing}
+              style={{
+                background: 'linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%)',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '6px 16px',
+                color: 'white',
+                fontSize: '0.8rem',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                cursor: isAnalyzing ? 'not-allowed' : 'pointer',
+                opacity: isAnalyzing ? 0.7 : 1
+              }}
+            >
+              {isAnalyzing ? <Loader2 size={14} className="spin-icon" /> : <Sparkles size={14} />}
+              {isAnalyzing ? 'Analyzing...' : 'Review This Trade Setup'}
             </button>
           </div>
 
