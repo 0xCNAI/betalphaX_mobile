@@ -24,6 +24,7 @@ import {
   Brain
 } from 'lucide-react';
 import { useBuyThesis } from '../context/BuyThesisContext';
+import { useAuth } from '../context/AuthContext';
 
 import { useTransactions } from '../context/TransactionContext';
 import { usePrices } from '../context/PriceContext';
@@ -34,7 +35,7 @@ import { getNewsForAsset } from '../services/newsService';
 import { generateTagsFromNote } from '../services/geminiService';
 import { generatePortfolioOverview, getTradeDiagnosis, getCachedOverview } from '../services/analysisService';
 import { captureContextSnapshot, getOutcomeOptions, getExitFactors } from '../services/contextService';
-import { getCoachAdvice } from '../services/aiCoachService'; // Import AI Coach
+import { runPreTradeReview, savePreTradeReviewToSummary } from '../services/aiCoachService';
 import TechnicalAnalysisWidget from './TechnicalAnalysisWidget';
 import FundamentalWidget from './FundamentalWidget';
 import ImportantEvents from './ImportantEvents'; // Was SocialNotificationWidget
@@ -44,6 +45,7 @@ import ImportantEvents from './ImportantEvents'; // Was SocialNotificationWidget
 
 const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initialType = null }) => {
   const { addTransaction, updateTransaction, transactions } = useTransactions();
+  const { user } = useAuth();
   const { getPrice, getIcon, fetchPriceForTicker } = usePrices();
   const { theses } = useBuyThesis(); // Get saved theses
   const [step, setStep] = useState(initialStep);
@@ -88,7 +90,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
   const [assetExists, setAssetExists] = useState(false);
   const [overview, setOverview] = useState(null);
   const [diagnosis, setDiagnosis] = useState(null);
-  const [aiCoachDiagnosis, setAiCoachDiagnosis] = useState(null);
+  const [preTradeReview, setPreTradeReview] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   // --- Step 2: Tag Selection ---
@@ -644,17 +646,19 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
       setDiagnosis(diag);
 
       // Trigger AI Coach Analysis
-      if (!aiCoachDiagnosis && !isAnalyzing) {
+      // Trigger AI Coach Analysis
+      if (!preTradeReview && !isAnalyzing && user) {
         setIsAnalyzing(true);
-        getCoachAdvice(formData.asset, formData.type, transactions, formData)
+        console.log('[TransactionForm] Triggering AI Coach...');
+        runPreTradeReview(user.uid, formData.asset, formData, transactions)
           .then(advice => {
-            setAiCoachDiagnosis(advice);
+            setPreTradeReview(advice);
           })
           .catch(err => console.error("AI Coach Error:", err))
           .finally(() => setIsAnalyzing(false));
       }
     }
-  }, [step, formData.asset, transactions]);
+  }, [step, formData.asset, transactions, user]);
 
   // Auto-fetch price when asset changes
   useEffect(() => {
@@ -2114,8 +2118,8 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             <button
               onClick={() => {
                 setIsAnalyzing(true);
-                getCoachAdvice(formData.asset, formData.type, transactions, formData)
-                  .then(advice => setAiCoachDiagnosis(advice))
+                runPreTradeReview(user?.uid || 'guest', formData.asset, formData, transactions)
+                  .then(advice => setPreTradeReview(advice))
                   .catch(err => console.error("AI Coach Error:", err))
                   .finally(() => setIsAnalyzing(false));
               }}
@@ -2141,7 +2145,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
           </div>
 
           {/* AI Coach Result Display */}
-          {aiCoachDiagnosis && (
+          {preTradeReview && (
             <div className="ai-coach-result" style={{
               marginTop: '16px',
               padding: '16px',
@@ -2156,13 +2160,13 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
 
               {/* Behavior Summary */}
               <div style={{ marginBottom: '16px', fontSize: '0.9rem', lineHeight: '1.5', color: '#e2e8f0' }}>
-                {aiCoachDiagnosis.behavior_summary}
+                {preTradeReview.behavior_summary}
               </div>
 
               {/* Playbook Rules */}
-              {aiCoachDiagnosis.recommended_playbook && aiCoachDiagnosis.recommended_playbook.length > 0 && (
+              {preTradeReview.recommended_playbook && preTradeReview.recommended_playbook.length > 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {aiCoachDiagnosis.recommended_playbook.map((item, idx) => (
+                  {preTradeReview.recommended_playbook.map((item, idx) => (
                     <div key={idx} style={{
                       display: 'flex',
                       gap: '10px',

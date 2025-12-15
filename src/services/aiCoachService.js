@@ -1,12 +1,13 @@
-
-import { fetchOHLC } from './marketDataServiceNew';
+import { db } from './firebase';
+import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { generateGeminiContent } from './geminiService';
 
-/**
- * Generates the AI Coach Review using the Desktop Prompt Logic.
- * Matches desktop: src/services/geminiService.js -> generateCoachReview
- */
-async function generateCoachReview(userSummary, assetSummary, currentTransaction) {
+const USERS_COLLECTION = 'users';
+const ASSET_SUMMARIES = 'asset_summaries';
+const USER_METRICS_DOC = 'ai_user_metrics/summary';
+
+// --- Desktop: src/services/geminiService.js -> generateCoachReview ---
+export const generateCoachReview = async (userSummary, assetSummary, currentTransaction = null) => {
     const prompt = `
 Role: Professional Crypto Trading Coach (Persona: Strict, data-driven, focused on behavioral psychology and system discipline).
 Task: Review the user's trading pattern for ${assetSummary?.assetSymbol || 'this asset'} and provide a critical "Review & Adjustments" assessment.
@@ -19,8 +20,10 @@ ${JSON.stringify(userSummary || {}, null, 2)}
 2. Asset Context (History for ${assetSummary?.assetSymbol}):
 ${JSON.stringify(assetSummary || {}, null, 2)}
 
+${currentTransaction ? `
 3. CURRENT TRANSACTION DRAFT (PRE-TRADE):
 ${JSON.stringify(currentTransaction, null, 2)}
+` : ''}
 
 Output Format (Strict JSON):
 {
@@ -53,93 +56,97 @@ Output Format (Strict JSON):
             recommended_playbook: []
         };
     }
-}
+};
 
 /**
- * Get AI Coach advice for a trade (Client-Side Logic)
- * @param {string} symbol - Asset symbol
- * @param {string} action - 'BUY' or 'SELL'
- * @param {Array} transactions - User's full transaction history
- * @param {Object} formData - Current form data (price, amount, notes)
- * @returns {Promise<Object>} Diagnosis object matching desktop schema
+ * Runs the AI Coach for a specific transaction DRAFT (Pre-trade or Pre-save).
+ * Does NOT persist to DB immediately, just returns the advice for the UI.
+ * Matches Desktop: src/services/aiCoachService.js -> runPreTradeReview
  */
-export async function getCoachAdvice(symbol, action, transactions = [], formData = {}) {
+export const runPreTradeReview = async (userId, assetSymbol, transactionData, allTransactions = []) => {
+    if (!userId || !assetSymbol) return null;
+    const upperAsset = assetSymbol.toUpperCase();
+
     try {
-        // 1. Calculate Statistics (Emulate User/Asset Summary)
-        const allTrades = transactions || [];
-        const assetTrades = allTrades.filter(t => t.asset === symbol);
+        // 1. Fetch User Summary
+        const userSummaryRef = doc(db, USERS_COLLECTION, userId, USER_METRICS_DOC);
+        const userSummarySnap = await getDoc(userSummaryRef);
+        const userSummary = userSummarySnap.exists() ? userSummarySnap.data() : {};
 
-        // Global Stats
-        const totalRealizedPnL = allTrades.reduce((acc, t) => acc + (parseFloat(t.realizedPnL) || 0), 0);
-        const winCount = allTrades.filter(t => (parseFloat(t.realizedPnL) || 0) > 0).length;
-        const lossCount = allTrades.filter(t => (parseFloat(t.realizedPnL) || 0) < 0).length;
+        // 2. Fetch Asset Summary
+        const assetSummaryRef = doc(db, USERS_COLLECTION, userId, ASSET_SUMMARIES, upperAsset);
+        const assetSummarySnap = await getDoc(assetSummaryRef);
+        let assetSummary = assetSummarySnap.exists() ? assetSummarySnap.data() : null;
 
-        const userSummary = {
-            totalTrades: allTrades.length,
-            totalRealizedPnL: totalRealizedPnL,
-            winRate: allTrades.length > 0 ? winCount / allTrades.length : 0,
-            winCount,
-            lossCount
-        };
+        // 2b. Synthesize Summary if missing (Fallback using client-side history)
+        const hasValidSummary = assetSummary && (assetSummary.totalTrades || assetSummary.total_trades);
 
-        // Asset Stats
-        const assetRealizedPnL = assetTrades.reduce((acc, t) => acc + (parseFloat(t.realizedPnL) || 0), 0);
-        const assetWins = assetTrades.filter(t => (parseFloat(t.realizedPnL) || 0) > 0).length;
+        if (!hasValidSummary && allTransactions && allTransactions.length > 0) {
+            const assetTxs = allTransactions.filter(t => t.asset === upperAsset);
+            if (assetTxs.length > 0) {
+                const totalRealized = assetTxs.reduce((sum, t) => sum + (Number(t.realizedPnL) || 0), 0);
+                const wins = assetTxs.filter(t => Number(t.realizedPnL) > 0).length;
+                const winRate = assetTxs.length > 0 ? Math.round((wins / assetTxs.length) * 100) : 0;
 
-        const assetSummary = {
-            assetSymbol: symbol,
-            totalTrades: assetTrades.length,
-            realizedPnL: assetRealizedPnL,
-            winRate: assetTrades.length > 0 ? assetWins / assetTrades.length : 0,
-            lastTradeDate: assetTrades.length > 0 ? assetTrades[assetTrades.length - 1].date : null
-        };
-
-        // Current Transaction Context
-        const currentTransaction = {
-            asset: symbol,
-            action: action,
-            price: formData.price,
-            amount: formData.amount,
-            notes: formData.investmentNotes,
-            tags: formData.tags
-        };
-
-        // 2. Generate Advice
-        const advice = await generateCoachReview(userSummary, assetSummary, currentTransaction);
-
-        if (advice) {
-            // Map to expected format if needed, or return as is
-            // Desktop returns { behavior_summary, recommended_playbook }
-            return advice;
+                // Simple check for accumulation if holding > 0 (heuristic for fallback)
+                // Note: Desktop fallback might be simpler, but we duplicate what's there
+                assetSummary = {
+                    assetSymbol: upperAsset,
+                    realizedPnL: totalRealized.toFixed(2),
+                    winRate: winRate,
+                    totalTrades: assetTxs.length,
+                    avgHoldTime: 0,
+                    maxDrawdown: 0,
+                    mistakes: []
+                };
+                console.log(`[AI Coach] Synthesized fallback summary based on ${assetTxs.length} local transactions.`);
+            }
         }
 
-        return null;
+        // If still no summary, default to empty object but with symbol
+        if (!assetSummary) {
+            assetSummary = { assetSymbol: upperAsset, note: "No prior history found." };
+        }
+
+        // Ensure assetSymbol is present
+        if (assetSummary) {
+            assetSummary.assetSymbol = assetSummary.assetSymbol || upperAsset;
+        }
+
+        // 3. Generate Review with Transaction Context
+        console.log(`[AI Coach] Generating PRE-TRADE review for ${upperAsset}...`);
+        const aiReview = await generateCoachReview(userSummary, assetSummary, transactionData);
+
+        return aiReview;
 
     } catch (error) {
-        console.error('Error getting coach advice:', error);
+        console.error(`[AI Coach] Error running pre-trade review:`, error);
         return null;
     }
-}
+};
 
-function calculateATR(ohlc, period = 14) {
-    if (ohlc.length < period + 1) return 0;
+/**
+ * Persists the Pre-Trade Review to the Asset Summary.
+ * Matches Desktop: src/services/aiCoachService.js -> savePreTradeReviewToSummary
+ */
+export const savePreTradeReviewToSummary = async (userId, assetSymbol, reviewData) => {
+    if (!userId || !assetSymbol || !reviewData) return;
+    const upperAsset = assetSymbol.toUpperCase();
 
-    let trSum = 0;
-    for (let i = ohlc.length - period; i < ohlc.length; i++) {
-        const current = ohlc[i];
-        const prev = ohlc[i - 1];
+    try {
+        const assetSummaryRef = doc(db, USERS_COLLECTION, userId, ASSET_SUMMARIES, upperAsset);
 
-        const high = current[2];
-        const low = current[3];
-        const prevClose = prev[4];
+        const updates = {
+            ai_behavior_summary: reviewData.behavior_summary,
+            ai_recommended_playbook: reviewData.recommended_playbook,
+            ai_last_review_at: new Date().toISOString(),
+            ai_model_version: 'v2.5-flash-lite'
+        };
 
-        const tr = Math.max(
-            high - low,
-            Math.abs(high - prevClose),
-            Math.abs(low - prevClose)
-        );
-        trSum += tr;
+        await setDoc(assetSummaryRef, updates, { merge: true });
+        console.log(`[AI Coach] Pre-trade review saved for ${upperAsset}`);
+
+    } catch (error) {
+        console.error(`[AI Coach] Error saving pre-trade review for ${upperAsset}:`, error);
     }
-
-    return trSum / period;
-}
+};
