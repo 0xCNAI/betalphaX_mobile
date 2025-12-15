@@ -35,7 +35,7 @@ import { captureContextSnapshot, getOutcomeOptions, getExitFactors } from '../se
 import { getCoachAdvice } from '../services/aiCoachService'; // Import AI Coach
 import FundamentalWidget from './FundamentalWidget';
 import SocialNotificationWidget from './SocialNotificationWidget'; // For Events/Insights
-import { ChevronUp } from 'lucide-react'; // Helper Component/Icon
+import { ChevronUp, ChevronRight, Activity, Target, Newspaper, ChevronDown, Check, Loader2, Sparkles, AlertTriangle } from 'lucide-react'; // Helper Component/Icon
 
 // ...
 
@@ -2281,39 +2281,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
       </div>
     </div>
 
-    {/* 4. Collapsible Sections (Visual Only) */ }
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-      <div style={{ backgroundColor: '#020617', borderRadius: '8px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #1e293b' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '0', height: '0', borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '8px solid #94a3b8' }}></div>
-          <span style={{ color: '#e2e8f0', fontSize: '0.9rem', fontWeight: '500' }}>Pro Technical Analysis</span>
-        </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <div style={{ width: '16px', height: '16px', border: '1px solid #475569', borderRadius: '2px' }}></div>
-          <ChevronDown size={16} color="#475569" />
-        </div>
-      </div>
-      <div style={{ backgroundColor: '#020617', borderRadius: '8px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #1e293b' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '0', height: '0', borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '8px solid #94a3b8' }}></div>
-          <span style={{ color: '#e2e8f0', fontSize: '0.9rem', fontWeight: '500' }}>Fundamental Intelligence</span>
-        </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <div style={{ width: '16px', height: '16px', border: '1px solid #475569', borderRadius: '2px' }}></div>
-          <ChevronDown size={16} color="#475569" />
-        </div>
-      </div>
-      <div style={{ backgroundColor: '#020617', borderRadius: '8px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #1e293b' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '0', height: '0', borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '8px solid #94a3b8' }}></div>
-          <span style={{ color: '#e2e8f0', fontSize: '0.9rem', fontWeight: '500' }}>Important Events & Insights</span>
-        </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <div style={{ width: '16px', height: '16px', border: '1px solid #475569', borderRadius: '2px' }}></div>
-          <ChevronDown size={16} color="#475569" />
-        </div>
-      </div>
-    </div>
+
 
     {/* Sell Amount Validation Error */ }
     {
