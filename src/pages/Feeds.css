@@ -252,11 +252,23 @@
     /* Pill shape */
     padding: 12px 24px;
     display: flex;
+    flex-wrap: wrap;
+    /* Allow wrapping for expanded content */
     align-items: center;
     justify-content: space-between;
     cursor: pointer;
     transition: all 0.2s ease;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.asset-intel-details {
+    width: 100%;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #1e293b;
+    animation: fadeIn 0.3s ease-out;
+    cursor: default;
+    /* Prevent toggling when clicking content */
 }
 
 .asset-intel-card:hover {

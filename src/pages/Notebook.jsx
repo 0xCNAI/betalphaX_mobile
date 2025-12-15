@@ -152,10 +152,11 @@ const Notebook = () => {
                         <p className="note-text">{note.content}</p>
                       </div>
 
+
                       <div className="note-meta-section">
                         <h4><Tag size={14} /> Tags</h4>
                         <div className="tags-display">
-                          {(note.tags || []).map((tag, i) => (
+                          {(Array.isArray(note.tags) ? note.tags : []).map((tag, i) => (
                             <span key={i} className="full-tag">{tag}</span>
                           ))}
                         </div>
@@ -163,7 +164,9 @@ const Notebook = () => {
 
                       <div className="note-meta-section">
                         <h4><Calendar size={14} /> Created</h4>
-                        <p className="meta-text">{note.date.toLocaleDateString()} {note.date.toLocaleTimeString()}</p>
+                        <p className="meta-text">
+                          {note.date?.toLocaleDateString ? note.date.toLocaleDateString() : 'Unknown Date'} {note.date?.toLocaleTimeString ? note.date.toLocaleTimeString() : ''}
+                        </p>
                       </div>
                     </div>
                   )}

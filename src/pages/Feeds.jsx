@@ -372,8 +372,18 @@ const Feeds = () => {
                         <div key={asset} className={`asset-intel-card ${isExpanded ? 'active' : ''}`} onClick={() => toggleEventExpansion(asset)}>
                             <div className="asset-col">
                                 <div className="coin-icon-large">
-                                    {/* Use a clear visual if no image */}
-                                    <div className="coin-icon-img flex items-center justify-center bg-slate-800 text-slate-200 font-bold rounded-full border border-slate-700">
+                                    <img
+                                        src={`https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a63530be6e374711a8554f31b17e4cb92c25fa5/128/color/${asset.toLowerCase()}.png`}
+                                        alt={asset}
+                                        className="coin-icon-img"
+                                        style={{ display: 'block' }}
+                                        onError={(e) => {
+                                            e.target.style.display = 'none';
+                                            e.target.nextSibling.style.display = 'flex';
+                                        }}
+                                    />
+                                    {/* Fallback Placeholder */}
+                                    <div className="coin-icon-img flex items-center justify-center bg-slate-800 text-slate-200 font-bold rounded-full border border-slate-700" style={{ display: 'none' }}>
                                         {asset[0]}
                                     </div>
                                 </div>
