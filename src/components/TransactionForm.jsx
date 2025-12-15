@@ -36,7 +36,7 @@ import { captureContextSnapshot, getOutcomeOptions, getExitFactors } from '../se
 import { getCoachAdvice } from '../services/aiCoachService'; // Import AI Coach
 import TechnicalAnalysisWidget from './TechnicalAnalysisWidget';
 import FundamentalWidget from './FundamentalWidget';
-import SocialNotificationWidget from './SocialNotificationWidget'; // For Events/Insights
+import ImportantEvents from './ImportantEvents'; // Was SocialNotificationWidget
 
 
 // ...
@@ -2239,7 +2239,8 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                 </div>
               </summary>
               <div style={{ padding: '4px', borderTop: '1px solid #1e293b' }}>
-                <SocialNotificationWidget />
+                {/* Using ImportantEvents for distinct event data */}
+                <ImportantEvents symbol={formData.asset} />
               </div>
             </details>
           </div>
