@@ -93,6 +93,11 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
   const [preTradeReview, setPreTradeReview] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+  // AI Widget State
+  const [proTaData, setProTaData] = useState(null);
+  const [widgetFundamentalData, setWidgetFundamentalData] = useState(null);
+  const [widgetEventsData, setWidgetEventsData] = useState(null);
+
   // --- Step 2: Tag Selection ---
   const [tagSearch, setTagSearch] = useState('');
   const [aiTags, setAiTags] = useState([]);
@@ -2007,6 +2012,81 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
         timestamp: new Date().toISOString(),
         pnl: 0, // Initial PnL is 0
         status: 'open',
+
+        // Save AI Data if selected
+        ai_fundamental: formData.includeFundamental ? widgetFundamentalData : null,
+        ai_events: formData.includeEvents ? widgetEventsData : null,
+        ai_technical: proTaData || null, // Always save Pro TA if available
+
+        // Unified Market Context Snapshot (Placeholders)
+        market_context_snapshot: {
+          timestamp: Date.now(),
+          price: priceVal,
+          // Placeholders to be filled by Context or null
+          btcDominance: null,
+          fearAndGreedIndex: null,
+          globalMarketCapChange: null,
+          marketSentiment: null,
+          topSector: null,
+          fdv_ratio: null,
+          tvl_trend_30d: null,
+          sector_tags: [],
+          price_change_24h: null,
+          rsi_1h: null,
+          rsi_4h: null,
+          rsi_1d: null,
+          macd_1h: null,
+          macd_4h: null,
+          structure_4h: null,
+          structure_1d: null,
+          near_level: null,
+          narratives: [],
+          news_sentiment: null,
+          social_buzz_level: null
+        },
+
+        // AI Analysis Fields
+        ai_entry_summary: null,
+        ai_exit_plan: null,
+        ai_risk_comment: null,
+
+        // AI TA Snapshot (Structured)
+        ai_ta_snapshot: proTaData ? {
+          short_term: {
+            trend: proTaData.verdicts?.short,
+            support: proTaData.levels?.shortTerm?.support,
+            resistance: proTaData.levels?.shortTerm?.resistance
+          },
+          long_term: {
+            trend: proTaData.verdicts?.long,
+            support: proTaData.levels?.longTerm?.support,
+            resistance: proTaData.levels?.longTerm?.resistance
+          },
+          overall_verdict: proTaData.action,
+          volatility_comment: proTaData.volatility_comment || null
+        } : null,
+
+        // Step 4: Fundamental & Events
+        ai_fundamental_insights: (widgetFundamentalData?.analysis && formData.includeFundamental) ? {
+          items: [
+            { title: 'Verdict', body: widgetFundamentalData.analysis.verdict },
+            { title: 'Reasoning', body: widgetFundamentalData.analysis.verdictReasoning },
+            { title: 'What it Does', body: widgetFundamentalData.analysis.whatItDoes }
+          ],
+          user_approved: true,
+          generated_at: new Date().toISOString()
+        } : null,
+
+        important_events_snapshot: (widgetEventsData && formData.includeEvents) ? {
+          discussions: widgetEventsData.discussions || [],
+          past_month_events: widgetEventsData.past_month_events || [],
+          future_events: widgetEventsData.future_events || [],
+          user_approved: true,
+          generated_at: new Date().toISOString()
+        } : null,
+
+        ai_events_insights: null,
+
         // Deprecated fields still included for backward compatibility
         reasons: formData.selectedReasons || [], // Map for display in History/Journal
         sellSignals: formData.selectedSellSignals || [], // Map for display in History/Journal
@@ -2240,7 +2320,10 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
               </summary>
               <div style={{ padding: '0 16px 16px', borderTop: '1px solid #1e293b' }}>
                 <div style={{ marginTop: '12px' }}>
-                  <TechnicalAnalysisWidget symbol={formData.asset} />
+                  <TechnicalAnalysisWidget
+                    symbol={formData.asset}
+                    onAnalysisComplete={setProTaData}
+                  />
                 </div>
               </div>
             </details>
@@ -2264,7 +2347,11 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                 </div>
               </summary>
               <div style={{ padding: '4px', borderTop: '1px solid #1e293b' }}>
-                <FundamentalWidget symbol={formData.asset} />
+                <FundamentalWidget
+                  symbol={formData.asset}
+                  onDataLoaded={data => setWidgetFundamentalData(prev => ({ ...prev, ...data }))}
+                  onAnalysisComplete={analysis => setWidgetFundamentalData(prev => ({ ...prev, analysis }))}
+                />
               </div>
             </details>
           </div>
@@ -2288,7 +2375,10 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
               </summary>
               <div style={{ padding: '4px', borderTop: '1px solid #1e293b' }}>
                 {/* Using ImportantEvents for distinct event data */}
-                <ImportantEvents symbol={formData.asset} />
+                <ImportantEvents
+                  symbol={formData.asset}
+                  onDataLoaded={setWidgetEventsData}
+                />
               </div>
             </details>
           </div>

@@ -490,3 +490,164 @@ Keep it professional, objective, and data-driven.
         return null;
     }
 };
+
+/**
+ * Generates a structured summary of asset notes.
+ * @param {string} assetSymbol 
+ * @param {Array} notes 
+ * @returns {Promise<Object>}
+ */
+export const generateAssetNoteSummary = async (assetSymbol, notes) => {
+    if (!notes || notes.length === 0) return null;
+
+    // Filter relevant fields to save tokens
+    const notesContent = notes.map(n => ({
+        date: n.createdAt,
+        content: n.content,
+        type: n.type, // 'journal', 'thesis', etc.
+        tags: n.tags
+    }));
+
+    const prompt = `
+    You are a dedicated AI Analyst managing a crypto trading journal for "${assetSymbol}".
+    Analyze the user's historical notes and generate a structured summary "State of the Asset" report.
+
+        ** Input Notes:**
+            ${JSON.stringify(notesContent)}
+
+    ** Your Task:**
+        1. ** Key Updates(Chronological):** Extract the most significant events, decisions, or observations. 
+       - Format: List of objects with { date: ISOString, content: string }.
+       - Limit to top 5 - 10 most important updates.
+       - "Content" should be concise(1 sentence).
+
+    2. ** Core Thesis:** Synthesize the user's main reason for holding/trading this asset.
+        - If they have a note tagged "thesis" or "Core Thesis", prioritize that.
+       - If not, infer it from their buy rationale / sentiment.
+       - Max 2 sentences.
+
+    3. ** Major Mistakes:** Identify any self - reported errors or lessons learned.
+       - e.g., "Sold too early", "Ignored stop loss".
+       - Return as array of strings.
+
+    4. ** Exit Conditions:** Extract specific price targets or conditions mentioned for selling.
+       - Return as array of strings.
+
+    ** Output Format(Strict JSON):**
+        {
+            "key_updates": [
+                { "date": "2024-01-01T...", "content": "Entered position due to ETF rumor." }
+            ],
+            "core_thesis": "...",
+            "major_mistakes": ["..."],
+            "exit_conditions": ["..."]
+        }
+            `;
+
+    try {
+        const generatedText = await generateGeminiContent(prompt);
+        if (!generatedText) return null;
+
+        const jsonString = generatedText.replace(/```json\n?|\n?```/g, '').trim();
+        return JSON.parse(jsonString);
+
+    } catch (error) {
+        console.error('Error generating asset note summary:', error);
+        return null;
+    }
+};
+
+/**
+ * Generates/Updates the User Behavior Archetype based on recent activity.
+ * @param {Object} currentProfile 
+ * @param {Array} recentTransactions 
+ * @param {Object} rawStats 
+ * @returns {Promise<Object>}
+ */
+export const generateUserArchetype = async (currentProfile, recentTransactions, rawStats) => {
+    // 1. Prepare Context
+    // We only send the last 10 transactions to keep it focused on "recent behavior changes" 
+    // while the 'currentProfile' holds the long-term memory.
+    const recentActivity = recentTransactions.slice(0, 10).map(t => ({
+        date: t.date,
+        type: t.type,
+        asset: t.asset,
+        amount: t.amount,
+        price: t.price,
+        pnl: t.realizedPnL || 0, // details if available
+        reasons: t.reasons || [],
+        memo: t.memo || ''
+    }));
+
+    // 2. Construct Prompt
+    const prompt = `
+    Role: Elite Trading Psychologist & Behavioral Coach.
+    Objective: Maintain and evolve a sophisticated "User Behavior Archetype" based on trading activity.
+
+    ** PHILOSOPHY **:
+    - You are observing a trader's journey. Your goal is to mirror their *actual* behavior, not an idealized version.
+    - ** Recursive Update **: You are given the [Current Profile] (Prior Knowledge) and [Recent Activity] (New Evidence).
+    - ** Conflict Resolution **: If [Recent Activity] contradicts [Current Profile], UPDATE the profile to reflect the change (e.g. they were "Conservative" but just made 5 yolo bets -> change to "Aggressive").
+    - ** Holistic Reasoning **: Do NOT just copy math stats. If the math says "Win Rate 90%" but it's only 1 trade, you should interpret that as "Untested" or "Lucky start", not "God mode".
+
+    ** INPUT DATA **:
+    
+    [A] CURRENT PROFILE (The Baseline):
+    ${JSON.stringify(currentProfile || {}, null, 2)}
+
+    [B] RECENT ACTIVITY (The Delta - Last 10 Trades):
+    ${JSON.stringify(recentActivity, null, 2)}
+
+    [C] RAW STATS (For Context Only - Use your own judgment):
+    ${JSON.stringify(rawStats || {}, null, 2)}
+
+    ** REQUIRED OUTPUT (The 20 Dimensions) **:
+    Return a STRICT JSON object with these exact keys. No markdown.
+    
+    {
+        "risk_tolerance": "string (e.g. Low, Moderate, High, Degen)",
+        "risk_capacity": "string (Description of financial cushion implied by sizing)",
+        "maximum_acceptable_drawdown": "string (e.g. '-20% (Strict stop loss observed)')",
+        "preferred_time_horizon": "string (e.g. Scalp, Swing, Position)",
+        "strategy_style": "string (e.g. Mean Reversion, Trend Following, Breakout)",
+        "entry_behavior_biases": "string (e.g. FOMO on spikes, Limit orders at support)",
+        "exit_behavior_biases": "string (e.g. Early profit taker, Bag holder)",
+        "position_sizing_preference": "string (e.g. Fixed fractional, Martingale, All-in)",
+        "emotional_triggers": "string (e.g. Revenge trading after loss, Greed on winning streaks)",
+        "discipline_consistency_score": "number (0-100)",
+        "portfolio_concentration_level": "string (e.g. Diversified, Sniper (1-2 assets))",
+        "sector_preferences": "string (e.g. L1s, Memecoins, DeFi)",
+        "win_rate_perception": "string (Your qualitative assessment of their hit rate)",
+        "average_rrr_perception": "string (Your assessment of their Risk/Reward skew)",
+        "max_drawdown_perception": "string (Your assessment of their drawdown tolerance)",
+        "thesis_quality_score": "number (0-100 based on 'reasons' and notes)",
+        "thesis_drift_tendency": "string (High/Low - do they stick to the plan?)",
+        "use_of_technical_analysis": "string (High/Low/None)",
+        "use_of_fundamental_analysis": "string (High/Low/None)",
+        "review_journaling_habits": "string (Implied from note frequency)"
+    }
+    `;
+
+    try {
+        console.log('[AI Profiler] Generating user archetype...');
+        const generatedText = await generateGeminiContent(prompt);
+
+        if (!generatedText) {
+            console.warn('[AI Profiler] No response from Gemini.');
+            return currentProfile; // Fallback to old if fail
+        }
+
+        const jsonString = generatedText.replace(/```json\n?|\n?```/g, '').trim();
+        const newProfile = JSON.parse(jsonString);
+
+        if (newProfile) {
+            return newProfile;
+        }
+        console.warn('[AI Profiler] Failed to parse JSON.');
+        return currentProfile;
+
+    } catch (error) {
+        console.error('Error generating user archetype:', error);
+        return currentProfile;
+    }
+};

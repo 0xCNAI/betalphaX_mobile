@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Loader2, TrendingUp, TrendingDown, Minus, Sparkles, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { analyzeTechnicals } from '../services/technicalService';
 
-const TechnicalAnalysisWidget = ({ symbol }) => {
+const TechnicalAnalysisWidget = ({ symbol, onAnalysisComplete }) => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -16,7 +16,10 @@ const TechnicalAnalysisWidget = ({ symbol }) => {
             setLoading(true);
             try {
                 const result = await analyzeTechnicals(symbol);
-                if (mounted) setData(result);
+                if (mounted) {
+                    setData(result);
+                    if (onAnalysisComplete) onAnalysisComplete(result);
+                }
             } catch (err) {
                 console.error("Failed to load technicals:", err);
                 if (mounted) setError(err);

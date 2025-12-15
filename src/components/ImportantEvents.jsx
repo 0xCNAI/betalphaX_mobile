@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { getNewsDashboard } from '../services/twitterService';
 import { Loader2, ExternalLink, Calendar, MessageSquare, Map, RefreshCw } from 'lucide-react';
 
-const ImportantEvents = ({ symbol }) => {
+const ImportantEvents = ({ symbol, onDataLoaded }) => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -17,6 +17,7 @@ const ImportantEvents = ({ symbol }) => {
             const result = await getNewsDashboard(symbol, forceRefresh);
             if (result) {
                 setData(result);
+                if (onDataLoaded) onDataLoaded(result);
             } else {
                 setError("No data available");
             }

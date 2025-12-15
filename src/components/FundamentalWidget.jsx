@@ -5,7 +5,7 @@ import { searchCryptoTweets } from '../services/twitterService';
 import { getCoinMetadata } from '../services/coinGeckoApi';
 import { generateFundamentalAnalysis } from '../services/geminiService';
 
-const FundamentalWidget = ({ symbol, name }) => {
+const FundamentalWidget = ({ symbol, name, onDataLoaded, onAnalysisComplete }) => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showFullSummary, setShowFullSummary] = useState(false);
@@ -13,8 +13,6 @@ const FundamentalWidget = ({ symbol, name }) => {
     // AI Analysis State
     const [aiAnalysis, setAiAnalysis] = useState(null);
     const [analyzing, setAnalyzing] = useState(false);
-
-
 
     useEffect(() => {
         let mounted = true;
@@ -33,6 +31,7 @@ const FundamentalWidget = ({ symbol, name }) => {
 
                 if (mounted && result) {
                     setData(result);
+                    if (onDataLoaded) onDataLoaded(result);
 
                     // 2. Check Cache for AI Analysis
                     const cacheKey = `fundamental_analysis_v3_${symbol}`;
@@ -47,6 +46,7 @@ const FundamentalWidget = ({ symbol, name }) => {
                                 console.log(`[FundamentalWidget] Using cached AI analysis for ${symbol}`);
                                 analysisData = data;
                                 setAiAnalysis(data);
+                                if (onAnalysisComplete) onAnalysisComplete(data);
                             }
                         } catch (e) {
                             console.warn("Invalid cache for analysis", e);
@@ -73,6 +73,7 @@ const FundamentalWidget = ({ symbol, name }) => {
                         if (mounted) {
                             setAiAnalysis(analysis);
                             setAnalyzing(false);
+                            if (onAnalysisComplete) onAnalysisComplete(analysis);
 
                             // Save to Cache
                             if (analysis && analysis.verdict) {
