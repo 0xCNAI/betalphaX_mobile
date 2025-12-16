@@ -14,6 +14,7 @@ import { generatePortfolioOverview, cacheOverview, getCachedOverview } from '../
 import PortfolioAIOverview from '../components/PortfolioAIOverview';
 
 import { useAuth } from '../context/AuthContext';
+import { saveDailySnapshot } from '../services/historyService';
 
 const Portfolio = () => {
     const { user, signOut } = useAuth();
@@ -83,7 +84,12 @@ const Portfolio = () => {
 
         setTotalBalance(total);
         setDailyPnL(pnl);
-    }, [transactions, pricesLoading, lastUpdate, getPrice]);
+
+        // Save Daily Snapshot if balance > 0
+        if (user && total > 0) {
+            saveDailySnapshot(user.uid, total, calculatedTotalPnL, assetHoldings);
+        }
+    }, [transactions, pricesLoading, lastUpdate, getPrice, user]);
 
     const handleImport = (transactions) => {
         bulkAddTransactions(transactions);

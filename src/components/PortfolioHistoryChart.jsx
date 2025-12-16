@@ -2,123 +2,96 @@ import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTransactions } from '../context/TransactionContext';
 import { usePrices } from '../context/PriceContext';
+import { useAuth } from '../context/AuthContext';
+import { getPortfolioHistory } from '../services/historyService';
 
 const PortfolioHistoryChart = ({ compact = false }) => {
+    const { user } = useAuth();
     const { transactions } = useTransactions();
     const { getPrice } = usePrices();
     const [chartData, setChartData] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [timeframe, setTimeframe] = useState(30); // Default to 30 days
+    const [timeframe, setTimeframe] = useState(30);
 
     useEffect(() => {
-        const generateChartData = () => {
-            if (transactions.length === 0) {
-                setLoading(false);
-                return;
-            }
-
+        const loadHistory = async () => {
+            if (!user) return;
             setLoading(true);
             try {
-                // 1. Identify all assets and their key price points
-                const assetPricePoints = {};
-                const assets = [...new Set(transactions.map(t => t.asset))];
+                // 1. Fetch persistent history from Firebase
+                const historyInDb = await getPortfolioHistory(user.uid, timeframe);
 
-                assets.forEach(asset => {
-                    const points = [];
-                    // Add transaction points
-                    transactions.filter(t => t.asset === asset).forEach(t => {
-                        points.push({
-                            timestamp: new Date(t.date).getTime(),
-                            price: t.price
-                        });
-                    });
+                // 2. Calculate "Today/Now" (Real-time)
+                // We calculate this live so the chart always ends at the current moment
+                let currentTotal = 0;
 
-                    // Add current price point
-                    const currentPriceData = getPrice(asset);
-                    // Fallback to last transaction price if current price is missing
-                    const lastTxPrice = points.length > 0 ? points[points.length - 1].price : 0;
-                    const currentPrice = currentPriceData.price > 0 ? currentPriceData.price : lastTxPrice;
+                // Calculate current holdings
+                const currentHoldings = transactions.reduce((acc, tx) => {
+                    const amount = parseFloat(tx.amount || 0);
+                    if (tx.type === 'buy') acc[tx.asset] = (acc[tx.asset] || 0) + amount;
+                    else if (tx.type === 'sell') acc[tx.asset] = (acc[tx.asset] || 0) - amount;
+                    return acc;
+                }, {});
 
-                    points.push({
-                        timestamp: Date.now(),
-                        price: currentPrice
-                    });
+                Object.entries(currentHoldings).forEach(([symbol, amount]) => {
+                    if (amount > 0.000001) {
+                        const priceData = getPrice(symbol);
+                        const price = priceData ? priceData.price : 0;
+                        currentTotal += amount * price;
 
-                    // Sort by time
-                    points.sort((a, b) => a.timestamp - b.timestamp);
-                    assetPricePoints[asset] = points;
+                        // Debug log for checking calculation
+                        // console.log(`[Chart] ${symbol}: ${amount} * ${price} = ${amount * price}`);
+                    }
                 });
 
-                // 2. Generate daily data points for the timeframe
-                const data = [];
-                const now = Date.now();
-                const msPerDay = 24 * 60 * 60 * 1000;
+                const nowPoint = {
+                    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                    timestamp: Date.now(),
+                    value: currentTotal
+                };
 
-                for (let i = timeframe; i >= 0; i--) {
-                    const timestamp = now - (i * msPerDay);
-                    const dateStr = new Date(timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                // 3. Merge: Filter DB history to ensure we don't duplicate "today" if it was already saved
+                // (Though saving happens on load, so it might exist. If it does, using live value for the very end is usually better for UX)
+                const todayStr = new Date().toISOString().split('T')[0];
 
-                    let totalValue = 0;
+                // Exclude today's snapshot from DB if we are appending a fresh live one, 
+                // OR just use DB data. 
+                // Better UX: Use DB data for past days, append "Current" as the last point.
+                const pastHistory = historyInDb.filter(h => h.date !== todayStr);
 
-                    assets.forEach(asset => {
-                        // A. Calculate Holdings at this timestamp
-                        const holdings = transactions.reduce((acc, tx) => {
-                            const txTime = new Date(tx.date).getTime();
-                            if (tx.asset === asset && txTime <= timestamp) {
-                                const amount = parseFloat(tx.amount || 0);
-                                if (tx.type === 'buy') {
-                                    return acc + amount;
-                                } else if (tx.type === 'sell') {
-                                    return acc - amount;
-                                }
-                            }
-                            return acc;
-                        }, 0);
+                // Transform DB data to chart format
+                const formattedHistory = pastHistory.map(h => ({
+                    date: new Date(h.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                    timestamp: h.timestamp ? h.timestamp.toMillis() : new Date(h.date).getTime(),
+                    value: h.totalBalance
+                }));
 
-                        if (holdings > 0) {
-                            // B. Interpolate Price at this timestamp
-                            const points = assetPricePoints[asset];
-                            let price = 0;
+                // Combine
+                let finalData = [...formattedHistory, nowPoint];
 
-                            if (points.length === 0) {
-                                price = 0;
-                            } else if (timestamp <= points[0].timestamp) {
-                                price = points[0].price;
-                            } else if (timestamp >= points[points.length - 1].timestamp) {
-                                price = points[points.length - 1].price;
-                            } else {
-                                for (let j = 0; j < points.length - 1; j++) {
-                                    if (timestamp >= points[j].timestamp && timestamp < points[j + 1].timestamp) {
-                                        const p1 = points[j];
-                                        const p2 = points[j + 1];
-                                        const ratio = (timestamp - p1.timestamp) / (p2.timestamp - p1.timestamp);
-                                        price = p1.price + (p2.price - p1.price) * ratio;
-                                        break;
-                                    }
-                                }
-                            }
-
-                            totalValue += holdings * price;
-                        }
-                    });
-
-                    data.push({
-                        date: dateStr,
-                        timestamp: timestamp,
-                        value: totalValue
-                    });
+                // UX Improvement: If only 1 point (today), show a flat line instead of a single dot
+                if (finalData.length === 1) {
+                    const singlePoint = finalData[0];
+                    const startTimestamp = singlePoint.timestamp - (24 * 60 * 60 * 1000); // 24h ago
+                    const startPoint = {
+                        date: new Date(startTimestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                        timestamp: startTimestamp,
+                        value: singlePoint.value
+                    };
+                    finalData = [startPoint, singlePoint];
                 }
 
-                setChartData(data);
-            } catch (error) {
-                console.error("Error generating chart data:", error);
+                setChartData(finalData);
+
+            } catch (err) {
+                console.error("Failed to load portfolio history:", err);
             } finally {
                 setLoading(false);
             }
         };
 
-        generateChartData();
-    }, [transactions, timeframe, getPrice]);
+        loadHistory();
+    }, [user, transactions, timeframe, getPrice]);
 
     if (loading) {
         return (
@@ -222,61 +195,61 @@ const PortfolioHistoryChart = ({ compact = false }) => {
         }
 
         .chart-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: var(--spacing-lg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
         }
 
         .chart-header h3 {
-          font-size: 1.1rem;
-          font-weight: 600;
+            font-size: 1.1rem;
+            font-weight: 600;
         }
 
         .time-controls {
-          display: flex;
-          gap: var(--spacing-xs);
-          background-color: var(--bg-primary);
-          padding: 4px;
-          border-radius: var(--radius-md);
+            display: flex;
+            gap: var(--spacing-xs);
+            background-color: var(--bg-primary);
+            padding: 4px;
+            border-radius: var(--radius-md);
         }
 
         .time-btn {
-          background: transparent;
-          border: none;
-          color: var(--text-secondary);
-          padding: 4px 12px;
-          border-radius: var(--radius-sm);
-          font-size: 0.8rem;
-          cursor: pointer;
-          transition: all 0.2s;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 4px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
         .time-btn:hover {
-          color: var(--text-primary);
+            color: var(--text-primary);
         }
 
         .time-btn.active {
-          background-color: var(--bg-tertiary);
-          color: var(--text-primary);
-          font-weight: 500;
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-weight: 500;
         }
 
         .chart-wrapper {
-          width: 100%;
+            width: 100%;
         }
 
         .chart-loading, .chart-empty {
-          height: 300px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: var(--spacing-md);
-          background-color: var(--bg-secondary);
-          border-radius: var(--radius-lg);
-          border: 1px solid var(--bg-tertiary);
-          color: var(--text-secondary);
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-md);
+            background-color: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--bg-tertiary);
+            color: var(--text-secondary);
         }
         
         .chart-loading.compact, .chart-empty.compact {
