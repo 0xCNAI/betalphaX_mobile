@@ -1203,7 +1203,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             style={{ width: '100%', justifyContent: 'center' }}
             onClick={() => setStep(formData.type === 'buy' ? 3 : 2)}
           >
-            Next: {formData.type === 'buy' ? 'Sell Signals' : 'Link Narrative'} <ArrowRight size={18} />
+            Next: {formData.type === 'buy' ? 'Sell Signals' : 'Outcome & factors'} <ArrowRight size={18} />
           </button>
         </div>
       </div>
@@ -2588,15 +2588,9 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
       <div className="progress-bar">
         <div className={`progress-step ${step >= 1 ? 'active' : ''}`}>1</div>
         <div className="progress-line"></div>
-        {formData.type === 'sell' && (
-          <>
-            <div className={`progress-step ${step >= 2 ? 'active' : ''}`}>2</div>
-            <div className="progress-line"></div>
-          </>
-        )}
-        <div className={`progress-step ${step >= 3 ? 'active' : ''}`}>{formData.type === 'sell' ? 3 : 2}</div>
+        <div className={`progress-step ${step >= 2 ? 'active' : ''}`}>2</div>
         <div className="progress-line"></div>
-        <div className={`progress-step ${step >= 4 ? 'active' : ''}`}>{formData.type === 'sell' ? 4 : 3}</div>
+        <div className={`progress-step ${step >= 3 ? 'active' : ''}`}>3</div>
       </div>
 
       {step === 1 && renderMergedStep1()}
@@ -3418,7 +3412,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             }
         }
       `}</style>
-    </div>
+    </div >
   );
 };
 
