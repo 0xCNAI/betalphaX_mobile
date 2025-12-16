@@ -343,9 +343,10 @@ const AssetList = ({ onImport }) => {
                 <div className="asset-info-wrapper">
                   <div className="info-top">
                     <span className="asset-symbol-text">{asset.symbol}</span>
+                    <span className="asset-holdings-inline">{asset.holdings.toLocaleString(undefined, { maximumFractionDigits: 4 })}</span>
                   </div>
                   <div className="info-bottom">
-                    <span className="asset-holdings-text">{asset.holdings.toLocaleString(undefined, { maximumFractionDigits: 4 })}</span>
+                    <span className="asset-value-sub">${currentValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
                   </div>
                 </div>
               </div>
@@ -822,7 +823,8 @@ const AssetList = ({ onImport }) => {
 
         .info-top {
             display: flex;
-            align-items: center;
+            align-items: baseline;
+            gap: 6px;
         }
 
         .asset-symbol-text {
@@ -830,12 +832,22 @@ const AssetList = ({ onImport }) => {
             font-size: 0.95rem;
             color: var(--text-primary);
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        }
+
+        .asset-holdings-inline {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 500;
         }
 
         .info-bottom {
             display: flex;
+        }
+        
+        .asset-value-sub {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
         }
 
         .asset-holdings-text {
