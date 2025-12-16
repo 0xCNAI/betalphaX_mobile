@@ -767,7 +767,7 @@ const AssetList = ({ onImport }) => {
 
         .mobile-list-header {
             display: grid;
-            grid-template-columns: 1.2fr 1fr 1.2fr; /* 3 Columns */
+            grid-template-columns: 1.5fr 0.8fr 1fr; /* Previously 1.2fr 1fr 1.2fr */
             padding: 8px 12px;
             border-bottom: 1px solid var(--bg-tertiary);
             background-color: var(--bg-secondary);
@@ -785,7 +785,7 @@ const AssetList = ({ onImport }) => {
           background-color: var(--bg-secondary);
           padding: 12px 12px;
           display: grid;
-          grid-template-columns: 1.2fr 1fr 1.2fr; /* 3 Columns */
+          grid-template-columns: 1.5fr 0.8fr 1fr; /* Matched to header */
           align-items: center;
           gap: 8px;
           border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -829,7 +829,7 @@ const AssetList = ({ onImport }) => {
 
         .asset-symbol-text {
             font-weight: 700;
-            font-size: 0.85rem; /* Reduced font size */
+            font-size: 0.8rem; /* Further reduced from 0.85rem */
             color: var(--text-primary);
             white-space: nowrap;
         }
