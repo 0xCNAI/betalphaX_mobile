@@ -14,6 +14,7 @@ import { PriceProvider } from './context/PriceContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { prefetchTweetsForAssets } from './services/twitterService';
 import { BuyThesisProvider } from './context/BuyThesisContext';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -45,6 +46,7 @@ const App = () => {
         <PriceProvider>
           <BuyThesisProvider>
             <Router>
+              <PWAInstallPrompt />
               <Routes>
                 {/* Public Routes */}
                 <Route path="/login" element={<Login />} />
