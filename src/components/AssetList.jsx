@@ -808,8 +808,8 @@ const AssetList = ({ onImport }) => {
         }
 
         .token-icon-large {
-            width: 32px;
-            height: 32px;
+            width: 26px;
+            height: 26px;
             border-radius: 50%;
             display: block;
         }
@@ -824,18 +824,18 @@ const AssetList = ({ onImport }) => {
         .info-top {
             display: flex;
             align-items: baseline;
-            gap: 6px;
+            gap: 4px; /* Reduced gap */
         }
 
         .asset-symbol-text {
             font-weight: 700;
-            font-size: 0.95rem;
+            font-size: 0.85rem; /* Reduced font size */
             color: var(--text-primary);
             white-space: nowrap;
         }
 
         .asset-holdings-inline {
-            font-size: 0.8rem;
+            font-size: 0.75rem; /* Reduced font size */
             color: var(--text-secondary);
             font-weight: 500;
         }
@@ -845,7 +845,7 @@ const AssetList = ({ onImport }) => {
         }
         
         .asset-value-sub {
-            font-size: 0.85rem;
+            font-size: 0.8rem; /* Reduced font size */
             color: var(--text-secondary);
             font-weight: 500;
         }
