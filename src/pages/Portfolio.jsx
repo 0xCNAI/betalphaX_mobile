@@ -337,10 +337,10 @@ const Portfolio = () => {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            padding: 12px;
+            gap: 6px; /* Reduced from 8px */
+            padding: 10px; /* Reduced from 12px */
             border-radius: 12px;
-            font-size: 0.95rem;
+            font-size: 0.85rem; /* Reduced from 0.95rem */
             font-weight: 600;
             border: none;
             cursor: pointer;
@@ -364,10 +364,10 @@ const Portfolio = () => {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            padding: 12px;
+            gap: 6px; /* Reduced from 8px */
+            padding: 10px; /* Reduced from 12px */
             border-radius: 12px;
-            font-size: 0.95rem;
+            font-size: 0.85rem; /* Reduced from 0.95rem */
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;

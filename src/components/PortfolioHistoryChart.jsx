@@ -153,21 +153,21 @@ const PortfolioHistoryChart = ({ compact = false }) => {
                     <AreaChart data={chartData} margin={compact ? { top: 5, right: 0, left: -20, bottom: 0 } : { top: 10, right: 10, left: 0, bottom: 0 }}>
                         <defs>
                             <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                                <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                             </linearGradient>
                         </defs>
-                        {!compact && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--bg-tertiary)" />}
+                        {!compact && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />}
                         <XAxis
                             dataKey="date"
-                            tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
+                            tick={{ fill: 'var(--text-muted)', fontSize: 10 }}
                             tickLine={false}
                             axisLine={false}
                             minTickGap={30}
                             hide={compact}
                         />
                         <YAxis
-                            tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
+                            tick={{ fill: 'var(--text-muted)', fontSize: 10 }}
                             tickLine={false}
                             axisLine={false}
                             tickFormatter={(value) => `$${value.toLocaleString(undefined, { notation: "compact" })}`}
@@ -176,20 +176,21 @@ const PortfolioHistoryChart = ({ compact = false }) => {
                         />
                         <Tooltip
                             contentStyle={{
-                                backgroundColor: 'var(--bg-secondary)',
-                                border: '1px solid var(--bg-tertiary)',
-                                borderRadius: '8px',
-                                color: 'var(--text-primary)',
-                                fontSize: '0.8rem'
+                                backgroundColor: 'rgba(23, 23, 23, 0.9)',
+                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                borderRadius: '12px',
+                                color: '#f8fafc',
+                                fontSize: '0.8rem',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
                             }}
-                            itemStyle={{ color: 'var(--accent-primary)' }}
+                            itemStyle={{ color: '#3b82f6' }}
                             formatter={(value) => [`$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'Value']}
                         />
                         <Area
                             type="monotone"
                             dataKey="value"
-                            stroke="var(--accent-primary)"
-                            strokeWidth={2}
+                            stroke="#3b82f6"
+                            strokeWidth={3}
                             fillOpacity={1}
                             fill="url(#colorValue)"
                             animationDuration={1000}
