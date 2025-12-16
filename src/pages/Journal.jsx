@@ -78,7 +78,7 @@ const Journal = () => {
 
                     {/* Column 3: Price */}
                     <span className="price" style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: '500' }}>
-                      @ ${tx.price ? tx.price.toLocaleString() : '0.00'}
+                      ${tx.price ? tx.price.toLocaleString() : '0.00'}
                     </span>
 
                     {/* Column 4: Chevron */}

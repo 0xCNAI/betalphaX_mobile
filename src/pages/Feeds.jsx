@@ -4,8 +4,9 @@ import { usePrices } from '../context/PriceContext';
 import { useAuth } from '../context/AuthContext';
 import { addNote } from '../services/notebookService';
 import { getPortfolioFeeds } from '../services/twitterService';
+import { searchCoins } from '../services/coinGeckoApi';
 import { detectAssetEvents, generateWidgetData } from '../services/analysisService';
-import { RefreshCw, AlertTriangle, Activity, Zap, Check, X, ChevronDown, TrendingUp, Award, ExternalLink, ArrowRight, FileText } from 'lucide-react';
+import { RefreshCw, AlertTriangle, Activity, Zap, Check, X, ChevronDown, TrendingUp, Award, ExternalLink, ArrowRight, FileText, Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import './Feeds.css';
@@ -60,6 +61,46 @@ const Feeds = () => {
     const [signalsReady, setSignalsReady] = useState(false);
     const [lastGenerated, setLastGenerated] = useState(null);
     const [showAssetSelector, setShowAssetSelector] = useState(false);
+
+    // Search State
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+
+    // Search Effect
+    useEffect(() => {
+        const timer = setTimeout(async () => {
+            if (searchQuery.trim().length >= 1) {
+                setIsSearching(true);
+                try {
+                    const results = await searchCoins(searchQuery);
+                    setSearchResults(results);
+                } catch (error) {
+                    console.error("Search failed", error);
+                } finally {
+                    setIsSearching(false);
+                }
+            } else {
+                setSearchResults([]);
+            }
+        }, 500); // Debounce 500ms
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    const handleSelectResult = (coin) => {
+        const symbol = coin.symbol.toUpperCase();
+        if (!selectedAssets.includes(symbol)) {
+            setSelectedAssets([...selectedAssets, symbol]);
+            // Also cache the icon
+            if (coin.large) {
+                setAssetIcons(prev => ({ ...prev, [symbol]: coin.large }));
+                localStorage.setItem(`icon_${symbol}`, coin.large);
+            }
+        }
+        setSearchQuery('');
+        setSearchResults([]);
+    };
     const [selectedAssets, setSelectedAssets] = useState(() => {
         try {
             const saved = localStorage.getItem('feeds_selected_assets');
@@ -335,31 +376,58 @@ const Feeds = () => {
                             </div>
 
                             {/* Add Asset Input */}
-                            <div className="add-asset-input-row" style={{ padding: '8px 12px', borderBottom: '1px solid var(--bg-tertiary)', display: 'flex', gap: '8px' }}>
-                                <input
-                                    type="text"
-                                    placeholder="Add Ticker (e.g. SOL)"
-                                    className="simple-input"
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                            const val = e.target.value.trim().toUpperCase();
-                                            if (val && !selectedAssets.includes(val)) {
-                                                setSelectedAssets([...selectedAssets, val]);
-                                                e.target.value = '';
-                                            }
-                                        }
-                                    }}
-                                    style={{
-                                        flex: 1,
-                                        background: 'rgba(255,255,255,0.05)',
-                                        border: '1px solid var(--bg-tertiary)',
-                                        color: 'white',
-                                        padding: '6px 10px',
-                                        borderRadius: '6px',
-                                        fontSize: '0.8rem'
-                                    }}
-                                />
+                            <div className="add-asset-input-row" style={{ padding: '8px 12px', borderBottom: '1px solid var(--bg-tertiary)', display: 'flex', gap: '8px', flexDirection: 'column' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
+                                    <input
+                                        type="text"
+                                        placeholder="Search Assets (e.g. SOL)"
+                                        className="simple-input"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        style={{
+                                            flex: 1,
+                                            background: 'rgba(255,255,255,0.05)',
+                                            border: '1px solid var(--bg-tertiary)',
+                                            color: 'white',
+                                            padding: '8px 10px',
+                                            borderRadius: '6px',
+                                            fontSize: '0.8rem'
+                                        }}
+                                        autoFocus
+                                    />
+                                    {isSearching && <Loader2 size={16} className="animate-spin text-slate-400" />}
+                                </div>
                             </div>
+
+                            {/* Search Results */}
+                            {(searchResults.length > 0) && (
+                                <div className="selector-list" style={{ maxHeight: '200px', borderBottom: '1px solid var(--bg-tertiary)', backgroundColor: 'rgba(15, 23, 42, 0.5)' }}>
+                                    <div style={{ padding: '4px 12px', fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase' }}>Search Results</div>
+                                    {searchResults.map(coin => (
+                                        <div
+                                            key={coin.id}
+                                            className="selector-item"
+                                            onClick={() => handleSelectResult(coin)}
+                                            style={{ padding: '8px 12px' }}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                {coin.thumb ? (
+                                                    <img src={coin.thumb} alt={coin.symbol} style={{ width: '20px', height: '20px', borderRadius: '50%' }} />
+                                                ) : (
+                                                    <div className="coin-icon-placeholder" style={{ width: '20px', height: '20px', fontSize: '0.6rem' }}>{coin.symbol[0]}</div>
+                                                )}
+                                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                    <span style={{ fontWeight: 600 }}>{coin.symbol}</span>
+                                                    <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{coin.name}</span>
+                                                </div>
+                                            </div>
+                                            <div style={{ marginLeft: 'auto' }}>
+                                                {selectedAssets.includes(coin.symbol.toUpperCase()) ? <Check size={14} className="text-emerald-400" /> : <plus size={14} className="text-slate-500" />}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
 
                             <div className="selector-list">
                                 {analyzedAssets.map(asset => (
