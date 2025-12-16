@@ -65,8 +65,11 @@ const PortfolioHistoryChart = ({ compact = false }) => {
                         const holdings = transactions.reduce((acc, tx) => {
                             const txTime = new Date(tx.date).getTime();
                             if (tx.asset === asset && txTime <= timestamp) {
-                                if (tx.status === 'open') {
-                                    return acc + tx.amount;
+                                const amount = parseFloat(tx.amount || 0);
+                                if (tx.type === 'buy') {
+                                    return acc + amount;
+                                } else if (tx.type === 'sell') {
+                                    return acc - amount;
                                 }
                             }
                             return acc;
