@@ -2376,8 +2376,9 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
           )}
 
           {/* 2. Transaction Details Card */}
-          <div className="details-card" style={{ marginBottom: '20px', borderRadius: '8px', overflow: 'hidden' }}>
-            <div style={{ backgroundColor: '#020617', padding: '12px 16px', borderTopLeftRadius: '8px', borderTopRightRadius: '8px', borderBottom: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {/* 2. Transaction Details Card */}
+          <div className="details-card" style={{ marginBottom: '20px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #1e293b' }}>
+            <div style={{ backgroundColor: '#020617', padding: '12px 16px', borderBottom: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h5 style={{ margin: 0, color: 'white', fontWeight: 'bold', fontSize: '0.95rem' }}>Transaction Details</h5>
               <span style={{
                 color: formData.type === 'buy' ? '#22c55e' : '#ef4444',
@@ -2391,18 +2392,32 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                 {formData.type}
               </span>
             </div>
-            <span style={{ color: 'white', fontWeight: '500' }}>{parseFloat(formData.amount).toLocaleString()}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem' }}>
-            <span style={{ color: 'white', fontWeight: '500' }}>${parseFloat(formData.price).toLocaleString()}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem' }}>
-            <span style={{ color: '#94a3b8' }}>Date</span>
-            <span style={{ color: 'white', fontWeight: '500' }}>{formData.date}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem' }}>
-            <span style={{ color: '#94a3b8' }}>Asset</span>
-            <span style={{ color: 'white', fontWeight: '500' }}>{formData.asset}</span>
+
+            <div style={{ backgroundColor: '#0f172a', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {/* Asset */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem' }}>
+                <span style={{ color: '#94a3b8' }}>Asset</span>
+                <span style={{ color: 'white', fontWeight: '500' }}>{formData.asset}</span>
+              </div>
+
+              {/* Amount */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem' }}>
+                <span style={{ color: '#94a3b8' }}>Amount</span>
+                <span style={{ color: 'white', fontWeight: '500' }}>{parseFloat(formData.amount).toLocaleString()}</span>
+              </div>
+
+              {/* Price */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem' }}>
+                <span style={{ color: '#94a3b8' }}>Price</span>
+                <span style={{ color: 'white', fontWeight: '500' }}>${parseFloat(formData.price).toLocaleString()}</span>
+              </div>
+
+              {/* Date */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem' }}>
+                <span style={{ color: '#94a3b8' }}>Date</span>
+                <span style={{ color: 'white', fontWeight: '500' }}>{formData.date}</span>
+              </div>
+            </div>
           </div>
 
           {/* Review Sections */}
