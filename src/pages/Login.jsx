@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
+import PWAInstallPrompt from '../components/PWAInstallPrompt';
 
 const Login = () => {
   const [error, setError] = useState('');
@@ -44,6 +45,7 @@ const Login = () => {
           </button>
         </div>
       </div>
+      <PWAInstallPrompt />
 
       <style>{`
                 .auth-container {
