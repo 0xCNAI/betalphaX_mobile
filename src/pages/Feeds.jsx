@@ -60,7 +60,20 @@ const Feeds = () => {
     const [signalsReady, setSignalsReady] = useState(false);
     const [lastGenerated, setLastGenerated] = useState(null);
     const [showAssetSelector, setShowAssetSelector] = useState(false);
-    const [selectedAssets, setSelectedAssets] = useState([]);
+    const [selectedAssets, setSelectedAssets] = useState(() => {
+        try {
+            const saved = localStorage.getItem('feeds_selected_assets');
+            return saved ? JSON.parse(saved) : [];
+        } catch (e) {
+            console.error("Failed to parse saved assets", e);
+            return [];
+        }
+    });
+
+    // Persist selected assets
+    useEffect(() => {
+        localStorage.setItem('feeds_selected_assets', JSON.stringify(selectedAssets));
+    }, [selectedAssets]);
     const [assetIcons, setAssetIcons] = useState({});
 
     // --- Icon Resolution Logic ---
