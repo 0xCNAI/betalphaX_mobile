@@ -143,6 +143,7 @@ const PortfolioHistoryChart = ({ compact = false }) => {
                             hide={compact}
                         />
                         <YAxis
+                            domain={['auto', 'auto']}
                             tick={{ fill: 'var(--text-muted)', fontSize: 10 }}
                             tickLine={false}
                             axisLine={false}
