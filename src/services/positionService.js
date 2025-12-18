@@ -72,7 +72,8 @@ export const createPositionDoc = async (userId, asset, firstTx) => {
 
         transactionIds: [], // Will be updated after tx is saved
 
-        main_thesis: firstTx.memo || null,
+        // Prioritize explicit thesis, fallback to memo
+        main_thesis: firstTx.main_thesis || firstTx.memo || null,
     });
 
     try {
@@ -252,9 +253,6 @@ export const recalculatePosition = async (positionId) => {
         // Update the position's transactionIds list to match reality
         const freshTransactionIds = txs.map(t => t.id);
 
-        // Sort by date/timestamp
-        txs.sort((a, b) => new Date(a.date) - new Date(b.date));
-
         // Replay metrics using standard WAC calculator
         let {
             holdings: current_size,
@@ -279,6 +277,11 @@ export const recalculatePosition = async (positionId) => {
             closedAt = lastTx?.createdAt || new Date().toISOString();
         }
 
+        // Sync Initial Thesis from transaction notes
+        // Prioritize narrative.notes (Firestore) or memo (local/legacy) of the FIRST transaction
+        const firstTx = txs[0];
+        const initialThesis = firstTx.narrative?.notes || firstTx.memo || null;
+
         // Update Position
         await updateDoc(positionRef, {
             current_size,
@@ -289,6 +292,7 @@ export const recalculatePosition = async (positionId) => {
             status,
             closedAt,
             transactionIds: freshTransactionIds, // Update the list with validation
+            main_thesis: initialThesis, // Sync Initial Thesis
             updatedAt: new Date().toISOString()
         });
 
