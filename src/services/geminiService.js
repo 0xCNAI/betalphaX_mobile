@@ -310,3 +310,34 @@ export const generateAssetNoteSummary = async (notes, asset) => {
         return 'Summarization failed.';
     }
 };
+
+/**
+ * Analyzes a tweet for sentiment and signal type using Gemini API.
+ */
+export const analyzeTweetSignal = async (tweetText, asset) => {
+    if (!tweetText) return { sentiment: 'Neutral', type: 'Opinion' };
+
+    const prompt = `Analyze this tweet about ${asset}:
+    "${tweetText}"
+
+    Output valid JSON only:
+    {
+      "sentiment": "Bullish" | "Bearish" | "Neutral",
+      "type": "News" | "Opinion" | "Analysis" | "Spam",
+    }`;
+
+    try {
+        const result = await generateGeminiContent(prompt, GEMINI_MODELS.FLASH_LITE_2_5, 'tweet_analysis', false);
+
+        // Simple JSON cleaning
+        let cleanResult = result.trim();
+        if (cleanResult.startsWith('```')) {
+            cleanResult = cleanResult.replace(/^```(json)?\n/, '').replace(/\n```$/, '');
+        }
+
+        return JSON.parse(cleanResult);
+    } catch (error) {
+        console.warn("Error analyzing tweet:", error);
+        return { sentiment: 'Neutral', type: 'Opinion' };
+    }
+};
