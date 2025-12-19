@@ -85,6 +85,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
 
   const { theses } = useBuyThesis(); // Get saved theses
   const [step, setStep] = useState(initialStep);
+  const [quickAdd, setQuickAdd] = useState(false);
   const [formData, setFormData] = useState({
     asset: initialData?.asset || '',
     type: initialData?.type || initialType || 'buy',

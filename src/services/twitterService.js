@@ -411,15 +411,24 @@ export async function getPortfolioFeeds(assets, forceRefresh = false) {
         finalList.sort((a, b) => b.score - a.score);
 
         // Format for Feeds UI
-        const feeds = finalList.map(tweet => ({
-            ...tweet, // Preserve all analysis/mock properties (sentiment, type, summary, etc.)
-            name: tweet.authorName || tweet.author || 'Unknown',
-            volume: `${formatEngagement(tweet.likes)} likes`,
-            text: tweet.text,
-            url: tweet.link,
-            timestamp: tweet.timestamp,
-            asset: tweet.asset // Optional: could display which asset this relates to
-        }));
+        const feeds = finalList.map(tweet => {
+            // Map Sentiment to Opportunity/Risk Type for Feeds.jsx
+            let type = 'Neutral';
+            if (tweet.sentiment === 'Bullish') type = 'Opportunity';
+            else if (tweet.sentiment === 'Bearish') type = 'Risk';
+
+            return {
+                ...tweet, // Preserve all analysis/mock properties
+                type: type, // Override "News"/"Analysis" type from Gemini with "Opportunity"/"Risk"
+                originalType: tweet.type, // Keep original type just in case
+                name: tweet.authorName || tweet.author || 'Unknown',
+                volume: `${formatEngagement(tweet.likes)} likes`,
+                text: tweet.text,
+                url: tweet.link,
+                timestamp: tweet.timestamp,
+                asset: tweet.asset
+            };
+        });
 
         // Cache the results
         localStorage.setItem(CACHE_KEY, JSON.stringify({
