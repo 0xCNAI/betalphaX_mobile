@@ -54,7 +54,26 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
   const { getPrice, getIcon, fetchPriceForTicker } = usePrices();
 
   // Helper for Tag Translations
-  const getTagLabel = (tag) => t(`tag_${tag.replace(/[\/\s]/g, '')}`) || tag;
+  // Helper for Tag Translations
+  const getTagLabel = (tag) => {
+    if (!tag) return '';
+    // Case 1: Tag is already a key (e.g. from AI)
+    if (tag.startsWith('tag_')) {
+      // Try to translate
+      const label = t(tag);
+      // If translation exists and is not just the key itself (depending on t() impl, usually returns key if missing)
+      // Assuming t() returns key if missing or explicitly check
+      if (label && label !== tag) return label;
+
+      // Fallback: Prettify the key (tag_DefiInnovation -> Defi Innovation)
+      return tag.replace(/^tag_/, '').replace(/([A-Z])/g, ' $1').trim();
+    }
+
+    // Case 2: Tag is a raw string (e.g. "Long Term Hold") -> Convert to key
+    const key = `tag_${tag.replace(/[\/\s]/g, '')}`;
+    const label = t(key);
+    return label || tag;
+  };
   const getExitTagLabel = (tag) => t(`exit_${tag.replace(/[\/\s]/g, '')}`) || tag;
 
   // Helper for translating arrays of strings
@@ -1190,7 +1209,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                   ))}
                 </div>
 
-                {showTagsDropdown && (tagSearch || isCustomTag) && (
+                {showTagsDropdown && (
                   <div className="tags-dropdown" style={{
                     position: 'fixed', // Fixed for mobile modal overlay issues
                     top: 'auto',
