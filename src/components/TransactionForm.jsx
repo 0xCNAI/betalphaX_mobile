@@ -143,6 +143,22 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
   const [isLoadingAiTags, setIsLoadingAiTags] = useState(false);
   const [showAllTags, setShowAllTags] = useState(false);
 
+  // Missing variables for Merged Step 1
+  const tagsDropdownRef = useRef(null);
+  const [showTagsDropdown, setShowTagsDropdown] = useState(false);
+
+  // Calculate current holdings for display
+  const currentHoldings = React.useMemo(() => {
+    if (!formData.asset) return 0;
+    return transactions
+      .filter(t => t.asset === formData.asset && t.status !== 'closed')
+      .reduce((acc, t) => {
+        if (t.type === 'buy') return acc + parseFloat(t.amount || 0);
+        if (t.type === 'sell') return acc - parseFloat(t.amount || 0);
+        return acc;
+      }, 0);
+  }, [formData.asset, transactions]);
+
   // Default Tag Library (Buy Thesis)
   const defaultTags = [
     "Long Term Hold", "Swing Trade", "Scalp", "Fundamental Undervalued",
