@@ -246,7 +246,6 @@ const Feeds = () => {
             setTimeout(() => setGenerationStatus(''), 3000);
 
         } catch (error) {
-        } catch (error) {
             console.error("Signal generation failed:", error);
             setGenerationStatus(t('genFailed'));
         } finally {
