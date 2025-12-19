@@ -341,3 +341,44 @@ export const analyzeTweetSignal = async (tweetText, asset) => {
         return { sentiment: 'Neutral', type: 'Opinion' };
     }
 };
+
+/**
+ * Generates fundamental analysis using Gemini API.
+ */
+export const generateFundamentalAnalysis = async (symbol, fundamentalData, socialContext) => {
+    // Basic fallback if data is missing, but we try to analyze anyway
+    const metrics = JSON.stringify(fundamentalData || {});
+    const social = JSON.stringify(socialContext || []);
+
+    const prompt = `Act as a senior crypto fundamental analyst. Analyze the following data for ${symbol}.
+    
+    Fundamental Metrics: ${metrics}
+    Recent Social Context (Tweets): ${social}
+
+    Provide a JSON output with the following fields:
+    - verdict: "Undervalued" | "Fair Value" | "Overvalued"
+    - reasoning: (String, max 30 words) Key reason for the verdict.
+    - projectDescription: (String, max 20 words) What does the project actually do?
+    - tags: (Array of Strings) 3 key themes (e.g., "Layer 1", "High Yield", "DeFi").
+
+    JSON ONLY.`;
+
+    try {
+        const result = await generateGeminiContent(prompt, GEMINI_MODELS.FLASH_LITE_2_5, 'fundamental_analysis', false);
+
+        let cleanResult = result.trim();
+        if (cleanResult.startsWith('```')) {
+            cleanResult = cleanResult.replace(/^```(json)?\n/, '').replace(/\n```$/, '');
+        }
+
+        return JSON.parse(cleanResult);
+    } catch (error) {
+        console.warn("Error generating fundamental analysis:", error);
+        return {
+            verdict: 'Neutral',
+            reasoning: 'AI analysis unavailable.',
+            projectDescription: 'Crypto Asset',
+            tags: []
+        };
+    }
+};
