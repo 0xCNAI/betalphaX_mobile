@@ -746,11 +746,10 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
       setDiagnosis(diag);
 
       // Trigger AI Coach Analysis
-      // Trigger AI Coach Analysis
       if (!preTradeReview && !isAnalyzing && user) {
         setIsAnalyzing(true);
         console.log('[TransactionForm] Triggering AI Coach...');
-        runPreTradeReview(user.uid, formData.asset, formData, transactions)
+        runPreTradeReview(user.uid, formData.asset, formData, transactions, language)
           .then(advice => {
             setPreTradeReview(advice);
           })
@@ -758,7 +757,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
           .finally(() => setIsAnalyzing(false));
       }
     }
-  }, [step, formData.asset, transactions, user]);
+  }, [step, formData.asset, transactions, user, language]);
 
   // Auto-fetch price when asset changes
   useEffect(() => {
