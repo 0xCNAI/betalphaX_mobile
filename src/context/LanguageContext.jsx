@@ -1,7 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { translations } from '../data/translations';
-import { useAuth } from './AuthContext';
-import { getUserSettings, updateUserLanguage } from '../services/userService';
 
 const LanguageContext = createContext();
 
@@ -15,52 +13,20 @@ export const useLanguage = () => {
 
 export const LanguageProvider = ({ children }) => {
     const [language, setLanguage] = useState('en'); // Default to English
-    const { user } = useAuth();
-    const [loading, setLoading] = useState(true);
 
-    // Load language from local storage on mount
+    // Load saved language from localStorage
     useEffect(() => {
-        const storedLang = localStorage.getItem('app_language');
-        if (storedLang && (storedLang === 'en' || storedLang === 'zh-TW')) {
-            setLanguage(storedLang);
+        const savedLang = localStorage.getItem('appLanguage');
+        if (savedLang && (savedLang === 'en' || savedLang === 'zh-TW')) {
+            setLanguage(savedLang);
         }
-        setLoading(false);
     }, []);
 
-    // Sync with user profile when user logs in
-    useEffect(() => {
-        const fetchUserLanguage = async () => {
-            if (user) {
-                try {
-                    const settings = await getUserSettings(user.uid);
-                    if (settings && settings.language) {
-                        setLanguage(settings.language);
-                        localStorage.setItem('app_language', settings.language);
-                    }
-                } catch (error) {
-                    console.error('Error fetching user language:', error);
-                }
-            }
-        };
+    const changeLanguage = (lang) => {
+        if (lang !== 'en' && lang !== 'zh-TW') return;
 
-        if (user) {
-            fetchUserLanguage();
-        }
-    }, [user]);
-
-    const changeLanguage = async (newLang) => {
-        if (newLang !== 'en' && newLang !== 'zh-TW') return;
-
-        setLanguage(newLang);
-        localStorage.setItem('app_language', newLang);
-
-        if (user) {
-            try {
-                await updateUserLanguage(user.uid, newLang);
-            } catch (error) {
-                console.error('Error updating user language preference:', error);
-            }
-        }
+        setLanguage(lang);
+        localStorage.setItem('appLanguage', lang);
     };
 
     const t = (key) => {
@@ -68,11 +34,11 @@ export const LanguageProvider = ({ children }) => {
         return langData[key] || key;
     };
 
+    // Construct value object matching web version structure where possible
     const value = {
         language,
         changeLanguage,
-        t,
-        loading
+        t
     };
 
     return (
