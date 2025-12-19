@@ -880,6 +880,12 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
     // Check if current search is a custom tag (not in known list)
     const isCustomTag = tagSearch.trim() && !defaultTags.some(t => t.toLowerCase() === tagSearch.trim().toLowerCase()) && !aiTags.some(t => t.toLowerCase() === tagSearch.trim().toLowerCase());
 
+    // Define handleAddTag for this scope
+    const handleAddTag = (tag) => {
+      toggleTag(tag);
+      setTagSearch('');
+    };
+
     const handleGenerateTags = () => {
       const firstNote = formData.investmentNotes && formData.investmentNotes.length > 0 ? formData.investmentNotes[0] : '';
       if (firstNote) {
@@ -1185,7 +1191,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                         style={{ cursor: 'pointer' }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleRemoveTag(tag);
+                          toggleTag(tag);
                         }}
                       />
                     </span>
