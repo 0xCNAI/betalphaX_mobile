@@ -855,14 +855,14 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
     return (
       <div className="step-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '16px' }}>
         <div className="step-header">
-          <h4>Transaction Details</h4>
-          <p>Enter details and categorize your trade.</p>
+          <h4>{t('transaction_details') || 'Transaction Details'}</h4>
+          <p>{t('enterDetails') || 'Enter details and categorize your trade.'}</p>
         </div>
 
         {/* Row 1: Ticker + Date */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div className="form-group">
-            <label className="form-label">Token Ticker</label>
+            <label className="form-label">{t('assetSymbol') || 'Token Ticker'}</label>
             <div ref={inputRef} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               {formData.asset && getIcon && getIcon(formData.asset) && (
                 <img
@@ -876,7 +876,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                 name="asset"
                 value={formData.asset}
                 onChange={handleChange}
-                placeholder="e.g., BTC"
+                placeholder={t('enterTicker') || "e.g., BTC"}
                 required
                 className="form-input"
                 autoFocus
@@ -900,7 +900,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                   {isSearching ? (
                     <div style={{ padding: '12px', textAlign: 'center', color: '#94a3b8' }}>
                       <Loader2 size={16} className="animate-spin" style={{ display: 'inline-block', marginRight: '8px' }} />
-                      Searching...
+                      {t('searching') || 'Searching...'}
                     </div>
                   ) : (
                     searchResults.map((coin) => (
@@ -946,14 +946,14 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                   color: '#94a3b8',
                   textAlign: 'right'
                 }}>
-                  Holdings: <strong style={{ color: '#f8fafc' }}>{currentHoldings.toFixed(4)}</strong>
+                  {t('action_hold') || 'Holdings'}: <strong style={{ color: '#f8fafc' }}>{currentHoldings.toFixed(4)}</strong>
                 </div>
               )}
             </div>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Date</label>
+            <label className="form-label">{t('date') || 'Date'}</label>
             <input
               type="date"
               name="date"
@@ -968,7 +968,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
         {/* Row 2: Amount + Price */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '8px' }}>
           <div className="form-group">
-            <label className="form-label">Amount</label>
+            <label className="form-label">{t('amount') || 'Amount'}</label>
             <input
               type="number"
               name="amount"
@@ -982,7 +982,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
           </div>
 
           <div className="form-group">
-            <label className="form-label">Price per Coin ($)</label>
+            <label className="form-label">{t('pricePerCoin') || 'Price per Coin ($)'}</label>
             <input
               type="number"
               name="price"
@@ -999,179 +999,269 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
         {/* Row 3: Total Cost */}
         <div style={{
           padding: '12px 16px',
-          backgroundColor: 'rgba(30, 41, 59, 0.5)',
-          borderRadius: '12px',
+          backgroundColor: 'rgba(99, 102, 241, 0.1)',
+          borderRadius: '8px',
+          border: '1px solid rgba(99, 102, 241, 0.2)',
+          marginTop: '8px',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center',
-          border: '1px solid rgba(255,255,255,0.05)',
-          marginBottom: '20px'
+          alignItems: 'center'
         }}>
-          <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Total Cost:</span>
-          <span style={{ fontSize: '1.1rem', fontWeight: '600', color: '#f8fafc' }}>
+          <span style={{ fontSize: '0.9rem', color: '#cbd5e1' }}>{t('totalCost') || 'Total Cost'}:</span>
+          <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#818cf8', fontFamily: 'monospace' }}>
             ${((parseFloat(formData.amount || 0) * parseFloat(formData.price || 0)) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
         </div>
 
-        {/* Row 4: Type Toggles & Quick Add */}
-        <div className="type-selector-row">
-          <div
-            className={`type-option buy ${formData.type === 'buy' ? 'selected' : ''}`}
+        {/* Action Toggle */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '16px' }}>
+          <button
+            type="button"
+            className={`action-toggle-btn ${formData.type === 'buy' ? 'active buy' : ''}`}
             onClick={() => setFormData(prev => ({ ...prev, type: 'buy' }))}
+            style={{
+              padding: '12px',
+              borderRadius: '8px',
+              border: formData.type === 'buy' ? '1px solid #10b981' : '1px solid #334155',
+              backgroundColor: formData.type === 'buy' ? 'rgba(16, 185, 129, 0.1)' : 'transparent',
+              color: formData.type === 'buy' ? '#10b981' : '#94a3b8',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
           >
-            Buy
-          </div>
-          <div
-            className={`type-option sell ${formData.type === 'sell' ? 'selected' : ''}`}
-            onClick={() => !isOverSelling && setFormData(prev => ({ ...prev, type: 'sell' }))}
-            style={{ opacity: isOverSelling ? 0.5 : 1, cursor: isOverSelling ? 'not-allowed' : 'pointer' }}
+            {t('action_buy') || 'Buy'}
+          </button>
+          <button
+            type="button"
+            className={`action-toggle-btn ${formData.type === 'sell' ? 'active sell' : ''}`}
+            onClick={() => setFormData(prev => ({ ...prev, type: 'sell' }))}
+            style={{
+              padding: '12px',
+              borderRadius: '8px',
+              border: formData.type === 'sell' ? '1px solid #ef4444' : '1px solid #334155',
+              backgroundColor: formData.type === 'sell' ? 'rgba(239, 68, 68, 0.1)' : 'transparent',
+              color: formData.type === 'sell' ? '#ef4444' : '#94a3b8',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
           >
-            {isOverSelling ? 'Insufficient Holdings' : 'Sell'}
-          </div>
+            {t('action_sell') || 'Sell'}
+          </button>
         </div>
 
-        {/* Quick Add Button */}
-        <button
-          type="button"
-          disabled={!assetExists}
-          className="btn-primary"
+        {/* Quick Add Toggle */}
+        <div
+          className="quick-add-toggle"
+          onClick={() => setQuickAdd(!quickAdd)}
           style={{
-            width: '100%',
+            marginTop: '16px',
+            padding: '12px',
+            backgroundColor: 'rgba(255,255,255,0.05)',
+            borderRadius: '8px',
+            display: 'flex',
+            alignItems: 'center',
             justifyContent: 'center',
-            background: assetExists ? 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' : '#1e293b',
-            boxShadow: assetExists ? '0 4px 12px rgba(79, 70, 229, 0.3)' : 'none',
-            color: assetExists ? 'white' : '#64748b'
-          }}
-          onClick={() => {
-            if (!assetExists) return;
-            const assetTransactions = transactions
-              .filter(t => t.asset === formData.asset && t.type === formData.type)
-              .sort((a, b) => new Date(b.date) - new Date(a.date));
-
-            if (assetTransactions.length > 0) {
-              const lastTx = assetTransactions[0];
-              setFormData(prev => ({
-                ...prev,
-                tags: lastTx.tags || [],
-                exitTags: lastTx.exitTags || [],
-                investmentNotes: lastTx.memo ? [lastTx.memo] : [''],
-                exitNotes: lastTx.exitMemo ? [lastTx.exitMemo] : [''],
-                selectedReasons: lastTx.selectedReasons || [],
-                reasonDetails: lastTx.reasonDetails || {},
-                customReasons: lastTx.customReasons || { fundamental: '', eventDriven: '', technical: '', social: '' },
-                selectedSellSignals: lastTx.selectedSellSignals || [],
-              }));
-            }
-            setStep(4);
+            gap: '8px',
+            cursor: 'pointer',
+            border: quickAdd ? '1px solid #6366f1' : '1px solid transparent',
+            color: quickAdd ? '#818cf8' : '#64748b',
+            fontSize: '0.9rem',
+            transition: 'all 0.2s'
           }}
         >
-          <FastForward size={18} /> Quick Add (Skip Analysis)
-        </button>
-
-        {/* Row 5: Investment Note & Generate Tags */}
-        <div className="form-group" style={{ marginTop: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <label className="form-label" style={{ marginBottom: 0 }}>Investment Note</label>
-              <HelpCircle size={14} color="#64748b" />
-            </div>
-            <button
-              type="button"
-              onClick={handleGenerateTags}
-              disabled={isLoadingAiTags || !formData.investmentNotes[0]}
-              className="btn-secondary"
-              style={{ padding: '4px 12px', fontSize: '0.75rem', height: 'auto' }}
-            >
-              {isLoadingAiTags ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-              Generate Tags
-            </button>
-          </div>
-          <textarea
-            name="investmentNotes"
-            value={formData.investmentNotes[0] || ''}
-            onChange={(e) => handleNoteChange('investment', 0, e.target.value)}
-            placeholder="Why are you taking this trade?"
-            className="form-input"
-            style={{
-              height: '80px',
-              minHeight: '80px',
-              resize: 'none',
-              lineHeight: '1.5'
-            }}
-          />
+          {quickAdd ? <Zap size={16} fill="currentColor" /> : <Zap size={16} />}
+          {quickAdd ? (t('quickAddActive') || 'Quick Add Active') : (t('quickAdd') || 'Quick Add (Skip Analysis)')}
         </div>
 
-        {/* Row 6: Tags Section (Merged from Step 2) - Only for BUY */}
-        {formData.type === 'buy' && (
-          <div style={{ marginTop: '24px' }}>
-            {/* Search Bar */}
-            <div style={{ position: 'relative', display: 'flex', gap: '8px', marginBottom: '16px' }}>
-              <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-              <input
-                type="text"
-                placeholder="Search or create tag..."
-                value={tagSearch}
-                onChange={(e) => setTagSearch(e.target.value)}
-                className="form-input"
-                style={{ paddingLeft: '36px' }}
-              />
-              {isCustomTag && (
-                <button type="button" className="btn-secondary" onClick={handleCreateTag}>
-                  <Plus size={14} /> Add
+        {!quickAdd && (
+          <div className="analysis-section" style={{ marginTop: '24px', borderTop: '1px solid #1e293b', paddingTop: '24px' }}>
+            <div className="form-group">
+              <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>{t('investmentNote') || 'Investment Note'} <span className="tooltip-icon">?</span></span>
+                <button
+                  type="button"
+                  onClick={handleGenerateTags}
+                  disabled={isLoadingAiTags || !formData.investmentNotes?.[0]}
+                  style={{
+                    fontSize: '0.75rem',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    color: '#818cf8',
+                    border: '1px solid rgba(99, 102, 241, 0.2)',
+                    cursor: formData.investmentNotes?.[0] ? 'pointer' : 'not-allowed',
+                    opacity: formData.investmentNotes?.[0] ? 1 : 0.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  {isLoadingAiTags ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                  {t('generateTags') || 'Generate Tags'}
                 </button>
-              )}
+              </label>
+              <textarea
+                value={formData.investmentNotes?.[0] || ''}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFormData(prev => {
+                    const notes = [...(prev.investmentNotes || [])];
+                    notes[0] = val;
+                    return { ...prev, investmentNotes: notes };
+                  });
+                }}
+                placeholder={t('notePlaceholder') || "Why are you taking this trade? (Click 'Generate Tags' to analyze)"}
+                className="form-textarea large-memo"
+                rows={3}
+              />
             </div>
 
-            {/* Selected Tags */}
-            {formData.tags && formData.tags.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
-                {formData.tags.map(tag => (
-                  <span
-                    key={tag}
-                    className="tag-pill selected active"
-                    onClick={() => toggleTag(tag)}
-                  >
-                    {tag} <X size={12} />
-                  </span>
-                ))}
-              </div>
-            )}
+            {/* Tags Selection */}
+            <div className="form-group" style={{ marginTop: '16px' }}>
+              <div ref={tagsDropdownRef} style={{ position: 'relative' }}>
+                <div
+                  className="form-input"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    flexWrap: 'wrap',
+                    padding: '8px 12px',
+                    minHeight: '42px'
+                  }}
+                  onClick={() => setShowTagsDropdown(true)}
+                >
+                  <Search size={16} color="#64748b" />
+                  <input
+                    type="text"
+                    value={tagSearch}
+                    onChange={(e) => {
+                      setTagSearch(e.target.value);
+                      setShowTagsDropdown(true);
+                    }}
+                    placeholder={t('searchOrCreateTag') || "Search or create tag..."}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'white',
+                      flex: 1,
+                      outline: 'none',
+                      fontSize: '0.9rem'
+                    }}
+                  />
+                </div>
 
-            {/* AI Tags */}
-            {aiTags.length > 0 && (
-              <div style={{ marginBottom: '16px' }}>
-                <h5 style={{ fontSize: '0.75rem', color: '#6366f1', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Sparkles size={12} /> AI Suggested
-                </h5>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {aiTags.map(tag => (
-                    <button
-                      key={`ai-${tag}`}
-                      type="button"
-                      className={`tag-pill ${formData.tags?.includes(tag) ? 'active' : ''}`}
-                      onClick={() => toggleTag(tag)}
-                    >
-                      {tag}
-                    </button>
+                {/* Selected Tags Display inline above input? Or separate? Design implies separate usually, but let's keep it clean */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+                  {formData.tags && formData.tags.map(tag => (
+                    <span key={tag} className="tag-pill active" style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', padding: '4px 10px' }}>
+                      {getTagLabel(tag)}
+                      <X
+                        size={12}
+                        style={{ cursor: 'pointer' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveTag(tag);
+                        }}
+                      />
+                    </span>
                   ))}
                 </div>
-              </div>
-            )}
 
-            {/* Recommended Tags */}
-            <div>
-              <h5 style={{ fontSize: '0.85rem', color: '#f8fafc', marginBottom: '8px', fontWeight: '600' }}>Recommended Tags</h5>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {displayedDefaultTags.map(tag => (
-                  <button
-                    key={`def-${tag}`}
-                    type="button"
-                    className={`tag-pill ${formData.tags?.includes(tag) ? 'active' : ''}`}
-                    onClick={() => toggleTag(tag)}
-                  >
-                    {tag}
-                  </button>
-                ))}
+                {showTagsDropdown && (tagSearch || isCustomTag) && (
+                  <div className="tags-dropdown" style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    marginTop: '4px',
+                    backgroundColor: '#1e293b',
+                    border: '1px solid #334155',
+                    borderRadius: '8px',
+                    zIndex: 20,
+                    maxHeight: '200px',
+                    overflowY: 'auto'
+                  }}>
+                    {/* AI Generated Tags Section */}
+                    {aiTags.length > 0 && (
+                      <div style={{ padding: '8px 12px' }}>
+                        <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Sparkles size={10} /> {t('aiSuggested') || 'AI Suggested'}
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                          {aiTags.map(tag => (
+                            <button
+                              key={tag}
+                              type="button"
+                              className={`tag-pill ${formData.tags.includes(tag) ? 'active' : ''} ai-tag`}
+                              onClick={() => {
+                                handleAddTag(tag);
+                                setTagSearch('');
+                              }}
+                              style={{ fontSize: '0.75rem', padding: '4px 8px' }}
+                            >
+                              {getTagLabel(tag)}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Recommend Tags Section */}
+                    <div style={{ padding: '8px 12px', borderTop: aiTags.length > 0 ? '1px solid #334155' : 'none' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '4px' }}>
+                        {t('recommendedTags') || 'Recommended Tags'}
+                      </div>
+                    </div>
+                    {/* Custom Tag Creation */}
+                    {isCustomTag && (
+                      <div style={{ padding: '8px 12px', borderTop: '1px solid #334155' }}>
+                        <button
+                          type="button"
+                          className="tag-pill custom-tag-create"
+                          onClick={() => {
+                            handleAddTag(tagSearch.trim());
+                            setTagSearch('');
+                          }}
+                          style={{ width: '100%', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '4px' }}
+                        >
+                          <Plus size={14} /> {t('createCustomTag') || `Create "${tagSearch.trim()}"`}
+                        </button>
+                      </div>
+                    )}
+                    {/* Default Tags */}
+                    <div style={{ padding: '8px 12px', borderTop: (aiTags.length > 0 || isCustomTag) ? '1px solid #334155' : 'none' }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        {displayedDefaultTags.map(tag => (
+                          <button
+                            key={tag}
+                            type="button"
+                            className={`tag-pill ${formData.tags.includes(tag) ? 'active' : ''}`}
+                            onClick={() => {
+                              handleAddTag(tag);
+                              setTagSearch('');
+                            }}
+                            style={{ fontSize: '0.75rem', padding: '4px 8px' }}
+                          >
+                            {getTagLabel(tag)}
+                          </button>
+                        ))}
+                      </div>
+                      {!showAllTags && filteredDefaultTags.length > 10 && (
+                        <button
+                          type="button"
+                          onClick={() => setShowAllTags(true)}
+                          className="btn-text"
+                          style={{ marginTop: '8px', fontSize: '0.75rem', color: '#818cf8' }}
+                        >
+                          {t('showAllTags') || 'Show all tags'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1185,7 +1275,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             onClick={() => setShowAdvanced(!showAdvanced)}
             style={{ width: '100%', justifyContent: 'space-between', border: 'none', background: 'rgba(255,255,255,0.03)' }}
           >
-            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>Advanced Settings (Group & Chain)</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>{t('advancedSettings') || 'Advanced Settings (Group & Chain)'}</span>
             {showAdvanced ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </button>
 

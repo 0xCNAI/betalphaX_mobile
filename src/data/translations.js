@@ -141,6 +141,27 @@ export const translations = {
         noTags: 'No tags yet',
         enterTag: 'Enter tag...',
         loadingFundamentals: 'Loading Fundamentals...',
+
+        // Feeds (EN)
+        opportunities: 'Opportunities',
+        risks: 'Risks',
+        opportunitiesCount: 'opportunities',
+        risksCount: 'risks',
+        marketIntel: 'Market Intel',
+        aiMarketIntelFor: 'AI market intelligence for',
+        sources: 'Sources',
+        goToAssetPage: 'Go to Asset Page',
+        marketFeeds: 'Market Intelligence Dashboard',
+        feedsDashboardTitle: 'Market Intelligence Dashboard',
+        feedsDashboardSubtitle: 'Unified AI analysis of Risks and Opportunities across your market.',
+        analyzing: 'Analyzing',
+        generateIntelligence: 'Generate Intelligence',
+        targetAssets: 'TARGET ASSETS',
+        selectAssets: 'Select Assets',
+        readyToAnalyze: 'Ready to analyze market',
+        aiScanDescription: 'AI will scan social sentiment, technicals, and news for your',
+        selectedAssets: 'selected assets',
+
         // ImportantEvents
         recentDiscussions: 'Recent Community Discussions',
         pastMonthEvents: 'Past Month Events',
