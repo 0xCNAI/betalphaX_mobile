@@ -1,0 +1,32 @@
+{
+    "name": "betalpha-pick",
+    "framework": "vite",
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist",
+    "rewrites": [
+        {
+            "source": "/api/twitter/(.*)",
+            "destination": "/api/twitter?path=$1"
+        },
+        {
+            "source": "/api/coingecko/(.*)",
+            "destination": "/api/coingecko?path=$1"
+        },
+        {
+            "source": "/api/binance/(.*)",
+            "destination": "/api/binance?path=$1"
+        },
+        {
+            "source": "/api/gt/(.*)",
+            "destination": "/api/gt?path=$1"
+        },
+        {
+            "source": "/api/debank-proxy",
+            "destination": "/api/debank"
+        },
+        {
+            "source": "/((?!api/.*).*)",
+            "destination": "/index.html"
+        }
+    ]
+}

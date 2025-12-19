@@ -1,0 +1,31 @@
+
+> crypto_journal@0.0.0 build
+> vite build
+
+vite v7.2.4 building client environment for production...
+transforming...
+✓ 17 modules transformed.
+✗ Build failed in 2.55s
+error during build:
+[vite:esbuild] Transform failed with 1 error:
+/Users/jonathan.c/Documents/Startup Ideas/Betalpha_Pick-main/src/pages/AssetDetails.jsx:207:12: ERROR: Expected ")" but found "{"
+file: /Users/jonathan.c/Documents/Startup Ideas/Betalpha_Pick-main/src/pages/AssetDetails.jsx:207:12
+
+Expected ")" but found "{"
+205 |              {holdingsBreakdown.length > 0 && (
+206 |                {/* On-Chain Holdings Breakdown */ }
+207 |              {holdingsBreakdown.length > 0 && (
+    |              ^
+208 |                <div className="card-auto flex flex-col shrink-0">
+209 |                  <div className="p-3 border-b border-slate-800 bg-slate-900/50 -mx-4 -mt-4 mb-4 rounded-t-xl">
+
+    at failureErrorWithLog (/Users/jonathan.c/Documents/Startup Ideas/Betalpha_Pick-main/node_modules/esbuild/lib/main.js:1467:15)
+    at /Users/jonathan.c/Documents/Startup Ideas/Betalpha_Pick-main/node_modules/esbuild/lib/main.js:736:50
+    at responseCallbacks.<computed> (/Users/jonathan.c/Documents/Startup Ideas/Betalpha_Pick-main/node_modules/esbuild/lib/main.js:603:9)
+    at handleIncomingPacket (/Users/jonathan.c/Documents/Startup Ideas/Betalpha_Pick-main/node_modules/esbuild/lib/main.js:658:12)
+    at Socket.readFromStdout (/Users/jonathan.c/Documents/Startup Ideas/Betalpha_Pick-main/node_modules/esbuild/lib/main.js:581:7)
+    at Socket.emit (node:events:508:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)

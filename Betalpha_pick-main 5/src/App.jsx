@@ -4,11 +4,12 @@ import Layout from './components/Layout';
 import Portfolio from './pages/Portfolio';
 import AssetDetails from './pages/AssetDetails';
 import Journal from './pages/Journal';
+import Notebook from './pages/Notebook';
 import Feeds from './pages/Feeds';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import DebugTwitter from './pages/DebugTwitter';
-import Notebook from './pages/Notebook';
+import MonitorPage from './pages/MonitorPage';
 import { TransactionProvider } from './context/TransactionContext';
 import { PriceProvider } from './context/PriceContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -41,8 +42,8 @@ const App = () => {
   }, []);
 
   return (
-    <AuthProvider>
-      <LanguageProvider>
+    <LanguageProvider>
+      <AuthProvider>
         <TransactionProvider>
           <PriceProvider>
             <BuyThesisProvider>
@@ -63,6 +64,7 @@ const App = () => {
                           <Route path="/journal" element={<Journal />} />
                           <Route path="/notebook" element={<Notebook />} />
                           <Route path="/debug-twitter" element={<DebugTwitter />} />
+                          <Route path="/monitor" element={<MonitorPage />} />
                         </Routes>
                       </Layout>
                     </PrivateRoute>
@@ -72,8 +74,8 @@ const App = () => {
             </BuyThesisProvider>
           </PriceProvider>
         </TransactionProvider>
-      </LanguageProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </LanguageProvider>
   );
 };
 

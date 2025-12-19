@@ -3,11 +3,14 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, BookOpen, Activity, Settings, LogOut, Trash2, StickyNote } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTransactions } from '../context/TransactionContext';
+import LanguageSwitcher from './LanguageSwitcher';
+import { useLanguage } from '../context/LanguageContext';
 
 const Layout = ({ children }) => {
   const location = useLocation();
   const { signOut } = useAuth();
   const { clearTransactions } = useTransactions();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -20,10 +23,10 @@ const Layout = ({ children }) => {
   };
 
   const navItems = [
-    { path: '/', label: 'Portfolio', icon: LayoutDashboard },
-    { path: '/feeds', label: 'Feeds', icon: Activity },
-    { path: '/journal', label: 'Journal', icon: BookOpen },
-    { path: '/notebook', label: 'Notebook', icon: StickyNote },
+    { path: '/', label: t('nav.portfolio'), icon: LayoutDashboard },
+    { path: '/feeds', label: t('nav.feeds'), icon: Activity },
+    { path: '/journal', label: t('nav.journal'), icon: BookOpen },
+    { path: '/notebook', label: t('nav.notebook'), icon: StickyNote },
   ];
 
   return (
@@ -32,6 +35,8 @@ const Layout = ({ children }) => {
       <main className="main-content">
         {children}
       </main>
+
+      <LanguageSwitcher />
 
       {/* Bottom Tab Bar */}
       <nav className="bottom-tab-bar">

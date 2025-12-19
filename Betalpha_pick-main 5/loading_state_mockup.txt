@@ -1,0 +1,6 @@
+<Detailed Loading State - Mockup>
+Center Column:
+[Spinner]
+[Title: "Analyzing Market Intelligence..."]
+[Pill Container: "Scanning BTC signals... (1/4)"]
+Background: Dark blue, centered.

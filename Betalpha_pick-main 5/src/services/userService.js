@@ -1,5 +1,5 @@
 import { db } from './firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
 /**
  * Get the list of handles a user is tracking for a specific symbol
@@ -53,46 +53,41 @@ export async function updateUserTrackingList(userId, symbol, newList) {
 }
 
 /**
- * Get user settings (including language preference)
- * @param {string} userId - User ID
- * @returns {Promise<Object>} - User settings object
+ * Get the user's saved asset monitoring list (Global)
+ * @param {string} userId
+ * @returns {Promise<Array<string>>}
  */
-export async function getUserSettings(userId) {
-    if (!userId) return null;
-
+export async function getUserSavedAssets(userId) {
+    if (!userId) return [];
     try {
-        const docRef = doc(db, 'users', userId, 'settings', 'preferences');
+        const docRef = doc(db, 'users', userId, 'preferences', 'dashboard');
         const docSnap = await getDoc(docRef);
-
         if (docSnap.exists()) {
-            return docSnap.data();
+            return docSnap.data().trackedAssets || [];
         }
-        return null;
+        return [];
     } catch (error) {
-        console.error('Error fetching user settings:', error);
-        return null;
+        console.error('Error fetching user saved assets:', error);
+        return [];
     }
 }
 
 /**
- * Update user language preference
- * @param {string} userId - User ID
- * @param {string} language - Language code ('en' or 'zh-TW')
+ * Update the user's saved asset monitoring list
+ * @param {string} userId
+ * @param {Array<string>} assets
  */
-export async function updateUserLanguage(userId, language) {
-    if (!userId || !language) throw new Error('Invalid user or language');
-
+export async function updateUserSavedAssets(userId, assets) {
+    if (!userId) return false;
     try {
-        const docRef = doc(db, 'users', userId, 'settings', 'preferences');
+        const docRef = doc(db, 'users', userId, 'preferences', 'dashboard');
         await setDoc(docRef, {
-            language: language,
+            trackedAssets: assets,
             updatedAt: new Date().toISOString()
         }, { merge: true });
-
         return true;
     } catch (error) {
-        console.error('Error updating user language:', error);
-        throw error;
+        console.error('Error saving user assets:', error);
+        return false;
     }
 }
-

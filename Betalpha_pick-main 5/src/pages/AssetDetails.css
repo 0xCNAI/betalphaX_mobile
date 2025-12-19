@@ -1,0 +1,119 @@
+/* Global Asset Page Layout Rules */
+
+/* 1. Global Padding System */
+.asset-card {
+    padding: 16px 20px !important;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 12px;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    height: auto !important;
+    min-height: fit-content !important;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 2. Consistent Spacing & 10. Flexible Grid */
+.asset-page-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    min-height: 100vh;
+    background-color: #020617;
+    /* slate-950 */
+    overflow-y: auto;
+}
+
+.asset-page-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 24px;
+    align-items: start;
+}
+
+/* Vertical gap between components */
+.asset-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+/* 3. Prevent Text Clipping */
+.text-fix {
+    overflow: visible !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    line-height: 1.45 !important;
+}
+
+/* 5. Sector & Tags Wrapping */
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.tag-item {
+    white-space: normal !important;
+    height: auto !important;
+}
+
+/* 6. Fundamental Intelligence Layout */
+.fundamental-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    /* Column gap */
+    align-items: flex-start;
+}
+
+.fundamental-column {
+    min-width: 220px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* 8. Technical Analysis Card Layout */
+.ta-card-container {
+    padding: 20px !important;
+    row-gap: 16px !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.ta-levels-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: center;
+}
+
+/* 9. Consistent Card Style Override */
+.card-auto {
+    height: auto !important;
+    min-height: fit-content !important;
+}
+
+/* Header Specifics */
+.asset-header {
+    padding: 12px 20px;
+    background: rgba(15, 23, 42, 0.8);
+    /* slate-900 */
+    border-radius: 12px;
+    border: 1px solid rgba(30, 41, 59, 0.5);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .asset-page-grid {
+        grid-template-columns: 1fr;
+    }
+}
