@@ -4,6 +4,8 @@ import { getTokenFundamentals } from '../services/fundamentalService';
 import { searchCryptoTweets } from '../services/twitterService';
 import { getCoinMetadata } from '../services/coinGeckoApi';
 import { generateFundamentalAnalysis } from '../services/geminiService';
+import { useLanguage } from '../context/LanguageContext';
+import { translateText } from '../services/translationService';
 
 const FundamentalWidget = ({ symbol, name, onDataLoaded, onAnalysisComplete }) => {
     const [data, setData] = useState(null);
@@ -13,6 +15,34 @@ const FundamentalWidget = ({ symbol, name, onDataLoaded, onAnalysisComplete }) =
     // AI Analysis State
     const [aiAnalysis, setAiAnalysis] = useState(null);
     const [analyzing, setAnalyzing] = useState(false);
+    const { t, language } = useLanguage();
+    const [translatedAnalysis, setTranslatedAnalysis] = useState(null);
+
+    // Translate AI content
+    useEffect(() => {
+        const translateContent = async () => {
+            if (language === 'zh-TW' && aiAnalysis) {
+                try {
+                    const [desc, reas] = await Promise.all([
+                        aiAnalysis.projectDescription ? translateText(aiAnalysis.projectDescription, 'zh-TW') : Promise.resolve(null),
+                        aiAnalysis.reasoning ? translateText(aiAnalysis.reasoning, 'zh-TW') : Promise.resolve(null)
+                    ]);
+                    setTranslatedAnalysis({
+                        projectDescription: desc || aiAnalysis.projectDescription,
+                        reasoning: reas || aiAnalysis.reasoning
+                    });
+                } catch (e) {
+                    console.error("Translation failed", e);
+                }
+            } else {
+                setTranslatedAnalysis(null);
+            }
+        };
+        translateContent();
+    }, [aiAnalysis, language]);
+
+    const displayAnalysis = (language === 'zh-TW' && translatedAnalysis) ? { ...aiAnalysis, ...translatedAnalysis } : aiAnalysis;
+    const getVerdictLabel = (v) => t(`verdict_${v?.toLowerCase().replace(' ', '_')}`) || v;
 
     useEffect(() => {
         let mounted = true;
@@ -105,7 +135,7 @@ const FundamentalWidget = ({ symbol, name, onDataLoaded, onAnalysisComplete }) =
         return (
             <div className="bg-slate-900/50 rounded-xl border border-slate-800 p-4 min-h-[180px] flex items-center justify-center w-full">
                 <div className="text-slate-500 text-xs flex items-center gap-2">
-                    <Activity size={14} className="animate-spin" /> Loading Fundamentals...
+                    <Activity size={14} className="animate-spin" /> {t('loadingFundamentals') || 'Loading Fundamentals...'}
                 </div>
             </div>
         );
@@ -128,7 +158,7 @@ const FundamentalWidget = ({ symbol, name, onDataLoaded, onAnalysisComplete }) =
                 <div className="grid grid-cols-2 gap-2">
                     {/* Market Cap */}
                     <div className="bg-slate-900/50 rounded-lg border border-slate-800 p-2 flex flex-col justify-center items-center text-center">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">M. Cap</span>
+                        <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">{t('marketCap')}</span>
                         <span className="text-sm font-bold text-white tracking-tight">
                             {valuation ? formatMoney(valuation.mcap) : '-'}
                         </span>
@@ -136,7 +166,7 @@ const FundamentalWidget = ({ symbol, name, onDataLoaded, onAnalysisComplete }) =
 
                     {/* FDV */}
                     <div className="bg-slate-900/50 rounded-lg border border-slate-800 p-2 flex flex-col justify-center items-center text-center">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">FDV</span>
+                        <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">{t('fdv')}</span>
                         <span className="text-sm font-bold text-white tracking-tight">
                             {valuation ? formatMoney(valuation.fdv) : '-'}
                         </span>
@@ -144,7 +174,7 @@ const FundamentalWidget = ({ symbol, name, onDataLoaded, onAnalysisComplete }) =
 
                     {/* TVL */}
                     <div className="bg-slate-900/50 rounded-lg border border-slate-800 p-2 flex flex-col justify-center items-center text-center">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">TVL</span>
+                        <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">{t('tvl')}</span>
                         <span className="text-sm font-bold text-white tracking-tight">
                             {growth ? formatMoney(growth.tvl_current) : '-'}
                         </span>
@@ -178,24 +208,23 @@ const FundamentalWidget = ({ symbol, name, onDataLoaded, onAnalysisComplete }) =
 
 
 
-                {/* 3. AI Insights & What It Does */}
                 <div className="flex flex-col gap-2">
                     <div className="text-xs font-bold tracking-wide text-purple-400 uppercase flex items-center gap-1 px-1">
-                        <Sparkles size={12} /> AI Insights
+                        <Sparkles size={12} /> {t('aiInsights')}
                     </div>
                     <div className="bg-slate-900/50 rounded-lg border border-slate-800 p-3">
                         {analyzing ? (
                             <div className="flex items-center gap-2 text-xs text-slate-500">
-                                <Sparkles size={12} className="animate-pulse" /> Analyzing Valuation & Growth...
+                                <Sparkles size={12} className="animate-pulse" /> {t('analyzingValuation') || 'Analyzing Valuation & Growth...'}
                             </div>
-                        ) : aiAnalysis ? (
+                        ) : displayAnalysis ? (
                             <div className="flex flex-col gap-3">
                                 {/* What It Does */}
-                                {aiAnalysis.projectDescription && (
+                                {displayAnalysis.projectDescription && (
                                     <div>
-                                        <h4 className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">What It Does</h4>
+                                        <h4 className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">{t('whatItDoes')}</h4>
                                         <p className="text-xs text-slate-300 leading-relaxed">
-                                            {aiAnalysis.projectDescription}
+                                            {displayAnalysis.projectDescription}
                                         </p>
                                     </div>
                                 )}
@@ -203,21 +232,21 @@ const FundamentalWidget = ({ symbol, name, onDataLoaded, onAnalysisComplete }) =
                                 {/* Verdict */}
                                 <div>
                                     <div className="flex items-center gap-2 mb-1">
-                                        <h4 className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Verdict:</h4>
-                                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${aiAnalysis.verdict === 'Undervalued' ? 'bg-emerald-500/20 text-emerald-400' :
-                                            aiAnalysis.verdict === 'Overvalued' ? 'bg-rose-500/20 text-rose-400' :
+                                        <h4 className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">{t('verdict')}:</h4>
+                                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${displayAnalysis.verdict === 'Undervalued' ? 'bg-emerald-500/20 text-emerald-400' :
+                                            displayAnalysis.verdict === 'Overvalued' ? 'bg-rose-500/20 text-rose-400' :
                                                 'bg-yellow-500/20 text-yellow-400'
                                             }`}>
-                                            {aiAnalysis.verdict}
+                                            {getVerdictLabel(displayAnalysis.verdict)}
                                         </span>
                                     </div>
                                     <p className="text-xs text-slate-300 italic leading-relaxed">
-                                        "{aiAnalysis.reasoning}"
+                                        "{displayAnalysis.reasoning}"
                                     </p>
                                 </div>
                             </div>
                         ) : (
-                            <p className="text-xs text-slate-500 italic">Analysis unavailable.</p>
+                            <p className="text-xs text-slate-500 italic">{t('noAiAnalysis') || 'Analysis unavailable.'}</p>
                         )}
                     </div>
                 </div>

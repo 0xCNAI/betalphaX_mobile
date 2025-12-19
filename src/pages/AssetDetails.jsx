@@ -219,7 +219,7 @@ const AssetDetails = () => {
                   }}
                   className="flex items-center justify-center gap-2 py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-emerald-900/20"
                 >
-                >
+
                   <TrendingUp size={20} /> {t('buy')}
                 </button>
                 <button
@@ -244,10 +244,10 @@ const AssetDetails = () => {
                 </div>
                 {/* Transaction History Header */}
                 <div className="grid grid-cols-[auto_1fr_1fr_1fr] gap-2 px-4 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                  <div>Type</div>
-                  <div>Date</div>
-                  <div className="text-right">Amount</div>
-                  <div className="text-right">Price</div>
+                  <div>{t('type') || 'Type'}</div>
+                  <div>{t('date')}</div>
+                  <div className="text-right">{t('amount')}</div>
+                  <div className="text-right">{t('price')}</div>
                 </div>
 
                 <div className="flex-1 space-y-2">

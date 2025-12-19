@@ -10,6 +10,7 @@ import { RefreshCw, AlertTriangle, Activity, Zap, Check, X, ChevronDown, Trendin
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import FeedsExpanded from '../components/FeedsExpanded';
 import './Feeds.css';
 
 const TweetItem = ({ tweet }) => {
@@ -546,92 +547,13 @@ const Feeds = () => {
                             </div>
 
                             {isExpanded && (
-                                <div className="asset-intel-details" onClick={(e) => e.stopPropagation()}>
-                                    {/* Opportunities Section */}
-                                    {oppCount > 0 && (
-                                        <div className="intel-section-block">
-                                            <h4 className="intel-section-title text-emerald-400">
-                                                <div className="w-2 h-2 rounded-full bg-emerald-500 mr-2"></div>
-                                                {t('opportunities')}
-                                            </h4>
-                                            <div className="intel-items-list">
-                                                {assetFeed.filter(isOpp).map((item, idx) => (
-                                                    <div key={idx} className="intel-detail-item">
-                                                        <div className="intel-content-row">
-                                                            <div className="intel-text-wrapper">
-                                                                <p className="intel-detail-text">• {item.text || item.summary}</p>
-                                                                {item.url && (
-                                                                    <div className="intel-source-row">
-                                                                        <span className="source-label">SOURCE:</span>
-                                                                        <a href={item.url} target="_blank" rel="noopener noreferrer" className="source-link">
-                                                                            {item.author || 'News'} <ExternalLink size={10} />
-                                                                        </a>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            <button
-                                                                className="add-to-note-btn-icon"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleAddToNote(item.text || item.summary, asset, 'Opportunity');
-                                                                }}
-                                                            >
-                                                                <FileText size={16} />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Risks Section */}
-                                    {riskCount > 0 && (
-                                        <div className="intel-section-block">
-                                            <h4 className="intel-section-title text-rose-400">
-                                                <div className="w-2 h-2 rounded-full bg-rose-500 mr-2"></div>
-                                                {t('risks')}
-                                            </h4>
-                                            <div className="intel-items-list">
-                                                {assetFeed.filter(isRisk).map((item, idx) => (
-                                                    <div key={idx} className="intel-detail-item">
-                                                        <div className="intel-content-row">
-                                                            <div className="intel-text-wrapper">
-                                                                <p className="intel-detail-text">• {item.text || item.summary}</p>
-                                                                {item.url && (
-                                                                    <div className="intel-source-row">
-                                                                        <span className="source-label">SOURCE:</span>
-                                                                        <a href={item.url} target="_blank" rel="noopener noreferrer" className="source-link">
-                                                                            {item.author || 'News'} <ExternalLink size={10} />
-                                                                        </a>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            <button
-                                                                className="add-to-note-btn-icon"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleAddToNote(item.text || item.summary, asset, 'Risk');
-                                                                }}
-                                                            >
-                                                                <FileText size={16} />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <div className="intel-card-footer">
-                                        <button
-                                            className="go-to-asset-btn"
-                                            onClick={() => handleWidgetClick(`/asset/${asset}`)}
-                                        >
-                                            {t('goToAssetPage')} <ArrowRight size={14} className="ml-1" />
-                                        </button>
-                                    </div>
-                                </div>
+                                <FeedsExpanded
+                                    asset={asset}
+                                    opportunities={assetFeed.filter(isOpp)}
+                                    risks={assetFeed.filter(isRisk)}
+                                    onCreateHighlight={handleAddToNote}
+                                    onNavigate={() => handleWidgetClick(`/asset/${asset}`)}
+                                />
                             )}
                         </div>
                     );

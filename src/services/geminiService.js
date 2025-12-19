@@ -4,213 +4,197 @@ const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/';
 
 // Model Definitions with Priorities and Limits
+export const GEMINI_MODELS = {
+    PRO_2_5: 'gemini-2.5-pro',
+    FLASH_2_5: 'gemini-2.5-flash',
+    FLASH_LITE_2_5: 'gemini-2.5-flash-lite',
+    FLASH_2_0: 'gemini-2.0-flash-exp',
+    FLASH_LITE_2_0: 'gemini-2.0-flash-lite',
+    FLASH_1_5: 'gemini-1.5-flash'
+};
+
 const MODELS = [
     {
-        id: 'gemini-2.5-flash-lite',
+        id: GEMINI_MODELS.FLASH_LITE_2_5,
         name: 'Gemini 2.5 Flash Lite',
         rpm: 15,
-        priority: 1 // Highest priority (Free, High RPD)
+        priority: 1
     },
     {
-        id: 'gemini-2.5-flash',
+        id: GEMINI_MODELS.FLASH_2_5,
         name: 'Gemini 2.5 Flash',
         rpm: 10,
         priority: 2
     },
     {
-        id: 'gemini-2.0-flash',
+        id: GEMINI_MODELS.FLASH_2_0,
         name: 'Gemini 2.0 Flash',
         rpm: 15,
         priority: 3
     },
     {
-        id: 'gemini-2.0-flash-lite',
+        id: GEMINI_MODELS.FLASH_LITE_2_0,
         name: 'Gemini 2.0 Flash Lite',
         rpm: 30,
-        priority: 4 // Last resort
+        priority: 4
+    },
+    {
+        id: GEMINI_MODELS.PRO_2_5,
+        name: 'Gemini 2.5 Pro',
+        rpm: 2,
+        priority: 5
     }
 ];
 
-// Manager to handle model selection, fallback, and rate limiting
 class GeminiModelManager {
     constructor() {
-        this.currentModelIndex = 0;
-        this.queues = new Map(); // Map<modelId, RequestQueue>
-        this.exhaustedModels = new Set(); // Set<modelId>
-
-        // Initialize queues for each model
-        MODELS.forEach(model => {
-            // Calculate interval from RPM (e.g., 15 RPM = 4000ms interval)
-            // Add 10% buffer to be safe
-            const interval = Math.ceil((60000 / model.rpm) * 1.1);
-            this.queues.set(model.id, new RequestQueue(1, interval));
-        });
-
-        this.loadState();
+        this.modelStatus = new Map(); // modelId -> { failures: 0, cooldownUntil: 0 }
+        this.requestQueue = new RequestQueue(15, 60000); // Global rate limiter (safe default)
     }
 
-    loadState() {
-        try {
-            const saved = localStorage.getItem('gemini_model_state');
-            if (saved) {
-                const { exhausted, timestamp } = JSON.parse(saved);
-                // Reset exhausted state if it's a new day (UTC)
-                const savedDate = new Date(timestamp).toDateString();
-                const today = new Date().toDateString();
+    getModelStatus(modelId) {
+        if (!this.modelStatus.has(modelId)) {
+            this.modelStatus.set(modelId, { failures: 0, cooldownUntil: 0 });
+        }
+        return this.modelStatus.get(modelId);
+    }
 
-                if (savedDate === today) {
-                    this.exhaustedModels = new Set(exhausted);
-                    // Advance current index to first non-exhausted model
-                    this.findNextAvailableModel();
-                } else {
-                    console.log('[GeminiManager] New day detected, resetting quotas.');
-                }
+    isModelAvailable(modelId) {
+        const status = this.getModelStatus(modelId);
+        return Date.now() > status.cooldownUntil;
+    }
+
+    recordFailure(modelId, isRateLimit = false) {
+        const status = this.getModelStatus(modelId);
+        status.failures++;
+
+        // Exponential backoff: 30s, 1m, 2m, etc.
+        const backoff = isRateLimit ? 60000 : 30000 * Math.pow(2, status.failures - 1);
+        status.cooldownUntil = Date.now() + backoff;
+
+        console.warn(`[Gemini] Model ${modelId} failed (${status.failures} times). Cooldown for ${backoff}ms.`);
+    }
+
+    recordSuccess(modelId) {
+        const status = this.getModelStatus(modelId);
+        if (status.failures > 0) {
+            status.failures = Math.max(0, status.failures - 1);
+            status.cooldownUntil = 0;
+        }
+    }
+
+    /**
+     * Executes a request trying models in order of priority
+     * @param {Function} requestFn - Async function taking (model) and returning result
+     */
+    async executeRequest(requestFn) {
+        let lastError = null;
+
+        for (const model of MODELS) {
+            if (!this.isModelAvailable(model.id)) {
+                continue;
             }
-        } catch (e) {
-            console.error('Failed to load Gemini state:', e);
-        }
-    }
-
-    saveState() {
-        try {
-            const state = {
-                exhausted: Array.from(this.exhaustedModels),
-                timestamp: Date.now()
-            };
-            localStorage.setItem('gemini_model_state', JSON.stringify(state));
-        } catch (e) { }
-    }
-
-    findNextAvailableModel() {
-        while (
-            this.currentModelIndex < MODELS.length &&
-            this.exhaustedModels.has(MODELS[this.currentModelIndex].id)
-        ) {
-            this.currentModelIndex++;
-        }
-    }
-
-    getCurrentModel() {
-        this.findNextAvailableModel();
-        if (this.currentModelIndex >= MODELS.length) {
-            return null; // All models exhausted
-        }
-        return MODELS[this.currentModelIndex];
-    }
-
-    markCurrentAsExhausted() {
-        const model = this.getCurrentModel();
-        if (model) {
-            console.warn(`[GeminiManager] Model ${model.id} exhausted (429/503). Switching...`);
-            this.exhaustedModels.add(model.id);
-            this.saveState();
-            this.currentModelIndex++;
-        }
-    }
-
-    async executeRequest(taskFn) {
-        // Try models in sequence until one works or all fail
-        while (true) {
-            const model = this.getCurrentModel();
-            if (!model) {
-                console.error('[GeminiManager] All models exhausted or failing. Aborting.');
-                throw new Error('All Gemini models are currently exhausted or rate-limited. Please try again later.');
-            }
-
-            const queue = this.queues.get(model.id);
 
             try {
-                // Execute request using the specific model's queue
-                return await queue.add(async () => {
-                    return await taskFn(model);
-                });
+                // Wait for rate limiter? We can optimize this later.
+                // For now, just execute.
+                const result = await requestFn(model);
+                this.recordSuccess(model.id);
+                return result;
             } catch (error) {
-                // Check for 429 (Too Many Requests) or 503 (Service Unavailable)
-                const isQuotaError = error.message.includes('429') || error.message.includes('503') || error.message.includes('Rate limit');
+                console.warn(`[Gemini] Request failed with ${model.name}:`, error.message);
+                const isRateLimit = error.message.includes('429') || error.message.includes('503');
+                this.recordFailure(model.id, isRateLimit);
+                lastError = error;
 
-                if (isQuotaError) {
-                    this.markCurrentAsExhausted();
-                    // Loop continues to try next model
-                    continue;
-                }
-
-                // If it's another error (e.g. 400 Bad Request), throw it immediately
-                throw error;
+                // If it's not a rate limit/server error, maybe don't retry other models?
+                // But for safety, we usually retry.
             }
         }
+
+        throw lastError || new Error('All Gemini models failed or are on cooldown.');
     }
 }
 
 const geminiManager = new GeminiModelManager();
 
-// Simple in-memory cache backed by localStorage
-const CACHE_KEY_PREFIX = 'gemini_cache_';
-const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+// --- Caching System ---
+const CACHE_PREFIX = 'gemini_cache_';
+const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
 
 const getFromCache = (key) => {
     try {
-        const item = localStorage.getItem(CACHE_KEY_PREFIX + key);
+        const item = localStorage.getItem(CACHE_PREFIX + key);
         if (!item) return null;
 
-        const parsed = JSON.parse(item);
-        if (Date.now() - parsed.timestamp > CACHE_TTL) {
-            localStorage.removeItem(CACHE_KEY_PREFIX + key);
+        const { value, timestamp } = JSON.parse(item);
+        if (Date.now() - timestamp > CACHE_EXPIRY) {
+            localStorage.removeItem(CACHE_PREFIX + key);
             return null;
         }
-        return parsed.value;
+        return value;
     } catch (e) {
+        console.error('Error reading from cache:', e);
         return null;
     }
 };
 
 const saveToCache = (key, value) => {
     try {
-        const item = {
+        const item = JSON.stringify({
             value,
             timestamp: Date.now()
-        };
-        localStorage.setItem(CACHE_KEY_PREFIX + key, JSON.stringify(item));
+        });
+        localStorage.setItem(CACHE_PREFIX + key, item);
     } catch (e) {
-        console.warn('Failed to save to Gemini cache (quota exceeded?)');
+        console.error('Error saving to cache:', e);
     }
 };
 
-// Helper to generate a stable hash/key for a prompt
-const generateCacheKey = (prompt) => {
+const generateCacheKey = (prompt, modelId) => {
+    // Simple hash for cache key
+    const combo = `${modelId || 'any'}_${prompt}`;
     let hash = 0;
-    for (let i = 0; i < prompt.length; i++) {
-        const char = prompt.charCodeAt(i);
+    for (let i = 0; i < combo.length; i++) {
+        const char = combo.charCodeAt(i);
         hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
+        hash = hash & hash;
     }
     return hash.toString();
 };
 
 
 /**
- * Generates investment tags based on the provided note using Gemini API.
- * @param {string} note - The investment note/thesis.
- * @returns {Promise<string[]>} - A promise that resolves to an array of tag strings.
- */
-/**
  * Generic function to call Gemini API
  * @param {string} prompt - The prompt to send to Gemini
+ * @param {string} preferredModelId - Optional specific model ID to request
+ * @param {string} feature - Feature name for logging (optional)
+ * @param {boolean} skipCache - Whether to bypass internal cache
  * @returns {Promise<string>} - The generated text response
  */
-export const generateGeminiContent = async (prompt) => {
+export const generateGeminiContent = async (prompt, preferredModelId = null, feature = 'generic', skipCache = false) => {
     if (!prompt) return '';
 
     // 1. Check Cache
-    const cacheKey = generateCacheKey(prompt);
-    const cached = getFromCache(cacheKey);
-    if (cached) {
-        console.log('[Gemini] Serving from cache');
-        return cached;
+    const cacheKey = generateCacheKey(prompt, preferredModelId);
+
+    if (!skipCache) {
+        const cached = getFromCache(cacheKey);
+        if (cached) {
+            console.log('[Gemini] Serving from cache');
+            return cached;
+        }
+    } else {
+        console.log('[Gemini] Bypassing cache (Force Refresh)');
     }
 
-    // 2. Execute via Manager (Cascade Logic)
+    // 2. Execute via Manager
     try {
         const generatedText = await geminiManager.executeRequest(async (model) => {
+            // If preferredModelId is strictly requested, we could check here, 
+            // but the manager rotates. For now, we trust the rotation priority.
+            // (Flash Lite is priority 1, so it should be picked first anyway)
+
             console.log(`[Gemini] Calling API with model: ${model.name}...`);
             const url = `${BASE_URL}${model.id}:generateContent?key=${GEMINI_API_KEY}`;
 
@@ -232,7 +216,6 @@ export const generateGeminiContent = async (prompt) => {
                 const errorData = await response.json().catch(() => ({}));
                 console.error(`Gemini API Error (${model.id}):`, errorData);
 
-                // Throw specific error message to trigger fallback in manager
                 if (response.status === 429 || response.status === 503) {
                     throw new Error(`${response.status} Rate limit exceeded`);
                 }
@@ -258,8 +241,6 @@ export const generateGeminiContent = async (prompt) => {
 
 /**
  * Generates investment tags based on the provided note using Gemini API.
- * @param {string} note - The investment note/thesis.
- * @returns {Promise<string[]>} - A promise that resolves to an array of tag strings.
  */
 export const generateTagsFromNote = async (note) => {
     if (!note || !note.trim()) {
@@ -284,370 +265,22 @@ Return the result as a strict JSON array of strings. Do not include any other te
 Note: "${note}"`;
 
     try {
-        const generatedText = await generateGeminiContent(prompt);
+        const generatedText = await generateGeminiContent(prompt, GEMINI_MODELS.FLASH_LITE_2_5, 'tag_generation', false);
 
-        if (!generatedText) {
-            return [];
+        // Sanitize and parse JSON
+        let jsonString = generatedText.trim();
+        // Remove markdown code blocks if present
+        if (jsonString.startsWith('```')) {
+            jsonString = jsonString.replace(/^```(json)?\n/, '').replace(/\n```$/, '');
         }
 
-        // Clean up the response to ensure it's valid JSON
-        const jsonString = generatedText.replace(/```json\n?|\n?```/g, '').trim();
-
-        try {
-            const tags = JSON.parse(jsonString);
-            if (Array.isArray(tags)) {
-                return tags;
-            }
-            return [];
-        } catch (parseError) {
-            console.error('Failed to parse Gemini response as JSON:', generatedText);
-            return [];
+        const tags = JSON.parse(jsonString);
+        if (Array.isArray(tags)) {
+            return tags.slice(0, 6);
         }
-
-    } catch (error) {
-        console.error('Error generating tags:', error);
         return [];
-    }
-};
-
-/**
- * Summarizes a tweet into a short, punchy investment thesis tag.
- * @param {string} tweetText - The content of the tweet.
- * @returns {Promise<string>} - A single short tag string (e.g., "Protocol Upgrade", "Strong Partnership").
- */
-export const summarizeTweet = async (tweetText) => {
-    if (!tweetText || !tweetText.trim()) return "News Event";
-
-    const prompt = `You are a crypto analyst. Summarize this tweet into a SINGLE, short, punchy investment thesis tag (2-4 words).
-    Examples: "Protocol Upgrade", "Strong Partnership", "Mainnet Launch", "Institutional Adoption", "Regulatory Clarity".
-    Avoid generic tags like "Good News". Be specific to the content.
-    Return ONLY the tag string. No quotes, no JSON.
-
-    Tweet: "${tweetText}"`;
-
-    try {
-        const tag = await generateGeminiContent(prompt);
-        return tag?.trim() || "News Event";
     } catch (error) {
-        console.error('Error summarizing tweet:', error);
-        return "News Event";
-    }
-};
-
-/**
- * Classifies a list of crypto assets into parent groups using Gemini.
- * @param {Array} assets - List of asset objects (must have 'symbol').
- * @returns {Promise<Object>} - Map of { AssetSymbol: ParentSymbol }.
- */
-export const classifyAssets = async (assets) => {
-    if (!assets || assets.length === 0) return {};
-
-    // Extract unique symbols to minimize token usage
-    const uniqueSymbols = [...new Set(assets.map(a => a.symbol))];
-    const symbolsString = uniqueSymbols.join(', ');
-
-    const prompt = `You are a DeFi Portfolio Accountant. Analyze the provided crypto assets and map them to their Underlying Native Asset Rules:
-
-Map wrappers (cbBTC, WBTC) -> Parent 'BTC'.
-
-Map LSDs (wstETH, rETH, ezETH) -> Parent 'ETH'.
-
-Map Stablecoins (USDC, DAI) -> Parent 'USD' (or 'Stablecoins').
-
-Keep others as is (Parent = Self).
-
-Assets to classify: [${symbolsString}]
-
-Return the result as a strict JSON object where keys are the Asset Symbols and values are the Parent Symbols.
-Example: { "wstETH": "ETH", "USDC": "USD", "PENDLE": "PENDLE" }
-Do not include any other text.`;
-
-    try {
-        const generatedText = await generateGeminiContent(prompt);
-
-        if (!generatedText) return {};
-
-        const jsonString = generatedText.replace(/```json\n?|\n?```/g, '').trim();
-        const mapping = JSON.parse(jsonString);
-
-        return mapping;
-
-    } catch (error) {
-        console.error('Error classifying assets with Gemini:', error);
-        return {};
-    }
-};
-
-/**
- * Analyzes a tweet to determine its signal category, sentiment, and explanation.
- * @param {string} text - Tweet content
- * @param {string} asset - Related asset symbol
- * @returns {Promise<Object>} - { category, sentiment, explanation, engagementScore }
- */
-export const analyzeTweetSignal = async (text, asset) => {
-    if (!text) return null;
-
-    const prompt = `Analyze this crypto tweet for "${asset}" and classify it into one of these 3 categories:
-1. "Risk Alert" (Delisting, hack, bug, negative governance, large outflows, regulatory threat)
-2. "Opportunity" (Breakout, inflows, upgrade, partnership, strong KOL support, bullish chart)
-3. "Sentiment Shift" (Hype spike, unusual volume, general discussion)
-
-Also determine the sentiment (Positive, Negative, Neutral) and provide a 1-sentence explanation for a trader.
-
-Tweet: "${text}"
-
-Return strict JSON:
-{
-  "category": "Risk Alert" | "Opportunity" | "Sentiment Shift",
-  "sentiment": "Positive" | "Negative" | "Neutral",
-  "explanation": "Why this matters...",
-  "engagementScore": 0-100 (Estimate impact based on content urgency)
-}`;
-
-    try {
-        const generatedText = await generateGeminiContent(prompt);
-        if (!generatedText) return null;
-
-        const jsonString = generatedText.replace(/```json\n?|\n?```/g, '').trim();
-        return JSON.parse(jsonString);
-    } catch (error) {
-        console.error('Error analyzing tweet signal:', error);
-        // Fallback
-        return {
-            category: 'Sentiment Shift',
-            sentiment: 'Neutral',
-            explanation: 'AI analysis failed, treat as general info.',
-            engagementScore: 50
-        };
-    }
-};
-
-/**
- * Generate Fundamental Analysis using Gemini
- * @param {string} symbol - Token symbol
- * @param {Object} data - Fundamental data (valuation, growth, benchmarks)
- * @param {Array} socialContext - Recent tweets/updates for context
- * @returns {Promise<Object>} - Analysis JSON
- */
-export const generateFundamentalAnalysis = async (symbol, data, socialContext = []) => {
-    const { valuation, growth, revenue, benchmarks, meta } = data;
-    const description = valuation?.description || '';
-    const name = meta?.name || symbol;
-    const coinId = meta?.coinId || '';
-
-    // Format social context
-    const recentUpdates = socialContext
-        .slice(0, 5) // Top 5 relevant tweets
-        .map(t => `- "${t.text || t.content}" (Source: ${t.author})`)
-        .join('\n');
-
-    const prompt = `
-Analyze the fundamental data for ${name} (${symbol}) ${coinId ? `[ID: ${coinId}]` : ''} and provide a structured investment analysis.
-
-**Project Description:**
-${description ? description.substring(0, 500) + '...' : 'No description available.'}
-
-**Recent Social Updates (Context):**
-${recentUpdates || 'No recent updates available.'}
-
-**Data:**
-- Market Cap: $${valuation?.mcap?.toLocaleString() || 'N/A'}
-- FDV: $${valuation?.fdv?.toLocaleString() || 'N/A'}
-- TVL: $${growth?.tvl_current?.toLocaleString() || 'N/A'}
-- 30d TVL Change: ${growth?.tvl_30d_change_percent?.toFixed(2) || 'N/A'}%
-- Annualized Revenue: ${revenue?.annualized_revenue ? '$' + revenue.annualized_revenue.toLocaleString() : 'Not Available (Data missing)'}
-
-**Industry Benchmarks (Category: ${growth?.category || 'General'}):**
-- Median FDV/TVL: ${benchmarks?.medianFdvTvl?.toFixed(2) || 'N/A'}
-- Median FDV/Revenue: ${benchmarks?.medianFdvRev?.toFixed(2) || 'N/A'}
-
-**Your Task:**
-Provide a concise analysis in the following JSON format:
-{
-  "whatItDoes": "1 sentence explaining what the project does. Use the description and recent updates to identify the latest protocol features (e.g., if rebrand or new product launched).",
-  "verdict": "Undervalued" | "Overvalued" | "Fair",
-  "verdictReasoning": "1 sentence justifying the verdict based on the data. Focus on TVL/FDV and growth."
-}
-
-Keep it professional, objective, and data-driven.
-`;
-
-    try {
-        const generatedText = await generateGeminiContent(prompt);
-        if (!generatedText) return null;
-
-        const jsonString = generatedText.replace(/```json\n?|\n?```/g, '').trim();
-        const result = JSON.parse(jsonString);
-
-        // Map keys to match mobile frontend expectations
-        return {
-            ...result,
-            reasoning: result.verdictReasoning || result.reasoning,
-            projectDescription: result.whatItDoes || result.projectDescription
-        };
-    } catch (error) {
-        console.error('Error generating fundamental analysis:', error);
-        return null;
-    }
-};
-
-/**
- * Generates a structured summary of asset notes.
- * @param {string} assetSymbol 
- * @param {Array} notes 
- * @returns {Promise<Object>}
- */
-export const generateAssetNoteSummary = async (assetSymbol, notes) => {
-    if (!notes || notes.length === 0) return null;
-
-    // Filter relevant fields to save tokens
-    const notesContent = notes.map(n => ({
-        date: n.createdAt,
-        content: n.content,
-        type: n.type, // 'journal', 'thesis', etc.
-        tags: n.tags
-    }));
-
-    const prompt = `
-    You are a dedicated AI Analyst managing a crypto trading journal for "${assetSymbol}".
-    Analyze the user's historical notes and generate a structured summary "State of the Asset" report.
-
-        ** Input Notes:**
-            ${JSON.stringify(notesContent)}
-
-    ** Your Task:**
-        1. ** Key Updates(Chronological):** Extract the most significant events, decisions, or observations. 
-       - Format: List of objects with { date: ISOString, content: string }.
-       - Limit to top 5 - 10 most important updates.
-       - "Content" should be concise(1 sentence).
-
-    2. ** Core Thesis:** Synthesize the user's main reason for holding/trading this asset.
-        - If they have a note tagged "thesis" or "Core Thesis", prioritize that.
-       - If not, infer it from their buy rationale / sentiment.
-       - Max 2 sentences.
-
-    3. ** Major Mistakes:** Identify any self - reported errors or lessons learned.
-       - e.g., "Sold too early", "Ignored stop loss".
-       - Return as array of strings.
-
-    4. ** Exit Conditions:** Extract specific price targets or conditions mentioned for selling.
-       - Return as array of strings.
-
-    ** Output Format(Strict JSON):**
-        {
-            "key_updates": [
-                { "date": "2024-01-01T...", "content": "Entered position due to ETF rumor." }
-            ],
-            "core_thesis": "...",
-            "major_mistakes": ["..."],
-            "exit_conditions": ["..."]
-        }
-            `;
-
-    try {
-        const generatedText = await generateGeminiContent(prompt);
-        if (!generatedText) return null;
-
-        const jsonString = generatedText.replace(/```json\n?|\n?```/g, '').trim();
-        return JSON.parse(jsonString);
-
-    } catch (error) {
-        console.error('Error generating asset note summary:', error);
-        return null;
-    }
-};
-
-/**
- * Generates/Updates the User Behavior Archetype based on recent activity.
- * @param {Object} currentProfile 
- * @param {Array} recentTransactions 
- * @param {Object} rawStats 
- * @returns {Promise<Object>}
- */
-export const generateUserArchetype = async (currentProfile, recentTransactions, rawStats) => {
-    // 1. Prepare Context
-    // We only send the last 10 transactions to keep it focused on "recent behavior changes" 
-    // while the 'currentProfile' holds the long-term memory.
-    const recentActivity = recentTransactions.slice(0, 10).map(t => ({
-        date: t.date,
-        type: t.type,
-        asset: t.asset,
-        amount: t.amount,
-        price: t.price,
-        pnl: t.realizedPnL || 0, // details if available
-        reasons: t.reasons || [],
-        memo: t.memo || ''
-    }));
-
-    // 2. Construct Prompt
-    const prompt = `
-    Role: Elite Trading Psychologist & Behavioral Coach.
-    Objective: Maintain and evolve a sophisticated "User Behavior Archetype" based on trading activity.
-
-    ** PHILOSOPHY **:
-    - You are observing a trader's journey. Your goal is to mirror their *actual* behavior, not an idealized version.
-    - ** Recursive Update **: You are given the [Current Profile] (Prior Knowledge) and [Recent Activity] (New Evidence).
-    - ** Conflict Resolution **: If [Recent Activity] contradicts [Current Profile], UPDATE the profile to reflect the change (e.g. they were "Conservative" but just made 5 yolo bets -> change to "Aggressive").
-    - ** Holistic Reasoning **: Do NOT just copy math stats. If the math says "Win Rate 90%" but it's only 1 trade, you should interpret that as "Untested" or "Lucky start", not "God mode".
-
-    ** INPUT DATA **:
-    
-    [A] CURRENT PROFILE (The Baseline):
-    ${JSON.stringify(currentProfile || {}, null, 2)}
-
-    [B] RECENT ACTIVITY (The Delta - Last 10 Trades):
-    ${JSON.stringify(recentActivity, null, 2)}
-
-    [C] RAW STATS (For Context Only - Use your own judgment):
-    ${JSON.stringify(rawStats || {}, null, 2)}
-
-    ** REQUIRED OUTPUT (The 20 Dimensions) **:
-    Return a STRICT JSON object with these exact keys. No markdown.
-    
-    {
-        "risk_tolerance": "string (e.g. Low, Moderate, High, Degen)",
-        "risk_capacity": "string (Description of financial cushion implied by sizing)",
-        "maximum_acceptable_drawdown": "string (e.g. '-20% (Strict stop loss observed)')",
-        "preferred_time_horizon": "string (e.g. Scalp, Swing, Position)",
-        "strategy_style": "string (e.g. Mean Reversion, Trend Following, Breakout)",
-        "entry_behavior_biases": "string (e.g. FOMO on spikes, Limit orders at support)",
-        "exit_behavior_biases": "string (e.g. Early profit taker, Bag holder)",
-        "position_sizing_preference": "string (e.g. Fixed fractional, Martingale, All-in)",
-        "emotional_triggers": "string (e.g. Revenge trading after loss, Greed on winning streaks)",
-        "discipline_consistency_score": "number (0-100)",
-        "portfolio_concentration_level": "string (e.g. Diversified, Sniper (1-2 assets))",
-        "sector_preferences": "string (e.g. L1s, Memecoins, DeFi)",
-        "win_rate_perception": "string (Your qualitative assessment of their hit rate)",
-        "average_rrr_perception": "string (Your assessment of their Risk/Reward skew)",
-        "max_drawdown_perception": "string (Your assessment of their drawdown tolerance)",
-        "thesis_quality_score": "number (0-100 based on 'reasons' and notes)",
-        "thesis_drift_tendency": "string (High/Low - do they stick to the plan?)",
-        "use_of_technical_analysis": "string (High/Low/None)",
-        "use_of_fundamental_analysis": "string (High/Low/None)",
-        "review_journaling_habits": "string (Implied from note frequency)"
-    }
-    `;
-
-    try {
-        console.log('[AI Profiler] Generating user archetype...');
-        const generatedText = await generateGeminiContent(prompt);
-
-        if (!generatedText) {
-            console.warn('[AI Profiler] No response from Gemini.');
-            return currentProfile; // Fallback to old if fail
-        }
-
-        const jsonString = generatedText.replace(/```json\n?|\n?```/g, '').trim();
-        const newProfile = JSON.parse(jsonString);
-
-        if (newProfile) {
-            return newProfile;
-        }
-        console.warn('[AI Profiler] Failed to parse JSON.');
-        return currentProfile;
-
-    } catch (error) {
-        console.error('Error generating user archetype:', error);
-        return currentProfile;
+        console.error("Error generating tags:", error);
+        return [];
     }
 };

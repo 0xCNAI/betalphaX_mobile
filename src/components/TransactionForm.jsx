@@ -24,12 +24,15 @@ import {
   Brain
 } from 'lucide-react';
 import { useBuyThesis } from '../context/BuyThesisContext';
+import { useBuyThesis } from '../context/BuyThesisContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { translateText } from '../services/translationService';
 
 import { useTransactions } from '../context/TransactionContext';
 import { usePrices } from '../context/PriceContext';
 import { searchCoins } from '../services/coinGeckoApi';
-import { analyzeTechnicals, generateSellSignals, analyzeSellTechnicals } from '../services/technicalAnalysis';
+import { analyzeTechnicals, generateSellSignals as generateTASellSignals, analyzeSellTechnicals } from '../services/technicalAnalysis';
 import { searchCryptoTweets } from '../services/twitterService';
 import { getNewsForAsset } from '../services/newsService';
 import { generateTagsFromNote } from '../services/geminiService';
@@ -46,21 +49,38 @@ import ImportantEvents from './ImportantEvents'; // Was SocialNotificationWidget
 const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initialType = null }) => {
   const { addTransaction, updateTransaction, transactions } = useTransactions();
   const { user } = useAuth();
+  const { t, language } = useLanguage();
   const { getPrice, getIcon, fetchPriceForTicker } = usePrices();
+
+  // Helper for Tag Translations
+  const getTagLabel = (tag) => t(`tag_${tag.replace(/[\/\s]/g, '')}`) || tag;
+  const getExitTagLabel = (tag) => t(`exit_${tag.replace(/[\/\s]/g, '')}`) || tag;
+
+  // Helper for translating arrays of strings
+  const translateArray = async (arr) => {
+    if (!arr || arr.length === 0) return [];
+    if (language !== 'zh-TW') return arr;
+    try {
+      return await Promise.all(arr.map(item => translateText(item, 'zh-TW')));
+    } catch (e) {
+      console.error("Translation error:", e);
+      return arr;
+    }
+  };
   // Helper Constants for Sell Flow (Synced with Desktop)
   const getOutcomeOptions = () => [
-    { id: 'target_hit', label: 'Target Hit (Success)' },
-    { id: 'stop_loss', label: 'Stop Loss (Invalidated)' },
-    { id: 'narrative_failed', label: 'Narrative Failed' },
-    { id: 'market_shift', label: 'Market Shift' },
-    { id: 'time_exit', label: 'Time Based Exit' }
+    { id: 'target_hit', label: t('targetHit') || 'Target Hit (Success)' },
+    { id: 'stop_loss', label: t('stopLoss') || 'Stop Loss (Invalidated)' },
+    { id: 'narrative_failed', label: t('narrativeFailed') || 'Narrative Failed' },
+    { id: 'market_shift', label: t('marketShift') || 'Market Shift' },
+    { id: 'time_exit', label: t('timeExit') || 'Time Based Exit' }
   ];
 
   const getExitFactors = () => ({
-    market: ['Market Overheated', 'Sector Rotation', 'Macro Headwinds'],
-    technical: ['Trend Breakdown', 'Resistance Rejection', 'Indicator Overbought'],
-    fundamental: ['News Event (Negative)', 'Metric Deterioration', 'Team/Project Issue'],
-    strategy: ['Better Opportunity Found', 'Risk Management', 'Emotional Exit']
+    market: [t('marketOverheated') || 'Market Overheated', t('sectorRotation') || 'Sector Rotation', t('macroHeadwinds') || 'Macro Headwinds'],
+    technical: [t('trendBreakdown') || 'Trend Breakdown', t('resistanceRejection') || 'Resistance Rejection', t('indicatorOverbought') || 'Indicator Overbought'],
+    fundamental: [t('newsEventNegative') || 'News Event (Negative)', t('metricDeterioration') || 'Metric Deterioration', t('teamProjectIssue') || 'Team/Project Issue'],
+    strategy: [t('betterOpportunityFound') || 'Better Opportunity Found', t('riskManagement') || 'Risk Management', t('emotionalExit') || 'Emotional Exit']
   });
 
   const { theses } = useBuyThesis(); // Get saved theses
@@ -199,8 +219,8 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
     return (
       <div className="step-container">
         <div className="step-header">
-          <h4>Step 2: Tag Selection</h4>
-          <p>Categorize your transaction with tags.</p>
+          <h4>{t('step2_title') || 'Step 2: Tag Selection'}</h4>
+          <p>{t('step2_desc') || 'Categorize your transaction with tags.'}</p>
         </div>
 
         {/* Search Bar */}
@@ -209,7 +229,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
             <input
               type="text"
-              placeholder="Search or create new tag..."
+              placeholder={t('searchOrCreateTag') || "Search or create new tag..."}
               value={tagSearch}
               onChange={(e) => setTagSearch(e.target.value)}
               className="form-input"
@@ -221,7 +241,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                 className="btn-secondary"
                 onClick={handleCreateTag}
               >
-                <Plus size={16} /> Add "{tagSearch}"
+                <Plus size={16} /> {t('add')} "{tagSearch}"
               </button>
             )}
           </div>
@@ -230,7 +250,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
         {/* Selected Tags Display - Enhanced Pill Style */}
         {formData.tags && formData.tags.length > 0 && (
           <div className="selected-tags-area" style={{ marginBottom: '1.5rem' }}>
-            <h5 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>Selected Tags</h5>
+            <h5 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>{t('selectedTags') || 'Selected Tags'}</h5>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {formData.tags.map(tag => (
                 <span
@@ -253,7 +273,8 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                     transition: 'all 0.2s ease'
                   }}
                 >
-                  {tag}
+
+                  {getTagLabel(tag)}
                   <X size={14} style={{ strokeWidth: 2.5 }} />
                 </span>
               ))}
@@ -265,7 +286,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
         {savedThesisTags.length > 0 && (
           <div className="tags-section" style={{ marginBottom: '1.5rem' }}>
             <h5 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Target size={14} color="var(--accent)" /> Saved Buy Thesis
+              <Target size={14} color="var(--accent)" /> {t('savedBuyThesis') || 'Saved Buy Thesis'}
             </h5>
             <div className="tags-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {savedThesisTags.map(tag => (
@@ -297,12 +318,12 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
         {/* AI Suggested Tags */}
         <div className="tags-section" style={{ marginBottom: '1.5rem' }}>
           <h5 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Sparkles size={14} color="var(--accent)" /> AI Suggested Tags
+            <Sparkles size={14} color="var(--accent)" /> {t('aiSuggestedTags') || 'AI Suggested Tags'}
           </h5>
 
           {isLoadingAiTags ? (
             <div className="loading-tags" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-              Analyzing your note...
+              {t('analyzingNote') || 'Analyzing your note...'}
             </div>
           ) : aiTags.length > 0 ? (
             <div className="tags-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -325,13 +346,13 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                     boxShadow: formData.tags?.includes(tag) ? '0 2px 4px rgba(99, 102, 241, 0.15)' : 'none'
                   }}
                 >
-                  {tag}
+                  {getTagLabel(tag)}
                 </button>
               ))}
             </div>
           ) : (
             <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-              No AI suggestions available. Try adding a more detailed note in Step 1.
+              {t('noAiSuggestions') || 'No AI suggestions available. Try adding a more detailed note in Step 1.'}
             </div>
           )}
         </div>
@@ -339,7 +360,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
         {/* Recommended Tags */}
         <div className="tags-section">
           <h5 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-            Recommended Tags
+            {t('recommendedTags') || 'Recommended Tags'}
           </h5>
           <div className="tags-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {displayedDefaultTags.map(tag => (
@@ -361,7 +382,8 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                   boxShadow: formData.tags?.includes(tag) ? '0 2px 4px rgba(99, 102, 241, 0.15)' : 'none'
                 }}
               >
-                {tag}
+
+                {getTagLabel(tag)}
               </button>
             ))}
           </div>
@@ -382,17 +404,17 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                 gap: '4px'
               }}
             >
-              Show More <ChevronDown size={14} />
+              {t('showMore') || 'Show More'} <ChevronDown size={14} />
             </button>
           )}
         </div>
 
         <div className="step-actions">
           <button type="button" onClick={() => setStep(1)} className="btn-secondary">
-            <ArrowLeft size={18} /> Back
+            <ArrowLeft size={18} /> {t('back')}
           </button>
           <button type="button" onClick={() => setStep(3)} className="btn-primary">
-            Next: Sell Signals <ArrowRight size={18} />
+            {t('nextSellSignals') || 'Next: Sell Signals'} <ArrowRight size={18} />
           </button>
         </div>
       </div>
@@ -445,23 +467,34 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
         }
       });
 
+      // Translate content if needed
+      const [trTechnical, trNews, trTweets] = await Promise.all([
+        translateArray(technicalReasons),
+        translateArray(newsItems),
+        translateArray(tweets)
+      ]);
+
+      const defaultFundamentals = [
+        ...generatedTags,
+        "Strong network growth",
+        "Institutional adoption",
+        "Protocol upgrade",
+        "Deflationary supply",
+        "Undervalued metrics"
+      ];
+
+      const trFundamentals = await translateArray(defaultFundamentals);
+
       // If no keywords match but note exists, add a generic tag
       if (generatedTags.length === 0 && note.length > 10) {
         generatedTags.push('Custom Thesis');
       }
 
       setGeneratedReasons({
-        fundamental: [
-          ...generatedTags,
-          "Strong network growth",
-          "Institutional adoption",
-          "Protocol upgrade",
-          "Deflationary supply",
-          "Undervalued metrics"
-        ],
-        eventDriven: newsItems,
-        social: tweets, // Twitter sentiment
-        technical: technicalReasons // Real TA data
+        fundamental: trFundamentals,
+        eventDriven: trNews,
+        social: trTweets, // Twitter sentiment
+        technical: trTechnical // Real TA data
       });
       setIsAnalyzing(false);
     } catch (error) {
@@ -505,17 +538,26 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
         searchCryptoTweets(formData.asset, 5)
       ]);
 
+      const [trTechnical, trNews, trTweets] = await Promise.all([
+        translateArray(technicalReasons),
+        translateArray(newsItems),
+        translateArray(tweets)
+      ]);
+
+      const defaultSellFundamentals = [
+        "Profit target reached.",
+        "Fundamentals deteriorating.",
+        "Better opportunities elsewhere.",
+        "Overvalued relative to metrics.",
+        "Risk/reward no longer favorable."
+      ];
+      const trFundamentals = await translateArray(defaultSellFundamentals);
+
       setGeneratedReasons({
-        fundamental: [
-          "Profit target reached.",
-          "Fundamentals deteriorating.",
-          "Better opportunities elsewhere.",
-          "Overvalued relative to metrics.",
-          "Risk/reward no longer favorable."
-        ],
-        eventDriven: newsItems,
-        social: tweets,
-        technical: technicalReasons // Real TA data for selling
+        fundamental: trFundamentals,
+        eventDriven: trNews,
+        social: trTweets,
+        technical: trTechnical // Real TA data for selling
       });
       setIsAnalyzing(false);
     } catch (error) {
@@ -552,7 +594,8 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
     setIsAnalyzing(true);
     try {
       const signals = await generateTASellSignals(formData.asset);
-      setGeneratedSellSignals(signals);
+      const trSignals = await translateArray(signals);
+      setGeneratedSellSignals(trSignals);
       setIsAnalyzing(false);
       setStep(3);
     } catch (error) {
@@ -1235,13 +1278,13 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
     return (
       <div className="step-container" style={{ padding: '24px' }}>
         <div className="step-header" style={{ marginBottom: '24px' }}>
-          <h4 style={{ color: '#818cf8', margin: 0, fontSize: '1.25rem' }}>Step 2: Outcome & Factors</h4>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>Classify the result and document the cause.</p>
+          <h4 style={{ color: '#818cf8', margin: 0, fontSize: '1.25rem' }}>{t('step2_outcome_title') || 'Step 2: Outcome & Factors'}</h4>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>{t('step2_outcome_desc') || 'Classify the result and document the cause.'}</p>
         </div>
 
         {/* 1. Outcome Status (Tags) */}
         <div className="form-group" style={{ marginBottom: '24px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Outcome Status</label>
+          <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{t('outcomeStatus') || 'Outcome Status'}</label>
           <div className="tags-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {outcomeOptions.map(opt => (
               <button
@@ -1269,7 +1312,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
 
         {/* 2. Exit Factors (Tags) */}
         <div className="form-group" style={{ marginBottom: '24px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Exit Factors</label>
+          <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{t('exitFactors') || 'Exit Factors'}</label>
           <div className="tags-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {Object.values(exitFactors).flat().map(factor => (
               <button
@@ -1305,7 +1348,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
 
         {/* 3. Exit Note (Prominent) */}
         <div className="form-group" style={{ marginBottom: '24px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Exit Note</label>
+          <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{t('exitNote') || 'Exit Note'}</label>
           <textarea
             value={(formData.exitNotes && formData.exitNotes.length > 0) ? formData.exitNotes[0] : ''}
             onChange={(e) => {
@@ -1316,7 +1359,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                 return { ...prev, exitNotes: newNotes };
               });
             }}
-            placeholder="Detailed thoughts on this exit..."
+            placeholder={t('exitNotePlaceholder') || "Detailed thoughts on this exit..."}
             className="form-textarea large-memo"
             rows={4}
             style={{ width: '100%', padding: '12px', borderRadius: '8px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--bg-tertiary)', color: 'white' }}
@@ -1325,7 +1368,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
 
         <div className="step-actions" style={{ display: 'flex', justifyContent: 'space-between', marginTop: 'auto' }}>
           <button type="button" onClick={() => setStep(1)} className="btn-secondary">
-            <ArrowLeft size={18} /> Back
+            <ArrowLeft size={18} /> {t('back')}
           </button>
           <button
             type="button"
@@ -1334,7 +1377,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             disabled={!formData.outcomeStatus}
             style={{ opacity: formData.outcomeStatus ? 1 : 0.5 }}
           >
-            Next: Review <ArrowRight size={18} />
+            {t('nextReview') || 'Next: Review'} <ArrowRight size={18} />
           </button>
         </div>
       </div>
@@ -1493,8 +1536,8 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
         <div className="step-header">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <h4 style={{ color: '#818cf8', marginBottom: '8px' }}>Exit Strategy</h4>
-              <p style={{ color: 'var(--text-secondary)' }}>Plan your exit. When will you take profit or cut losses?</p>
+              <h4 style={{ color: '#818cf8', marginBottom: '8px' }}>{t('exitStrategy') || 'Exit Strategy'}</h4>
+              <p style={{ color: 'var(--text-secondary)' }}>{t('exitStrategyDesc') || 'Plan your exit. When will you take profit or cut losses?'}</p>
             </div>
             <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)' }}>
               <X size={24} />
@@ -1628,7 +1671,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                         border: '1px solid rgba(99, 102, 241, 0.3)',
                       }}
                     >
-                      {tag}
+                      {getExitTagLabel(tag)}
                       <X size={14} />
                     </span>
                   ))}
@@ -1659,7 +1702,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                       transition: 'all 0.2s ease',
                     }}
                   >
-                    {tag}
+                    {getExitTagLabel(tag)}
                   </button>
                 ))}
               </div>
@@ -1679,7 +1722,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
 
         <div className="step-actions" style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid var(--bg-tertiary)' }}>
           <button type="button" onClick={() => setStep(2)} className="btn-secondary" style={{ minWidth: '100px' }}>
-            <ArrowLeft size={18} /> Back
+            <ArrowLeft size={18} /> {t('back')}
           </button>
           <button
             type="button"
@@ -1687,7 +1730,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             className="btn-primary"
             style={{ flex: 1, background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', border: 'none' }}
           >
-            Next: Review <ArrowRight size={18} />
+            {t('nextReview') || 'Next: Review'} <ArrowRight size={18} />
           </button>
         </div>
       </div>
@@ -1843,7 +1886,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                       className="news-link"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      🔗 Read Article
+                      🔗 {t('readArticle') || 'Read Article'}
                     </a>
                   )}
                 </div>
@@ -1853,7 +1896,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                   </div>
                 )}
                 <textarea
-                  placeholder="Add your analysis or notes about this news..."
+                  placeholder={t('addAnalysisPlaceholder') || "Add your analysis or notes about this news..."}
                   value={formData.reasonDetails[newsItem.headline] || ''}
                   onChange={(e) => handleReasonDetailChange(newsItem.headline, e.target.value)}
                   className="form-textarea"
@@ -1871,7 +1914,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
           type="text"
           value={formData.customReasons[categoryKey]}
           onChange={(e) => handleCustomReasonChange(categoryKey, e.target.value)}
-          placeholder={`Add custom ${title.toLowerCase()} reason...`}
+          placeholder={t('addCustomReasonPlaceholder', { title: title.toLowerCase() }) || `Add custom ${title.toLowerCase()} reason...`}
           className="form-input small-input"
           onKeyDown={(e) => e.key === 'Enter' && handleAddCustomReason(categoryKey)}
         />
@@ -1920,12 +1963,12 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                         className="tweet-link"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        🔗 View Tweet
+                        🔗 {t('viewTweet') || 'View Tweet'}
                       </a>
                     )}
                   </div>
                   <textarea
-                    placeholder="Why is this tweet relevant to your decision?"
+                    placeholder={t('tweetRelevancePlaceholder') || "Why is this tweet relevant to your decision?"}
                     value={formData.reasonDetails[tweetText] || ''}
                     onChange={(e) => handleReasonDetailChange(tweetText, e.target.value)}
                     className="form-textarea"
@@ -1938,7 +1981,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
         })
       ) : (
         <div className="no-tweets-message">
-          No tweets available. Configure your Twitter API key to see social sentiment.
+          {t('noTweetsAvailable') || 'No tweets available. Configure your Twitter API key to see social sentiment.'}
         </div>
       )}
 
@@ -1948,7 +1991,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
           type="text"
           value={formData.customReasons[categoryKey]}
           onChange={(e) => handleCustomReasonChange(categoryKey, e.target.value)}
-          placeholder={`Add custom ${title.toLowerCase()} tweet...`}
+          placeholder={t('addCustomTweetPlaceholder', { title: title.toLowerCase() }) || `Add custom ${title.toLowerCase()} tweet...`}
           className="form-input small-input"
           onKeyDown={(e) => e.key === 'Enter' && handleAddCustomReason(categoryKey)}
         />
@@ -1975,7 +2018,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             {isSelected && (
               <div className="reason-details-group">
                 <textarea
-                  placeholder="Add specific details or notes..."
+                  placeholder={t('addDetailsPlaceholder') || "Add specific details or notes..."}
                   value={formData.reasonDetails[reason] || ''}
                   onChange={(e) => handleReasonDetailChange(reason, e.target.value)}
                   className="form-textarea"
@@ -1983,7 +2026,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                 />
                 <input
                   type="text"
-                  placeholder="Add resource link (http://...)"
+                  placeholder={t('addResourceLinkPlaceholder') || "Add resource link (http://...)"}
                   value={formData.reasonLinks[reason] || ''}
                   onChange={(e) => handleReasonLinkChange(reason, e.target.value)}
                   className="form-input small-text"
@@ -2000,7 +2043,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
           type="text"
           value={formData.customReasons[categoryKey]}
           onChange={(e) => handleCustomReasonChange(categoryKey, e.target.value)}
-          placeholder={`Add custom ${title.toLowerCase()} reason...`}
+          placeholder={t('addCustomReasonPlaceholder', { title: title.toLowerCase() }) || `Add custom ${title.toLowerCase()} reason...`}
           className="form-input small-input"
           onKeyDown={(e) => e.key === 'Enter' && handleAddCustomReason(categoryKey)}
         />
@@ -2271,8 +2314,8 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
       <div className="step-container" style={{ padding: '0' }}> {/* No padding on container to stretch header */}
         <div className="step-header" style={{ padding: '20px 24px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h4 style={{ color: '#818cf8', margin: 0, fontSize: '1.25rem' }}>Review & Save</h4>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>Review transaction details and AI insights before saving.</p>
+            <h4 style={{ color: '#818cf8', margin: 0, fontSize: '1.25rem' }}>{t('review_save') || 'Review & Save'}</h4>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>{t('review_desc') || 'Review transaction details and AI insights before saving.'}</p>
           </div>
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)' }}>
             <X size={24} />
@@ -2294,13 +2337,13 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Sparkles size={18} style={{ color: 'white' }} />
-                <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 'bold', color: 'white', letterSpacing: '0.5px' }}>AI COACH REVIEW</h4>
+                <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 'bold', color: 'white', letterSpacing: '0.5px' }}>{t('ai_coach_review') || 'AI COACH REVIEW'}</h4>
               </div>
               <Sparkles size={40} style={{ color: 'rgba(99, 102, 241, 0.3)', position: 'absolute', top: '5px', right: '5px' }} />
             </div>
 
             <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '16px', maxWidth: '85%' }}>
-              Check how this trade fits your system rules before saving.
+              {t('check_trade_fit') || 'Check how this trade fits your system rules before saving.'}
             </p>
 
             <button
@@ -2328,7 +2371,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
               }}
             >
               {isAnalyzing ? <Loader2 size={14} className="spin-icon" /> : <Sparkles size={14} />}
-              {isAnalyzing ? 'Analyzing...' : 'Review This Trade Setup'}
+              {isAnalyzing ? (t('analyzing') || 'Analyzing...') : (t('review_trade_setup') || 'Review This Trade Setup')}
             </button>
           </div>
 
@@ -2343,7 +2386,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
               animation: 'fadeIn 0.5s ease-out'
             }}>
               <h5 style={{ margin: '0 0 12px', color: '#818cf8', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem' }}>
-                <Brain size={16} /> Coach's Diagnosis
+                <Brain size={16} /> {t('coach_diagnosis') || "Coach's Diagnosis"}
               </h5>
 
               {/* Behavior Summary */}
@@ -2379,7 +2422,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
           {/* 2. Transaction Details Card */}
           <div className="details-card" style={{ marginBottom: '20px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #1e293b' }}>
             <div style={{ backgroundColor: '#020617', padding: '12px 16px', borderBottom: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h5 style={{ margin: 0, color: 'white', fontWeight: 'bold', fontSize: '0.95rem' }}>Transaction Details</h5>
+              <h5 style={{ margin: 0, color: 'white', fontWeight: 'bold', fontSize: '0.95rem' }}>{t('transaction_details') || 'Transaction Details'}</h5>
               <span style={{
                 color: formData.type === 'buy' ? '#22c55e' : '#ef4444',
                 fontWeight: 'bold',
@@ -2396,25 +2439,25 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             <div style={{ backgroundColor: '#0f172a', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {/* Asset */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem' }}>
-                <span style={{ color: '#94a3b8' }}>Asset</span>
+                <span style={{ color: '#94a3b8' }}>{t('asset') || 'Asset'}</span>
                 <span style={{ color: 'white', fontWeight: '500' }}>{formData.asset}</span>
               </div>
 
               {/* Amount */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem' }}>
-                <span style={{ color: '#94a3b8' }}>Amount</span>
+                <span style={{ color: '#94a3b8' }}>{t('amount') || 'Amount'}</span>
                 <span style={{ color: 'white', fontWeight: '500' }}>{parseFloat(formData.amount).toLocaleString()}</span>
               </div>
 
               {/* Price */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem' }}>
-                <span style={{ color: '#94a3b8' }}>Price</span>
+                <span style={{ color: '#94a3b8' }}>{t('price') || 'Price'}</span>
                 <span style={{ color: 'white', fontWeight: '500' }}>${parseFloat(formData.price).toLocaleString()}</span>
               </div>
 
               {/* Date */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem' }}>
-                <span style={{ color: '#94a3b8' }}>Date</span>
+                <span style={{ color: '#94a3b8' }}>{t('date') || 'Date'}</span>
                 <span style={{ color: 'white', fontWeight: '500' }}>{formData.date}</span>
               </div>
             </div>
@@ -2430,7 +2473,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
               <summary style={{ padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', listStyle: 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <ChevronRight size={16} className="summary-arrow" style={{ transition: 'transform 0.2s' }} />
-                  <span style={{ fontWeight: '500', color: 'white' }}>Pro Technical Analysis</span>
+                  <span style={{ fontWeight: '500', color: 'white' }}>{t('pro_technical_analysis') || 'Pro Technical Analysis'}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
                   <input
@@ -2458,7 +2501,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
               <summary style={{ padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', listStyle: 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <ChevronRight size={16} className="summary-arrow" style={{ transition: 'transform 0.2s' }} />
-                  <span style={{ fontWeight: '500', color: 'white' }}>Fundamental Intelligence</span>
+                  <span style={{ fontWeight: '500', color: 'white' }}>{t('fundamental_intelligence') || 'Fundamental Intelligence'}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
                   <input
@@ -2485,7 +2528,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
               <summary style={{ padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', listStyle: 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <ChevronRight size={16} className="summary-arrow" style={{ transition: 'transform 0.2s' }} />
-                  <span style={{ fontWeight: '500', color: 'white' }}>Important Events & Insights</span>
+                  <span style={{ fontWeight: '500', color: 'white' }}>{t('important_events_insights') || 'Important Events & Insights'}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
                   <input
@@ -2506,7 +2549,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             </details>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '12px', borderTop: '1px solid #1e293b', fontSize: '0.95rem' }}>
-            <span style={{ color: '#94a3b8' }}>Total Value</span>
+            <span style={{ color: '#94a3b8' }}>{t('total_value') || 'Total Value'}</span>
             <span style={{ color: 'white', fontWeight: 'bold' }}>
               ${((parseFloat(formData.amount || 0) * parseFloat(formData.price || 0)) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
@@ -2515,18 +2558,18 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
 
         {/* 3. Thesis & Notes Card */}
         <div className="thesis-card" style={{ backgroundColor: '#0f172a', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
-          <h5 style={{ margin: '0 0 16px', color: 'white', fontSize: '0.95rem', fontWeight: 'bold' }}>Thesis & Notes</h5>
+          <h5 style={{ margin: '0 0 16px', color: 'white', fontSize: '0.95rem', fontWeight: 'bold' }}>{t('thesis_notes') || 'Thesis & Notes'}</h5>
 
           <div style={{ marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: 'bold', color: '#94a3b8', marginBottom: '8px' }}>
-              <Target size={12} /> {formData.type === 'buy' ? 'BUY THESIS' : 'SELL OUTCOME'}
+              <Target size={12} /> {formData.type === 'buy' ? (t('buy_thesis') || 'BUY THESIS') : (t('sell_outcome') || 'SELL OUTCOME')}
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {formData.tags && formData.tags.length > 0 ? (
                 formData.tags.map(tag => (
                   <span key={tag} style={{ color: '#94a3b8', fontSize: '0.85rem', fontStyle: 'italic' }}>#{tag}</span>
                 ))
-              ) : <span style={{ color: '#64748b', fontSize: '0.85rem', fontStyle: 'italic' }}>No thesis tags selected</span>}
+              ) : <span style={{ color: '#64748b', fontSize: '0.85rem', fontStyle: 'italic' }}>{t('no_thesis_tags') || 'No thesis tags selected'}</span>}
             </div>
           </div>
         </div>
@@ -2550,7 +2593,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             }}>
               <AlertTriangle size={20} />
               <div>
-                <strong>Insufficient Holdings:</strong> You are trying to sell {sellAmount.toFixed(4)} {formData.asset}, but you only hold {currentHoldings.toFixed(4)} {formData.asset}.
+                <strong>{t('insufficient_holdings') || 'Insufficient Holdings'}:</strong> {t('insufficient_holdings_desc', { sellAmount: sellAmount.toFixed(4), asset: formData.asset, currentHoldings: currentHoldings.toFixed(4) }) || `You are trying to sell ${sellAmount.toFixed(4)} ${formData.asset}, but you only hold ${currentHoldings.toFixed(4)} ${formData.asset}.`}
               </div>
             </div>
           )
@@ -2567,7 +2610,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
           zIndex: 10
         }}>
           <button type="button" onClick={() => formData.type === 'sell' ? setStep(2) : setStep(3)} className="btn-secondary" style={{ backgroundColor: 'transparent', border: '1px solid #334155', color: '#cbd5e1' }}>
-            <ArrowLeft size={18} /> Back
+            <ArrowLeft size={18} /> {t('back')}
           </button>
           <button
             type="button"
@@ -2583,11 +2626,11 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
           >
             {isSubmitting ? (
               <>
-                <Loader2 size={18} className="spin" /> Saving...
+                <Loader2 size={18} className="spin" /> {t('saving') || 'Saving...'}
               </>
             ) : (
               <>
-                <Check size={18} /> Save Transaction
+                <Check size={18} /> {t('save_transaction') || 'Save Transaction'}
               </>
             )}
           </button>

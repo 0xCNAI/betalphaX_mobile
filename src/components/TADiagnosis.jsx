@@ -1,12 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { analyzeTechnicals } from '../services/technicalService';
 import { Activity, Sparkles, X, AlertCircle, RefreshCw } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
+import { translateText } from '../services/translationService';
 
 const TADiagnosis = ({ symbol, currentPrice, iconUrl, autoRun = false }) => {
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
     const [error, setError] = useState(null);
     const [lastUpdated, setLastUpdated] = useState(null);
+    const { t, language } = useLanguage();
+    const [translatedInsights, setTranslatedInsights] = useState([]);
+
+    // Translate AI Insights
+    useEffect(() => {
+        const translateInsights = async () => {
+            if (language === 'zh-TW' && result?.proAnalysis?.insights?.length > 0) {
+                const insights = result.proAnalysis.insights;
+                // Check if already translated (simple check or re-run)
+                // Better to just translate.
+                try {
+                    const translated = await Promise.all(insights.map(i => translateText(i, 'zh-TW')));
+                    setTranslatedInsights(translated);
+                } catch (e) {
+                    console.error('Translation failed', e);
+                }
+            } else {
+                setTranslatedInsights([]);
+            }
+        };
+        translateInsights();
+    }, [result, language]);
 
     // Auto-run effect
     useEffect(() => {
@@ -64,7 +88,7 @@ const TADiagnosis = ({ symbol, currentPrice, iconUrl, autoRun = false }) => {
             return (
                 <div className="ta-loading">
                     <div className="ta-loading-spinner"></div>
-                    <span className="ta-loading-text">Initializing AI Diagnosis...</span>
+                    <span className="ta-loading-text">{t('analyzingMarketData') || 'Initializing AI Diagnosis...'}</span>
                 </div>
             );
         }
@@ -75,7 +99,7 @@ const TADiagnosis = ({ symbol, currentPrice, iconUrl, autoRun = false }) => {
                 className="ta-trigger-btn"
             >
                 <Sparkles size={18} className="animate-pulse" />
-                <span>AI Diagnosis</span>
+                <span>{t('runAiDiagnosis') || 'AI Diagnosis'}</span>
                 <div className="ta-trigger-glow" />
             </button>
         );
@@ -85,7 +109,7 @@ const TADiagnosis = ({ symbol, currentPrice, iconUrl, autoRun = false }) => {
         return (
             <div className="ta-loading">
                 <div className="ta-loading-spinner"></div>
-                <span className="ta-loading-text">Analyzing Market Data...</span>
+                <span className="ta-loading-text">{t('analyzingMarketData')}</span>
             </div>
         );
     }
@@ -102,7 +126,7 @@ const TADiagnosis = ({ symbol, currentPrice, iconUrl, autoRun = false }) => {
                     onClick={() => handleAnalyze(true)}
                     className="ta-retry-btn"
                 >
-                    Retry Analysis
+                    {t('retry')}
                 </button>
             </div>
         );
@@ -117,6 +141,12 @@ const TADiagnosis = ({ symbol, currentPrice, iconUrl, autoRun = false }) => {
         volatility: 'Normal',
         insights: []
     };
+
+    const displayInsights = (language === 'zh-TW' && translatedInsights.length > 0) ? translatedInsights : pro.insights;
+
+    // Helper for Translation Keys
+    const getActionLabel = (action) => t(`action_${action?.toLowerCase().replace(' ', '_')}`) || action;
+    const getVerdictLabel = (verdict) => t(`verdict_${verdict?.toLowerCase()}`) || verdict;
 
     return (
         <div className="flex flex-col gap-4 w-full">
@@ -135,7 +165,7 @@ const TADiagnosis = ({ symbol, currentPrice, iconUrl, autoRun = false }) => {
                             {symbol} <span className="text-sm font-normal text-gray-500">/ USDT</span>
                         </h2>
                         <span className="text-[10px] text-indigo-400 font-medium tracking-wide uppercase mt-1 block">
-                            Pro Technical Analysis
+                            {t('proTechnicalAnalysis')}
                         </span>
                     </div>
                 </div>
@@ -202,7 +232,7 @@ const TADiagnosis = ({ symbol, currentPrice, iconUrl, autoRun = false }) => {
 
                 {/* Verdict Text */}
                 <h1 className={`text-xl font-black tracking-tight ${getScoreColor(result.score)}`}>
-                    {result.action.toUpperCase()}
+                    {getActionLabel(result.action).toUpperCase()}
                 </h1>
             </div>
 
@@ -213,32 +243,32 @@ const TADiagnosis = ({ symbol, currentPrice, iconUrl, autoRun = false }) => {
                     <div className="flex items-center gap-3 mb-2">
                         <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                            Short term (1H)
+                            {t('shortTerm')}
                         </h4>
                         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${result.verdicts?.short === 'Bullish' ? 'bg-emerald-500/10 text-emerald-400' :
                             result.verdicts?.short === 'Bearish' ? 'bg-rose-500/10 text-rose-400' :
                                 'bg-yellow-500/10 text-yellow-400'
                             }`}>
-                            {result.verdicts?.short || 'Neutral'}
+                            {getVerdictLabel(result.verdicts?.short) || 'Neutral'}
                         </span>
                     </div>
                     <div className="bg-gray-800/20 border border-gray-700/30 rounded-lg overflow-hidden">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="bg-gray-800/50 text-left">
-                                    <th className="py-2 px-3 text-[10px] uppercase text-gray-500 font-bold">Level</th>
-                                    <th className="py-2 px-3 text-[10px] uppercase text-gray-500 font-bold text-right">Price</th>
+                                    <th className="py-2 px-3 text-[10px] uppercase text-gray-500 font-bold">{t('level') || 'Level'}</th>
+                                    <th className="py-2 px-3 text-[10px] uppercase text-gray-500 font-bold text-right">{t('price')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-700/30">
                                 <tr>
-                                    <td className="py-2 px-3 text-gray-300">Support</td>
+                                    <td className="py-2 px-3 text-gray-300">{t('support')}</td>
                                     <td className="py-2 px-3 text-right font-mono font-medium text-emerald-400">
                                         ${result.levels?.shortTerm?.support?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td className="py-2 px-3 text-gray-300">Resistance</td>
+                                    <td className="py-2 px-3 text-gray-300">{t('resistance')}</td>
                                     <td className="py-2 px-3 text-right font-mono font-medium text-rose-400">
                                         ${result.levels?.shortTerm?.resistance?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </td>
@@ -253,32 +283,32 @@ const TADiagnosis = ({ symbol, currentPrice, iconUrl, autoRun = false }) => {
                     <div className="flex items-center gap-3 mb-2">
                         <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
-                            Long term (1D)
+                            {t('longTerm')}
                         </h4>
                         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${result.verdicts?.long === 'Bullish' ? 'bg-emerald-500/10 text-emerald-400' :
                             result.verdicts?.long === 'Bearish' ? 'bg-rose-500/10 text-rose-400' :
                                 'bg-yellow-500/10 text-yellow-400'
                             }`}>
-                            {result.verdicts?.long || 'Neutral'}
+                            {getVerdictLabel(result.verdicts?.long) || 'Neutral'}
                         </span>
                     </div>
                     <div className="bg-gray-800/20 border border-gray-700/30 rounded-lg overflow-hidden">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="bg-gray-800/50 text-left">
-                                    <th className="py-2 px-3 text-[10px] uppercase text-gray-500 font-bold">Level</th>
-                                    <th className="py-2 px-3 text-[10px] uppercase text-gray-500 font-bold text-right">Price</th>
+                                    <th className="py-2 px-3 text-[10px] uppercase text-gray-500 font-bold">{t('level') || 'Level'}</th>
+                                    <th className="py-2 px-3 text-[10px] uppercase text-gray-500 font-bold text-right">{t('price')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-700/30">
                                 <tr>
-                                    <td className="py-2 px-3 text-gray-300">Support</td>
+                                    <td className="py-2 px-3 text-gray-300">{t('support')}</td>
                                     <td className="py-2 px-3 text-right font-mono font-medium text-emerald-400">
                                         ${result.levels?.longTerm?.support?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td className="py-2 px-3 text-gray-300">Resistance</td>
+                                    <td className="py-2 px-3 text-gray-300">{t('resistance')}</td>
                                     <td className="py-2 px-3 text-right font-mono font-medium text-rose-400">
                                         ${result.levels?.longTerm?.resistance?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </td>
@@ -293,28 +323,28 @@ const TADiagnosis = ({ symbol, currentPrice, iconUrl, autoRun = false }) => {
             <div>
                 <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
                     <h4 className="text-[10px] font-bold text-indigo-300 uppercase tracking-wider mb-2 flex items-center gap-1">
-                        <Sparkles size={10} /> AI Insights
+                        <Sparkles size={10} /> {t('aiInsights')}
                     </h4>
 
                     {/* Bullet Points (All except last) */}
                     <ul className="space-y-1.5 mb-3">
-                        {pro.insights.length > 0 ? (
-                            pro.insights.slice(0, -1).map((insight, idx) => (
+                        {displayInsights.length > 0 ? (
+                            displayInsights.slice(0, -1).map((insight, idx) => (
                                 <li key={idx} className="text-xs text-gray-300 flex items-start gap-2 leading-relaxed">
                                     <span className="mt-1.5 w-1 h-1 rounded-full bg-indigo-400 flex-shrink-0"></span>
                                     {insight}
                                 </li>
                             ))
                         ) : (
-                            <li className="text-xs text-gray-500 italic">No specific insights generated.</li>
+                            <li className="text-xs text-gray-500 italic">{t('noInsights')}</li>
                         )}
                     </ul>
 
                     {/* Conclusion (Last item) */}
-                    {pro.insights.length > 0 && (
+                    {displayInsights.length > 0 && (
                         <div className="mt-3 pt-3 border-t border-indigo-500/20">
                             <p className="text-xs text-indigo-200 font-medium leading-relaxed italic">
-                                "{pro.insights[pro.insights.length - 1]}"
+                                "{displayInsights[displayInsights.length - 1]}"
                             </p>
                         </div>
                     )}

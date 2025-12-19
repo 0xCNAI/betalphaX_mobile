@@ -2,11 +2,66 @@
 import React, { useState, useEffect } from 'react';
 import { getNewsDashboard } from '../services/twitterService';
 import { Loader2, ExternalLink, Calendar, MessageSquare, Map, RefreshCw } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
+import { translateText } from '../services/translationService';
 
 const ImportantEvents = ({ symbol, onDataLoaded }) => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const { t, language } = useLanguage();
+    const [translatedData, setTranslatedData] = useState(null);
+
+    // Context Translation Logic
+    useEffect(() => {
+        const translateData = async () => {
+            if (language === 'zh-TW' && data) {
+                try {
+                    // 1. Discussions
+                    const discussionsPromise = data.discussions ? Promise.all(data.discussions.map(async (d) => {
+                        const theme = await translateText(d.theme, 'zh-TW');
+                        const points = await Promise.all(d.points.map(async (p) => {
+                            const detail = await translateText(p.detail, 'zh-TW');
+                            return { ...p, detail: detail || p.detail };
+                        }));
+                        return { ...d, theme: theme || d.theme, points };
+                    })) : Promise.resolve([]);
+
+                    // 2. Past Events
+                    const pastPromise = data.past_month_events ? Promise.all(data.past_month_events.map(async (e) => {
+                        const event = await translateText(e.event, 'zh-TW');
+                        const details = await translateText(e.details, 'zh-TW');
+                        return { ...e, event: event || e.event, details: details || e.details };
+                    })) : Promise.resolve([]);
+
+                    // 3. Future Events
+                    const futurePromise = data.future_events ? Promise.all(data.future_events.map(async (e) => {
+                        const event = await translateText(e.event, 'zh-TW');
+                        const details = await translateText(e.details, 'zh-TW');
+                        const timeline = await translateText(e.timeline, 'zh-TW'); // Timeline often has text like "Q1 2024" which might stay English, but "Early January" should translate.
+                        return { ...e, event: event || e.event, details: details || e.details, timeline: timeline || e.timeline };
+                    })) : Promise.resolve([]);
+
+                    const [discussions, past_month_events, future_events] = await Promise.all([discussionsPromise, pastPromise, futurePromise]);
+
+                    setTranslatedData({
+                        ...data,
+                        discussions: discussions.length ? discussions : data.discussions,
+                        past_month_events: past_month_events.length ? past_month_events : data.past_month_events,
+                        future_events: future_events.length ? future_events : data.future_events
+                    });
+                } catch (e) {
+                    console.error("Translation failed", e);
+                    setTranslatedData(null);
+                }
+            } else {
+                setTranslatedData(null);
+            }
+        };
+        translateData();
+    }, [data, language]);
+
+    const displayData = (language === 'zh-TW' && translatedData) ? translatedData : data;
 
     const fetchData = async (forceRefresh = false) => {
         if (!symbol) return;
@@ -37,7 +92,10 @@ const ImportantEvents = ({ symbol, onDataLoaded }) => {
             <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 mb-6 flex items-center justify-center min-h-[200px]">
                 <div className="flex flex-col items-center gap-3 text-gray-400">
                     <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
-                    <span className="text-sm">Analyzing Community & Events...</span>
+                    <div className="flex flex-col items-center gap-3 text-gray-400">
+                        <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
+                        <span className="text-sm">{t('analyzingCommunity') || 'Analyzing Community & Events...'}</span>
+                    </div>
                 </div>
             </div>
         );
@@ -52,7 +110,7 @@ const ImportantEvents = ({ symbol, onDataLoaded }) => {
                     <span className="bg-blue-500/20 text-blue-400 p-1.5 rounded-lg">
                         <Calendar className="w-5 h-5" />
                     </span>
-                    Important Events & Insights
+                    {t('importantEvents')}
                 </h2>
                 <button
                     onClick={() => fetchData(true)}
@@ -66,14 +124,14 @@ const ImportantEvents = ({ symbol, onDataLoaded }) => {
 
             <div className="space-y-8">
                 {/* 1. Recent Community Discussions */}
-                {data.discussions && data.discussions.length > 0 && (
+                {displayData.discussions && displayData.discussions.length > 0 && (
                     <section>
                         <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                             <MessageSquare className="w-4 h-4" />
-                            Recent Community Discussions
+                            {t('recentDiscussions')}
                         </h3>
                         <div className="grid gap-4">
-                            {data.discussions.map((theme, idx) => (
+                            {displayData.discussions.map((theme, idx) => (
                                 <div key={idx} className="bg-white/5 rounded-lg p-4 border border-white/5">
                                     <h4 className="text-blue-300 font-medium mb-3">{theme.theme}</h4>
                                     <ul className="space-y-3">
@@ -89,7 +147,7 @@ const ImportantEvents = ({ symbol, onDataLoaded }) => {
                                                             rel="noopener noreferrer"
                                                             className="inline-flex items-center gap-1 ml-2 text-xs text-blue-400/70 hover:text-blue-400 transition-colors"
                                                         >
-                                                            Source <ExternalLink className="w-3 h-3" />
+                                                            {t('source')} <ExternalLink className="w-3 h-3" />
                                                         </a>
                                                     )}
                                                 </span>
@@ -103,23 +161,23 @@ const ImportantEvents = ({ symbol, onDataLoaded }) => {
                 )}
 
                 {/* 2. Past Month Events */}
-                {data.past_month_events && data.past_month_events.length > 0 && (
+                {displayData.past_month_events && displayData.past_month_events.length > 0 && (
                     <section>
                         <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
-                            Past Month Events
+                            {t('pastMonthEvents')}
                         </h3>
                         <div className="overflow-hidden rounded-lg border border-white/10">
                             <table className="w-full text-sm text-left">
                                 <thead className="bg-white/5 text-gray-400">
                                     <tr>
-                                        <th className="px-4 py-3 font-medium w-24">Date</th>
-                                        <th className="px-4 py-3 font-medium w-1/3">Event</th>
-                                        <th className="px-4 py-3 font-medium">Details</th>
+                                        <th className="px-4 py-3 font-medium w-24">{t('date')}</th>
+                                        <th className="px-4 py-3 font-medium w-1/3">{t('event')}</th>
+                                        <th className="px-4 py-3 font-medium">{t('details')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
-                                    {data.past_month_events.map((event, idx) => (
+                                    {displayData.past_month_events.map((event, idx) => (
                                         <tr key={idx} className="hover:bg-white/5 transition-colors">
                                             <td className="px-4 py-3 text-gray-400 font-mono">{event.date}</td>
                                             <td className="px-4 py-3 text-white font-medium">{event.event}</td>
@@ -145,23 +203,23 @@ const ImportantEvents = ({ symbol, onDataLoaded }) => {
                 )}
 
                 {/* 3. Future Roadmap */}
-                {data.future_events && data.future_events.length > 0 && (
+                {displayData.future_events && displayData.future_events.length > 0 && (
                     <section>
                         <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                             <Map className="w-4 h-4" />
-                            Future Roadmap
+                            {t('futureRoadmap')}
                         </h3>
                         <div className="overflow-hidden rounded-lg border border-white/10">
                             <table className="w-full text-sm text-left">
                                 <thead className="bg-white/5 text-gray-400">
                                     <tr>
-                                        <th className="px-4 py-3 font-medium w-24">Timeline</th>
-                                        <th className="px-4 py-3 font-medium w-1/3">Event</th>
-                                        <th className="px-4 py-3 font-medium">Details</th>
+                                        <th className="px-4 py-3 font-medium w-24">{t('timeline')}</th>
+                                        <th className="px-4 py-3 font-medium w-1/3">{t('event')}</th>
+                                        <th className="px-4 py-3 font-medium">{t('details')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
-                                    {data.future_events.map((event, idx) => (
+                                    {displayData.future_events.map((event, idx) => (
                                         <tr key={idx} className="hover:bg-white/5 transition-colors">
                                             <td className="px-4 py-3 text-blue-300 font-medium">{event.timeline}</td>
                                             <td className="px-4 py-3 text-white font-medium">{event.event}</td>
