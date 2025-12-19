@@ -872,7 +872,12 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
 
     // Tag Logic (from Step 2)
     const filteredDefaultTags = defaultTags.filter(t => t.toLowerCase().includes(tagSearch.toLowerCase()));
-    const displayedDefaultTags = showAllTags ? filteredDefaultTags : filteredDefaultTags.slice(0, 10);
+
+    // Web Layout: Always show some recommended tags, filter when searching
+    // If search is empty, show all (or top N). If searching, show matches.
+    const displayedTags = tagSearch ? filteredDefaultTags : defaultTags;
+
+    // Check if current search is a custom tag (not in known list)
     const isCustomTag = tagSearch.trim() && !defaultTags.some(t => t.toLowerCase() === tagSearch.trim().toLowerCase()) && !aiTags.some(t => t.toLowerCase() === tagSearch.trim().toLowerCase());
 
     const handleGenerateTags = () => {
@@ -889,8 +894,6 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
       }
     };
 
-    // Missing logic for tags in merged step (Declarations merged above, removing duplicates here)
-
     return (
       <div className="step-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '16px' }}>
         <div className="step-header">
@@ -900,6 +903,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
 
         {/* Row 1: Ticker + Date */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          {/* ... (Existing ticker/date inputs - kept same) ... */}
           <div className="form-group">
             <label className="form-label">{t('assetSymbol') || 'Token Ticker'}</label>
             <div ref={inputRef} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -921,8 +925,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                 autoFocus
                 style={{ paddingLeft: formData.asset && getIcon && getIcon(formData.asset) ? '40px' : '16px' }}
               />
-
-              {/* Autocomplete Dropdown */}
+              {/* Autocomplete Dropdown - kept same */}
               {showDropdown && (searchResults.length > 0 || isSearching) && createPortal(
                 <div className="modal-content" style={{
                   position: 'fixed',
@@ -974,8 +977,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                 </div>,
                 document.body
               )}
-
-              {/* Holdings Display */}
+              {/* Holdings Display - kept same */}
               {formData.asset && (
                 <div style={{
                   position: 'absolute',
@@ -1157,44 +1159,25 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
               />
             </div>
 
-            {/* Tags Selection */}
+            {/* Tags Selection - Inline Style */}
             <div className="form-group" style={{ marginTop: '16px' }}>
-              <div ref={tagsDropdownRef} style={{ position: 'relative' }}>
-                <div
-                  className="form-input"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    flexWrap: 'wrap',
-                    padding: '8px 12px',
-                    minHeight: '42px'
-                  }}
-                  onClick={() => setShowTagsDropdown(true)}
-                >
+              <div style={{ position: 'relative' }}>
+                <div className="form-input" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px' }}>
                   <Search size={16} color="#64748b" />
                   <input
                     type="text"
                     value={tagSearch}
-                    onChange={(e) => {
-                      setTagSearch(e.target.value);
-                      setShowTagsDropdown(true);
-                    }}
+                    onChange={(e) => setTagSearch(e.target.value)}
                     placeholder={t('searchOrCreateTag') || "Search or create tag..."}
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      color: 'white',
-                      flex: 1,
-                      outline: 'none',
-                      fontSize: '0.9rem'
-                    }}
+                    style={{ background: 'transparent', border: 'none', color: 'white', flex: 1, outline: 'none', fontSize: '0.9rem' }}
                   />
                 </div>
+              </div>
 
-                {/* Selected Tags Display inline above input? Or separate? Design implies separate usually, but let's keep it clean */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
-                  {formData.tags && formData.tags.map(tag => (
+              {/* Selected Tags */}
+              {formData.tags && formData.tags.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '12px', marginBottom: '8px' }}>
+                  {formData.tags.map(tag => (
                     <span key={tag} className="tag-pill active" style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', padding: '4px 10px' }}>
                       {getTagLabel(tag)}
                       <X
@@ -1208,114 +1191,61 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
                     </span>
                   ))}
                 </div>
+              )}
 
-                {showTagsDropdown && (
-                  <div className="tags-dropdown" style={{
-                    position: 'fixed', // Fixed for mobile modal overlay issues
-                    top: 'auto',
-                    bottom: '0',
-                    left: 0,
-                    right: 0,
-                    height: '50vh',
-                    backgroundColor: '#1e293b',
-                    borderTop: '1px solid #334155',
-                    zIndex: 99999, // High z-index
-                    borderTopLeftRadius: '16px',
-                    borderTopRightRadius: '16px',
-                    paddingBottom: '24px',
-                    overflowY: 'auto',
-                    boxShadow: '0 -4px 20px rgba(0,0,0,0.5)'
-                  }}>
-                    {/* Header for mobile dropdown */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderBottom: '1px solid #334155' }}>
-                      <span style={{ fontWeight: 600 }}>Select Tags</span>
-                      <button onClick={() => setShowTagsDropdown(false)} style={{ background: 'none', border: 'none', color: '#94a3b8' }}><X size={20} /></button>
-                    </div>
+              {/* Recommended / Search Results Area */}
+              <div style={{ marginTop: '12px' }}>
+                <div style={{ fontSize: '0.9rem', color: '#f8fafc', fontWeight: 'bold', marginBottom: '8px' }}>
+                  {t('recommendedTags') || 'Recommended Tags'}
+                </div>
 
-                    {/* AI Generated Tags Section */}
-                    {aiTags.length > 0 && (
-                      <div style={{ padding: '8px 12px' }}>
-                        <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Sparkles size={10} /> {t('aiSuggested') || 'AI Suggested'}
-                        </div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                          {aiTags.map(tag => (
-                            <button
-                              key={tag}
-                              type="button"
-                              className={`tag-pill ${formData.tags.includes(tag) ? 'active' : ''} ai-tag`}
-                              onClick={() => {
-                                handleAddTag(tag);
-                                setTagSearch('');
-                              }}
-                              style={{ fontSize: '0.75rem', padding: '4px 8px' }}
-                            >
-                              {getTagLabel(tag)}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {/* Create Custom Tag Option */}
+                  {isCustomTag && (
+                    <button
+                      type="button"
+                      className="tag-pill custom-tag-create"
+                      onClick={() => {
+                        handleAddTag(tagSearch.trim());
+                        setTagSearch('');
+                      }}
+                      style={{ borderColor: '#818cf8', color: '#818cf8', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      <Plus size={14} /> {t('createCustomTag') || 'Create'} "{tagSearch.trim()}"
+                    </button>
+                  )}
 
-                    {/* Recommend Tags Section */}
-                    <div style={{ padding: '8px 12px', borderTop: aiTags.length > 0 ? '1px solid #334155' : 'none' }}>
-                      <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '4px' }}>
-                        {t('recommendedTags') || 'Recommended Tags'}
-                      </div>
-                    </div>
-                    {/* Custom Tag Creation */}
-                    {isCustomTag && (
-                      <div style={{ padding: '8px 12px', borderTop: '1px solid #334155' }}>
-                        <button
-                          type="button"
-                          className="tag-pill custom-tag-create"
-                          onClick={() => {
-                            handleAddTag(tagSearch.trim());
-                            setTagSearch('');
-                          }}
-                          style={{ width: '100%', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '4px' }}
-                        >
-                          <Plus size={14} /> {t('createCustomTag') || `Create "${tagSearch.trim()}"`}
-                        </button>
-                      </div>
-                    )}
-                    {/* Default Tags */}
-                    <div style={{ padding: '8px 12px', borderTop: (aiTags.length > 0 || isCustomTag) ? '1px solid #334155' : 'none' }}>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                        {displayedDefaultTags.map(tag => (
-                          <button
-                            key={tag}
-                            type="button"
-                            className={`tag-pill ${formData.tags.includes(tag) ? 'active' : ''}`}
-                            onClick={() => {
-                              handleAddTag(tag);
-                              setTagSearch('');
-                            }}
-                            style={{ fontSize: '0.75rem', padding: '4px 8px' }}
-                          >
-                            {getTagLabel(tag)}
-                          </button>
-                        ))}
-                      </div>
-                      {!showAllTags && filteredDefaultTags.length > 10 && (
-                        <button
-                          type="button"
-                          onClick={() => setShowAllTags(true)}
-                          className="btn-text"
-                          style={{ marginTop: '8px', fontSize: '0.75rem', color: '#818cf8' }}
-                        >
-                          {t('showAllTags') || 'Show all tags'}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )}
+                  {/* AI Tags */}
+                  {aiTags.map(tag => (
+                    <button
+                      key={tag}
+                      type="button"
+                      className={`tag-pill ${formData.tags.includes(tag) ? 'active' : ''} ai-tag`}
+                      onClick={() => handleAddTag(tag)}
+                    >
+                      <Sparkles size={10} style={{ marginRight: '4px' }} /> {getTagLabel(tag)}
+                    </button>
+                  ))}
+
+                  {/* Default/Filtered Tags */}
+                  {displayedTags.map(tag => (
+                    <button
+                      key={tag}
+                      type="button"
+                      className={`tag-pill ${formData.tags.includes(tag) ? 'active' : ''}`}
+                      onClick={() => handleAddTag(tag)}
+                    >
+                      {getTagLabel(tag)}
+                    </button>
+                  ))}
+                </div>
               </div>
+
             </div>
           </div>
         )}
 
-        {/* Group & Chain Settings */}
+        {/* Group & Chain Settings - Kept Same */}
         <div style={{ marginTop: '24px' }}>
           <button
             type="button"

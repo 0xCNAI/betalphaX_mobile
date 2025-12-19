@@ -60,7 +60,11 @@ ${currentTransaction ? `
 ${JSON.stringify(currentTransaction, null, 2)}
 ` : ''}
 
+
 ${outputInstruction}
+
+IMPORTANT:
+${isChinese ? 'Strictly output ONLY in Traditional Chinese (繁體中文). Do not use English unless it is a specific proper noun.' : 'Output in English.'}
 `;
 
     try {
