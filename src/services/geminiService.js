@@ -284,3 +284,29 @@ Note: "${note}"`;
         return [];
     }
 };
+
+/**
+ * Generates a concise summary of asset notes using Gemini API.
+ */
+export const generateAssetNoteSummary = async (notes, asset) => {
+    if (!notes || notes.length === 0) {
+        return '';
+    }
+
+    const notesText = notes.map(n => `- ${n.date}: ${n.content}`).join('\n');
+
+    const prompt = `You are a portfolio manager assistant. Briefly summarize the key investment thesis updates for ${asset} based on the following notes.
+    Focus on valid reasons for holding, selling, or risks. Keep it under 50 words.
+
+    Notes:
+    ${notesText}
+    `;
+
+    try {
+        const summary = await generateGeminiContent(prompt, GEMINI_MODELS.FLASH_LITE_2_5, 'note_summary', false);
+        return summary || 'Unable to generate summary.';
+    } catch (error) {
+        console.error("Error generating note summary:", error);
+        return 'Summarization failed.';
+    }
+};
