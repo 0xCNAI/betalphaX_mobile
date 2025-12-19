@@ -15,9 +15,11 @@ import PortfolioAIOverview from '../components/PortfolioAIOverview';
 
 import { useAuth } from '../context/AuthContext';
 import { saveDailySnapshot } from '../services/historyService';
+import { useLanguage } from '../context/LanguageContext';
 
 const Portfolio = () => {
     const { user, signOut } = useAuth();
+    const { t } = useLanguage();
     const { transactions, bulkAddTransactions, addTransaction } = useTransactions();
     const { getPrice, loading: pricesLoading, error, lastUpdate } = usePrices();
     const [showUnifiedImport, setShowUnifiedImport] = useState(false);
@@ -118,7 +120,7 @@ const Portfolio = () => {
                     <button className="btn-icon" onClick={() => setShowAIInsights(false)}>
                         <X size={24} />
                     </button>
-                    <h2 style={{ fontSize: '1.2rem', margin: 0 }}>AI Insights</h2>
+                    <h2 style={{ fontSize: '1.2rem', margin: 0 }}>{t('aiInsights')}</h2>
                     <div style={{ width: 24 }}></div>
                 </div>
                 <PortfolioAIOverview transactions={transactions} prices={currentPricesForAI} user={user} />
@@ -132,11 +134,11 @@ const Portfolio = () => {
             <div className="page-header-compact">
                 <button className="btn-header-action" onClick={() => setShowAIInsights(true)}>
                     <Sparkles size={16} />
-                    <span>AI Insights</span>
+                    <span>{t('aiInsights')}</span>
                 </button>
                 <button className="btn-header-action" onClick={() => setShowUnifiedImport(true)}>
                     <ArrowDown size={16} />
-                    <span>Import</span>
+                    <span>{t('import')}</span>
                 </button>
             </div>
 
@@ -145,7 +147,7 @@ const Portfolio = () => {
                 <div className="dashboard-card-compact">
                     <div className="balance-card-compact">
                         <div className="balance-header-compact">
-                            <h3 className="text-secondary text-sm uppercase tracking-wider">Total Balance</h3>
+                            <h3 className="text-secondary text-sm uppercase tracking-wider">{t('totalBalance')}</h3>
                         </div>
 
                         <div className="balance-content-compact">
@@ -171,11 +173,11 @@ const Portfolio = () => {
                     <div className="action-buttons-row">
                         <button className="btn-action-primary" onClick={() => setIsTransactionModalOpen(true)}>
                             <Plus size={18} />
-                            <span>Add Transaction</span>
+                            <span>{t('addTransaction')}</span>
                         </button>
                         <button className="btn-action-secondary" onClick={handleAddNote}>
                             <FileText size={18} />
-                            <span>Add Note</span>
+                            <span>{t('addNote')}</span>
                         </button>
                     </div>
                 </div>
@@ -189,7 +191,7 @@ const Portfolio = () => {
             {/* Sign Out Button */}
             <div className="footer-actions">
                 <button className="btn-sign-out-danger" onClick={signOut}>
-                    Sign Out
+                    {t('signOut')}
                 </button>
             </div>
 
@@ -212,7 +214,7 @@ const Portfolio = () => {
             )}
 
             {isNoteModalOpen && (
-                <Modal isOpen={isNoteModalOpen} onClose={() => setIsNoteModalOpen(false)} title="Add New Note">
+                <Modal isOpen={isNoteModalOpen} onClose={() => setIsNoteModalOpen(false)} title={t('addNewNote')}>
                     <NoteForm onClose={() => setIsNoteModalOpen(false)} />
                 </Modal>
             )}

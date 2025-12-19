@@ -9,6 +9,7 @@ import { detectAssetEvents, generateWidgetData } from '../services/analysisServi
 import { RefreshCw, AlertTriangle, Activity, Zap, Check, X, ChevronDown, TrendingUp, Award, ExternalLink, ArrowRight, FileText, Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 import './Feeds.css';
 
 const TweetItem = ({ tweet }) => {
@@ -18,6 +19,7 @@ const TweetItem = ({ tweet }) => {
 
 const Feeds = () => {
     const { user } = useAuth(); // Add Auth Context
+    const { t } = useLanguage();
     const { transactions } = useTransactions();
     const { prices, refreshPrices } = usePrices();
     const navigate = useNavigate();
@@ -193,7 +195,7 @@ const Feeds = () => {
     // --- Signal Generation ---
     const generateSignals = async () => {
         setLoading(true);
-        setGenerationStatus('Step 1/5: Fetching Market Data...');
+        setGenerationStatus(t('step1'));
 
         try {
             // Step 1: Fetch Market Data (Prices, Volume, Volatility)
@@ -201,7 +203,8 @@ const Feeds = () => {
             await refreshPrices(); // Ensure this is awaited
 
             // Step 2: Fetch Social Data (Tweets, Sentiment)
-            setGenerationStatus('Step 2/5: Fetching Social Data...');
+            // Step 2: Fetch Social Data (Tweets, Sentiment)
+            setGenerationStatus(t('step2'));
             console.log('[Signal Pipeline] Step 2: Fetching social feeds (Force Refresh)...');
 
             // Identify Assets
@@ -221,27 +224,31 @@ const Feeds = () => {
             const feeds = await getPortfolioFeeds(targets, true);
 
             // Step 3: AI Processing
-            setGenerationStatus('Step 3/5: AI Processing Events & Signals...');
+            // Step 3: AI Processing
+            setGenerationStatus(t('step3'));
             console.log('[Signal Pipeline] Step 3: Analyzing events...');
             // Simulate brief processing time for UX (detectAssetEvents is fast)
             await new Promise(resolve => setTimeout(resolve, 800));
 
             // Step 4: Update Dashboard
-            setGenerationStatus('Step 4/5: Updating Dashboard...');
+            // Step 4: Update Dashboard
+            setGenerationStatus(t('step4'));
             console.log('[Signal Pipeline] Step 4: Updating state...');
             setHoldingsFeed(feeds);
             saveToCache(feeds);
 
             // Step 5: Completed
-            setGenerationStatus('Step 5/5: Completed');
+            // Step 5: Completed
+            setGenerationStatus(t('step5'));
             console.log('[Signal Pipeline] Step 5: Done.');
 
             // Clear status after delay
             setTimeout(() => setGenerationStatus(''), 3000);
 
         } catch (error) {
+        } catch (error) {
             console.error("Signal generation failed:", error);
-            setGenerationStatus('Error: Failed to generate signals.');
+            setGenerationStatus(t('genFailed'));
         } finally {
             setLoading(false);
         }
@@ -321,8 +328,8 @@ const Feeds = () => {
         <div className="feeds-container centered-layout">
             {/* 1. Header Section */}
             <div className="dashboard-header">
-                <h1>Market Intelligence Dashboard</h1>
-                <p className="dashboard-subtitle">Unified AI analysis of Risks and Opportunities across your market.</p>
+                <h1>{t('feedsTitle')}</h1>
+                <p className="dashboard-subtitle">{t('feedsSubtitle')}</p>
             </div>
 
             {/* 2. Primary CTA Section */}
@@ -333,18 +340,18 @@ const Feeds = () => {
                     disabled={loading}
                 >
                     {loading ? <RefreshCw className="spin-icon" /> : <Zap fill="currentColor" />}
-                    {loading ? 'Analyzing...' : 'Generate Intelligence'}
+                    {loading ? t('analyzing') : t('generateIntelligence')}
                 </button>
                 {lastGenerated && !loading && (
                     <span className="last-updated-text">
-                        Last updated: {formatDistanceToNow(lastGenerated)} ago
+                        {t('lastUpdated')}: {formatDistanceToNow(lastGenerated)} {t('ago')}
                     </span>
                 )}
             </div>
 
             {/* 3. Target Assets Selector */}
             <div className="target-assets-section">
-                <div className="target-label">TARGET ASSETS ({selectedAssets.length}):</div>
+                <div className="target-label">{t('targetAssets')} ({selectedAssets.length}):</div>
 
                 <div className="target-assets-display">
                     {selectedAssets.slice(0, 3).map(asset => (
@@ -365,13 +372,13 @@ const Feeds = () => {
                         className="edit-holdings-btn-simple"
                         onClick={() => setShowAssetSelector(!showAssetSelector)}
                     >
-                        [ Select Assets ] <ChevronDown size={14} />
+                        [ {t('selectAssets')} ] <ChevronDown size={14} />
                     </button>
 
                     {showAssetSelector && (
                         <div className="asset-selector-dropdown">
                             <div className="selector-header">
-                                <span>Select Assets</span>
+                                <span>{t('selectAssets')}</span>
                                 <X size={16} className="close-icon" onClick={() => setShowAssetSelector(false)} />
                             </div>
 
@@ -380,7 +387,7 @@ const Feeds = () => {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
                                     <input
                                         type="text"
-                                        placeholder="Search Assets (e.g. SOL)"
+                                        placeholder={t('searchAssets')}
                                         className="simple-input"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -402,7 +409,7 @@ const Feeds = () => {
                             {/* Search Results */}
                             {(searchResults.length > 0) && (
                                 <div className="selector-list" style={{ maxHeight: '200px', borderBottom: '1px solid var(--bg-tertiary)', backgroundColor: 'rgba(15, 23, 42, 0.5)' }}>
-                                    <div style={{ padding: '4px 12px', fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase' }}>Search Results</div>
+                                    <div style={{ padding: '4px 12px', fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase' }}>{t('searchResults')}</div>
                                     {searchResults.map(coin => (
                                         <div
                                             key={coin.id}
@@ -524,9 +531,9 @@ const Feeds = () => {
 
                             <div className="intel-summary-col">
                                 <span className="intel-text">
-                                    <span className="highlight-white">{oppCount} opportunities</span> • <span className="highlight-white">{riskCount} risks</span>
+                                    <span className="highlight-white">{oppCount} {t('opportunities_count')}</span> • <span className="highlight-white">{riskCount} {t('risks_count')}</span>
                                 </span>
-                                <span className="intel-subtext">AI market intelligence for {asset}</span>
+                                <span className="intel-subtext">{t('aiMarketIntel')} {asset}</span>
                             </div>
 
                             <div className="intel-badges-col">
@@ -546,7 +553,7 @@ const Feeds = () => {
                                         <div className="intel-section-block">
                                             <h4 className="intel-section-title text-emerald-400">
                                                 <div className="w-2 h-2 rounded-full bg-emerald-500 mr-2"></div>
-                                                OPPORTUNITIES
+                                                {t('opportunities')}
                                             </h4>
                                             <div className="intel-items-list">
                                                 {assetFeed.filter(isOpp).map((item, idx) => (
@@ -584,7 +591,7 @@ const Feeds = () => {
                                         <div className="intel-section-block">
                                             <h4 className="intel-section-title text-rose-400">
                                                 <div className="w-2 h-2 rounded-full bg-rose-500 mr-2"></div>
-                                                RISKS
+                                                {t('risks')}
                                             </h4>
                                             <div className="intel-items-list">
                                                 {assetFeed.filter(isRisk).map((item, idx) => (
@@ -622,7 +629,7 @@ const Feeds = () => {
                                             className="go-to-asset-btn"
                                             onClick={() => handleWidgetClick(`/asset/${asset}`)}
                                         >
-                                            Go to Asset Page <ArrowRight size={14} className="ml-1" />
+                                            {t('goToAssetPage')} <ArrowRight size={14} className="ml-1" />
                                         </button>
                                     </div>
                                 </div>

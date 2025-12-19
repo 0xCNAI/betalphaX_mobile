@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, TrendingUp, TrendingDown, Calendar, Tag, Edit2, 
 import { useTransactions } from '../context/TransactionContext';
 import { usePrices } from '../context/PriceContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { calculateAssetPnL } from '../utils/pnlCalculator';
 import { getBestTradingViewSymbol } from '../services/coinGeckoApi';
 import { summarizeTweet } from '../services/geminiService';
@@ -20,6 +21,7 @@ import Modal from '../components/Modal';
 const AssetDetails = () => {
   const { symbol } = useParams();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { transactions, updateTransaction } = useTransactions();
   const { getPrice, getIcon } = usePrices();
   const [editingTransaction, setEditingTransaction] = useState(null);
@@ -130,22 +132,22 @@ const AssetDetails = () => {
             </div>
             <div className="text-right">
               <div className="text-xl font-bold text-white">${currentPrice.toLocaleString()}</div>
-              <div className="text-xs text-slate-400">Current Price</div>
+              <div className="text-xs text-slate-400">{t('price')}</div>
             </div>
           </div>
 
           {/* Holdings Summary Row */}
           <div className="grid grid-cols-3 gap-2 bg-slate-950/50 p-2 rounded-lg border border-slate-800/50">
             <div className="text-center">
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider">Holdings</div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider">{t('holdings')}</div>
               <div className="text-sm font-semibold text-slate-200">{currentHoldings.toLocaleString()}</div>
             </div>
             <div className="text-center border-l border-slate-800/50">
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider">Value</div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider">{t('value')}</div>
               <div className="text-sm font-semibold text-slate-200">${currentValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
             </div>
             <div className="text-center border-l border-slate-800/50">
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider">PnL</div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider">{t('pnl')}</div>
               <div className={`text-sm font-semibold ${totalPnL >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                 {totalPnL >= 0 ? '+' : ''}{pnlPercent}%
               </div>
@@ -217,7 +219,8 @@ const AssetDetails = () => {
                   }}
                   className="flex items-center justify-center gap-2 py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-emerald-900/20"
                 >
-                  <TrendingUp size={20} /> BUY
+                >
+                  <TrendingUp size={20} /> {t('buy')}
                 </button>
                 <button
                   onClick={() => {
@@ -227,7 +230,7 @@ const AssetDetails = () => {
                   }}
                   className="flex items-center justify-center gap-2 py-3 px-4 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-rose-900/20"
                 >
-                  <TrendingDown size={20} /> SELL
+                  <TrendingDown size={20} /> {t('sell')}
                 </button>
               </div>
 
@@ -235,7 +238,7 @@ const AssetDetails = () => {
               <div className="card-auto flex flex-col mt-2">
                 <div className="p-3 border-b border-slate-800 flex justify-between items-center bg-slate-900/50 -mx-4 -mt-4 mb-4 rounded-t-xl">
                   <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                    <History size={14} /> Transaction History
+                    <History size={14} /> {t('history')}
                   </h3>
                   <span className="text-xs text-slate-500">{assetTransactions.length} txs</span>
                 </div>
@@ -249,7 +252,7 @@ const AssetDetails = () => {
 
                 <div className="flex-1 space-y-2">
                   {assetTransactions.length === 0 ? (
-                    <div className="text-center text-slate-500 text-sm py-8">No transactions yet.</div>
+                    <div className="text-center text-slate-500 text-sm py-8">{t('noTransactions')}</div>
                   ) : (
                     assetTransactions.sort((a, b) => new Date(b.date) - new Date(a.date)).map((tx) => {
                       const isExpanded = expandedTxIds.includes(tx.id);
@@ -262,7 +265,7 @@ const AssetDetails = () => {
                             {/* Type */}
                             <div>
                               <span className={`type ${tx.type} text-[10px] px-1.5 py-0.5 rounded font-bold uppercase`}>
-                                {tx.type === 'buy' ? 'BUY' : 'SELL'}
+                                {tx.type === 'buy' ? t('action_buy') : t('action_sell')}
                               </span>
                             </div>
 
@@ -285,7 +288,7 @@ const AssetDetails = () => {
                           {isExpanded && (
                             <div className="list-item-body">
                               <div className="thesis-section">
-                                <h4><Brain size={14} /> Buy Thesis</h4>
+                                <h4><Brain size={14} /> {t('buyThesis')}</h4>
                                 {(tx.tags && tx.tags.length > 0) || (tx.selectedReasons && tx.selectedReasons.length > 0) ? (
                                   <div className="tags-display" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
                                     {(tx.tags && tx.tags.length > 0 ? tx.tags : tx.selectedReasons).map((tag, i) => {
@@ -331,7 +334,7 @@ const AssetDetails = () => {
 
                               {((tx.sellSignals && tx.sellSignals.length > 0) || (tx.selectedSellSignals && tx.selectedSellSignals.length > 0) || (tx.exitTags && tx.exitTags.length > 0) || tx.exitStrategy) && (
                                 <div className="thesis-section">
-                                  <h4><TrendingDown size={14} /> Exit Strategy</h4>
+                                  <h4><TrendingDown size={14} /> {t('exitStrategy')}</h4>
                                   {tx.exitTags && tx.exitTags.length > 0 && (
                                     <div className="tags-display" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
                                       {tx.exitTags.map((tag, i) => (
@@ -381,7 +384,7 @@ const AssetDetails = () => {
 
                               {(tx.memo || tx.notes) && (
                                 <div className="thesis-section">
-                                  <h4><FileText size={14} /> Investment Note</h4>
+                                  <h4><FileText size={14} /> {t('investmentNote')}</h4>
                                   <p className="text-secondary text-wrap-fix" style={{ fontSize: '0.9rem', lineHeight: '1.5' }}>
                                     {tx.memo || tx.notes}
                                   </p>
@@ -390,7 +393,7 @@ const AssetDetails = () => {
 
                               {tx.holdings_breakdown && tx.holdings_breakdown.length > 0 && (
                                 <div className="thesis-section">
-                                  <h4><Wallet size={14} /> On-Chain Source</h4>
+                                  <h4><Wallet size={14} /> {t('onChainSource')}</h4>
                                   <div className="breakdown-list" style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     {tx.holdings_breakdown.map((item, idx) => (
                                       <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', backgroundColor: 'rgba(255,255,255,0.05)', padding: '6px 10px', borderRadius: '6px' }}>
@@ -411,7 +414,7 @@ const AssetDetails = () => {
                                     setInitialStep(1);
                                   }}
                                 >
-                                  <Edit2 size={14} /> Edit Transaction
+                                  <Edit2 size={14} /> {t('editTransaction')}
                                 </button>
                               </div>
                             </div>
@@ -436,7 +439,7 @@ const AssetDetails = () => {
               <div className="card-auto flex flex-col">
                 <div className="p-3 border-b border-slate-800 bg-slate-900/50 -mx-4 -mt-4 mb-4 rounded-t-xl">
                   <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                    <Sparkles size={14} className="text-indigo-400" /> Social Intelligence
+                    <Sparkles size={14} className="text-indigo-400" /> {t('socialIntelligence')}
                   </h3>
                 </div>
                 <div className="flex-1">
