@@ -8,7 +8,7 @@ const USER_METRICS_DOC = 'ai_user_metrics/summary';
 
 // --- Desktop: src/services/geminiService.js -> generateCoachReview ---
 export const generateCoachReview = async (userSummary, assetSummary, currentTransaction = null, language = 'en') => {
-    const isChinese = language === 'zh-TW';
+    const isChinese = language === 'zh-TW' || (language && language.startsWith('zh'));
     const roleDesc = isChinese
         ? "角色：專業加密貨幣交易教練 (性格：嚴格、數據驅動、專注於行為心理學和紀律)。"
         : "Role: Professional Crypto Trading Coach (Persona: Strict, data-driven, focused on behavioral psychology and system discipline).";
