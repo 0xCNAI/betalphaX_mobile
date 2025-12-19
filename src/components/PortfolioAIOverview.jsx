@@ -3,7 +3,10 @@ import { generatePortfolioReport } from '../services/portfolioAnalysisService';
 import { saveAIReport, getLatestAIReport } from '../services/aiReportService';
 import { Sparkles, X, AlertTriangle, TrendingUp, CheckCircle, BrainCircuit, Maximize2, RefreshCw, Shield } from 'lucide-react';
 
+import { useLanguage } from '../context/LanguageContext';
+
 const PortfolioAIOverview = ({ transactions, prices, user }) => {
+    const { language } = useLanguage();
     const [loading, setLoading] = useState(false);
     const [report, setReport] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,7 +31,7 @@ const PortfolioAIOverview = ({ transactions, prices, user }) => {
     const handleGenerate = async () => {
         setLoading(true);
         try {
-            const data = await generatePortfolioReport(transactions, prices);
+            const data = await generatePortfolioReport(transactions, prices, language);
             if (data) {
                 setReport(data);
                 setLastUpdated(new Date());

@@ -1,4 +1,5 @@
 import { generateGeminiContent } from './geminiService';
+import { translateText } from './translationService';
 import { analyzeTechnicals } from './technicalService';
 import { getRecommendedKOLs } from './socialService';
 import { getNewsDashboard } from './twitterService';
@@ -10,7 +11,7 @@ import { getTokenFundamentals } from './fundamentalService';
  * @param {Object} prices - Current market prices { SYMBOL: { price, change24h } }
  * @returns {Promise<Object>} - The AI Report JSON
  */
-export async function generatePortfolioReport(transactions, prices) {
+export async function generatePortfolioReport(transactions, prices, language = 'en') {
     let portfolioData = null;
     try {
         // 1. Aggregate Data
@@ -24,13 +25,45 @@ export async function generatePortfolioReport(transactions, prices) {
         const enrichedAssets = await enrichAssetsWithExternalData(portfolioData.assets);
 
         // 3. Construct Prompt
-        const prompt = constructPrompt(enrichedAssets, portfolioData.summary);
+        const prompt = constructPrompt(enrichedAssets, portfolioData.summary, language);
 
         // 4. Call Gemini
         const aiResponse = await generateGeminiContent(prompt);
 
         // 5. Parse and Return
-        return parseAIResponse(aiResponse);
+        const parsedReport = parseAIResponse(aiResponse);
+
+        // 6. Translation Layer
+        const isChinese = language === 'zh-TW' || (language && language.startsWith('zh'));
+        if (isChinese && parsedReport) {
+            console.log('[Portfolio Analysis] Applying translation layer...');
+            // Translate Executive Summary
+            if (parsedReport.executiveSummary) {
+                const tOverview = await translateText(parsedReport.executiveSummary.overview, 'zh-TW');
+                if (tOverview) parsedReport.executiveSummary.overview = tOverview;
+                const tAction = await translateText(parsedReport.executiveSummary.topPriorityAction, 'zh-TW');
+                if (tAction) parsedReport.executiveSummary.topPriorityAction = tAction;
+            }
+            // Translate Assets
+            if (parsedReport.assets && Array.isArray(parsedReport.assets)) {
+                await Promise.all(parsedReport.assets.map(async (asset) => {
+                    const tVerdict = await translateText(asset.technicalVerdict, 'zh-TW');
+                    if (tVerdict) asset.technicalVerdict = tVerdict;
+                    const tInsight = await translateText(asset.fundamentalInsight, 'zh-TW');
+                    if (tInsight) asset.fundamentalInsight = tInsight;
+                    const tAdvice = await translateText(asset.strategicAdvice, 'zh-TW');
+                    if (tAdvice) asset.strategicAdvice = tAdvice;
+                }));
+            }
+            // Translate Checklist
+            if (parsedReport.actionableChecklist && Array.isArray(parsedReport.actionableChecklist)) {
+                parsedReport.actionableChecklist = await Promise.all(
+                    parsedReport.actionableChecklist.map(item => translateText(item, 'zh-TW'))
+                );
+            }
+        }
+
+        return parsedReport;
 
     } catch (error) {
         console.error('Error generating portfolio report, using mock:', error);
@@ -196,7 +229,8 @@ async function enrichAssetsWithExternalData(assets) {
 /**
  * Construct the prompt for Gemini
  */
-function constructPrompt(assets, summary) {
+function constructPrompt(assets, summary, language) {
+    const isChinese = language === 'zh-TW' || (language && language.startsWith('zh'));
     const assetsJson = JSON.stringify(assets.map(a => ({
         symbol: a.symbol,
         pnlPercent: `${a.pnlPercent.toFixed(1)}%`,
@@ -248,6 +282,7 @@ Generate a JSON report with the following structure:
 2. **Synthesize:** Combine Technicals (Trend), Fundamentals (Valuation/TVL), and Events (Catalysts) for a holistic view.
 3. **Focus on Alpha:** Highlight opportunities (e.g., upcoming roadmap events) or risks (e.g., high FDV dilution).
 4. **JSON Only:** Return ONLY the JSON object. No markdown formatting.
+5. **Language:** ${isChinese ? 'Strictly output ONLY in Traditional Chinese (繁體中文). Do not use English unless it is a specific proper noun or token symbol.' : 'Output in English.'}
 `;
 }
 
