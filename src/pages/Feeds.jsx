@@ -33,22 +33,22 @@ const Feeds = () => {
             return;
         }
 
-        const isOpp = type === 'Opportunity';
+        const isOpp = type === 'Opportunity' || (!type && asset === 'Bullish'); // Fallback for raw sentiment
         const noteTitle = `${type}: ${asset} – ${isOpp ? 'Opportunity' : 'Risk'}`;
 
         try {
             await addNote(user.uid, {
                 title: noteTitle,
                 content: text,
-                tags: [type.toLowerCase(), asset],
+                tags: [type?.toLowerCase() || (isOpp ? 'opportunity' : 'risk'), asset],
                 asset: asset,
                 type: 'token',
                 noteCategory: 'highlight', // Matches desktop category for these
                 color: isOpp ? 'var(--accent-primary)' : '#ef4444',
                 sourceRef: {
                     asset: asset,
-                    group: type.toLowerCase(),
-                    sourceType: `feed_mobile_${type.toLowerCase()}`
+                    group: isOpp ? 'opportunity' : 'risk',
+                    sourceType: `feed_mobile_${isOpp ? 'opp' : 'risk'}`
                 }
             });
             alert("✅ Insight saved to Notebook!");
@@ -475,17 +475,17 @@ const Feeds = () => {
                     const assetFeed = holdingsFeed.filter(f => f.asset === asset);
                     // Analyze sentiment/type more robustly. Backend returns 'bullish'/'bearish' or 'opportunity'/'risk'
                     // Helper to determine type safely
-                    const isOpp = (i) =>
-                        (i.category === 'Opportunity') ||
-                        (i.sentiment === 'Positive') ||
-                        (i.type === 'opportunity') ||
-                        (i.sentiment === 'bullish');
+                    const isOpp = (i) => {
+                        const type = i.type?.toLowerCase() || '';
+                        const sent = i.sentiment?.toLowerCase() || '';
+                        return type === 'opportunity' || sent === 'bullish' || i.category === 'Opportunity';
+                    };
 
-                    const isRisk = (i) =>
-                        (i.category === 'Risk Alert') ||
-                        (i.sentiment === 'Negative') ||
-                        (i.type === 'risk') ||
-                        (i.sentiment === 'bearish');
+                    const isRisk = (i) => {
+                        const type = i.type?.toLowerCase() || '';
+                        const sent = i.sentiment?.toLowerCase() || '';
+                        return type === 'risk' || sent === 'bearish' || i.category === 'Risk Alert';
+                    };
 
                     const oppCount = assetFeed.filter(isOpp).length;
                     const riskCount = assetFeed.filter(isRisk).length;

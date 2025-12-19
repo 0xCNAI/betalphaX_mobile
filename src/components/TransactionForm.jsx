@@ -21,7 +21,8 @@ import {
   HelpCircle,
   FileText,
   ChevronUp,
-  Brain
+  Brain,
+  Zap
 } from 'lucide-react';
 import { useBuyThesis } from '../context/BuyThesisContext';
 
