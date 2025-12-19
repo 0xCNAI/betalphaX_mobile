@@ -10,30 +10,17 @@ const USER_METRICS_DOC = 'ai_user_metrics/summary';
 // --- Desktop: src/services/geminiService.js -> generateCoachReview ---
 export const generateCoachReview = async (userSummary, assetSummary, currentTransaction = null, language = 'en') => {
     const isChinese = language === 'zh-TW' || (language && language.startsWith('zh'));
-    const roleDesc = isChinese
-        ? "角色：專業加密貨幣交易教練 (性格：嚴格、數據驅動、專注於行為心理學和紀律)。"
-        : "Role: Professional Crypto Trading Coach (Persona: Strict, data-driven, focused on behavioral psychology and system discipline).";
 
-    const taskDesc = isChinese
-        ? `任務：審查用戶對 ${assetSummary?.assetSymbol || '此資產'} 的交易模式，並提供批判性的「審查與調整」評估。`
-        : `Task: Review the user's trading pattern for ${assetSummary?.assetSymbol || 'this asset'} and provide a critical "Review & Adjustments" assessment.`;
+    // Always use English for generation consistency
+    const roleDesc = "Role: Professional Crypto Trading Coach (Persona: Strict, data-driven, focused on behavioral psychology and system discipline).";
+
+    const taskDesc = `Task: Review the user's trading pattern for ${assetSummary?.assetSymbol || 'this asset'} and provide a critical "Review & Adjustments" assessment.`;
 
     const extraContext = currentTransaction
-        ? (isChinese ? `等等！用戶正準備儲存 ${currentTransaction.asset} 的新交易。請針對此特定的交易設置對比其歷史進行審查。` : `Wait! The user is about to SAVE A NEW TRANSACTION for ${currentTransaction.asset}. Review this SPECIFIC trade setup against their history.`)
+        ? `Wait! The user is about to SAVE A NEW TRANSACTION for ${currentTransaction.asset}. Review this SPECIFIC trade setup against their history.`
         : '';
 
-    const outputInstruction = isChinese
-        ? `輸出格式 (嚴格 JSON):
-{
-    "behavior_summary": "一段像真人教練般的對話段落 (約 3-5 句話)。根據數據批評交易設置或給予肯定。請自然、有洞察力且直接 ('說人話')。不要使用條列式。專注於心理和系統一致性。例如：'看你的歷史，這個設置看起來很穩。你通常在這裡會猶豫，但數據支持做多。只是要注意止損位，你傾向於設得太緊。'",
-    "recommended_playbook": [
-        {
-            "rule": "簡短且可執行的規則標題 (例如 '定義失效點')",
-            "reasoning": "簡要解釋為什麼這現在適用。"
-        }
-    ]
-}`
-        : `Output Format (Strict JSON):
+    const outputInstruction = `Output Format (Strict JSON):
 {
     "behavior_summary": "A single, conversational paragraph (approx 3-5 sentences) acting as a direct human coach. Critique the trade setup or validate it based on the data. Be natural, insightful, and direct ('说人话'). Do NOT use bullet points here. Focus on the psychology and system alignment.",
     "recommended_playbook": [
@@ -65,7 +52,8 @@ ${JSON.stringify(currentTransaction, null, 2)}
 ${outputInstruction}
 
 IMPORTANT:
-${isChinese ? 'Strictly output ONLY in Traditional Chinese (繁體中文). Do not use English unless it is a specific proper noun.' : 'Output in English.'}
+IMPORTANT:
+Output in English.
 `;
 
     try {

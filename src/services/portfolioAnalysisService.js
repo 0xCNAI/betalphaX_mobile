@@ -230,7 +230,8 @@ async function enrichAssetsWithExternalData(assets) {
  * Construct the prompt for Gemini
  */
 function constructPrompt(assets, summary, language) {
-    const isChinese = language === 'zh-TW' || (language && language.startsWith('zh'));
+    // Always use English for generation consistency
+    // language param is used for translation layer only, not prompt construction
     const assetsJson = JSON.stringify(assets.map(a => ({
         symbol: a.symbol,
         pnlPercent: `${a.pnlPercent.toFixed(1)}%`,
@@ -282,7 +283,7 @@ Generate a JSON report with the following structure:
 2. **Synthesize:** Combine Technicals (Trend), Fundamentals (Valuation/TVL), and Events (Catalysts) for a holistic view.
 3. **Focus on Alpha:** Highlight opportunities (e.g., upcoming roadmap events) or risks (e.g., high FDV dilution).
 4. **JSON Only:** Return ONLY the JSON object. No markdown formatting.
-5. **Language:** ${isChinese ? 'Strictly output ONLY in Traditional Chinese (繁體中文). Do not use English unless it is a specific proper noun or token symbol.' : 'Output in English.'}
+5. **Language:** Output in English.
 `;
 }
 
