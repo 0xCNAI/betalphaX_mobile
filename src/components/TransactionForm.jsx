@@ -24,7 +24,7 @@ import {
   Brain
 } from 'lucide-react';
 import { useBuyThesis } from '../context/BuyThesisContext';
-import { useBuyThesis } from '../context/BuyThesisContext';
+
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { translateText } from '../services/translationService';
