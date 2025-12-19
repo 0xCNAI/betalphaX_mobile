@@ -2501,7 +2501,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
               <summary style={{ padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', listStyle: 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <ChevronRight size={16} className="summary-arrow" style={{ transition: 'transform 0.2s' }} />
-                  <span style={{ fontWeight: '500', color: 'white' }}>{t('fundamental_intelligence') || 'Fundamental Intelligence'}</span>
+                  <span style={{ fontWeight: '500', color: 'white' }}>{t('fundamentalIntelligence') || 'Fundamental Intelligence'}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
                   <input
@@ -2528,7 +2528,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
               <summary style={{ padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', listStyle: 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <ChevronRight size={16} className="summary-arrow" style={{ transition: 'transform 0.2s' }} />
-                  <span style={{ fontWeight: '500', color: 'white' }}>{t('important_events_insights') || 'Important Events & Insights'}</span>
+                  <span style={{ fontWeight: '500', color: 'white' }}>{t('importantEvents') || 'Important Events & Insights'}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
                   <input
@@ -2593,7 +2593,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             }}>
               <AlertTriangle size={20} />
               <div>
-                <strong>{t('insufficient_holdings') || 'Insufficient Holdings'}:</strong> {t('insufficient_holdings_desc', { sellAmount: sellAmount.toFixed(4), asset: formData.asset, currentHoldings: currentHoldings.toFixed(4) }) || `You are trying to sell ${sellAmount.toFixed(4)} ${formData.asset}, but you only hold ${currentHoldings.toFixed(4)} ${formData.asset}.`}
+                <strong>{t('insufficientHoldings') || 'Insufficient Holdings'}:</strong> {t('insufficient_holdings_desc', { sellAmount: sellAmount.toFixed(4), asset: formData.asset, currentHoldings: currentHoldings.toFixed(4) }) || `You are trying to sell ${sellAmount.toFixed(4)} ${formData.asset}, but you only hold ${currentHoldings.toFixed(4)} ${formData.asset}.`}
               </div>
             </div>
           )

@@ -205,7 +205,7 @@ const Feeds = () => {
 
             // Step 2: Fetch Social Data (Tweets, Sentiment)
             // Step 2: Fetch Social Data (Tweets, Sentiment)
-            setGenerationStatus(t('step2'));
+            setGenerationStatus(t('feedStep2'));
             console.log('[Signal Pipeline] Step 2: Fetching social feeds (Force Refresh)...');
 
             // Identify Assets
@@ -226,21 +226,21 @@ const Feeds = () => {
 
             // Step 3: AI Processing
             // Step 3: AI Processing
-            setGenerationStatus(t('step3'));
+            setGenerationStatus(t('feedStep3'));
             console.log('[Signal Pipeline] Step 3: Analyzing events...');
             // Simulate brief processing time for UX (detectAssetEvents is fast)
             await new Promise(resolve => setTimeout(resolve, 800));
 
             // Step 4: Update Dashboard
             // Step 4: Update Dashboard
-            setGenerationStatus(t('step4'));
+            setGenerationStatus(t('feedStep4'));
             console.log('[Signal Pipeline] Step 4: Updating state...');
             setHoldingsFeed(feeds);
             saveToCache(feeds);
 
             // Step 5: Completed
             // Step 5: Completed
-            setGenerationStatus(t('step5'));
+            setGenerationStatus(t('feedStep5'));
             console.log('[Signal Pipeline] Step 5: Done.');
 
             // Clear status after delay
@@ -328,8 +328,8 @@ const Feeds = () => {
         <div className="feeds-container centered-layout">
             {/* 1. Header Section */}
             <div className="dashboard-header">
-                <h1>{t('feedsTitle')}</h1>
-                <p className="dashboard-subtitle">{t('feedsSubtitle')}</p>
+                <h2 className="feeds-title">{t('feedsDashboardTitle')}</h2>
+                <p className="feeds-subtitle">{t('feedsDashboardSubtitle')}</p>
             </div>
 
             {/* 2. Primary CTA Section */}
@@ -531,9 +531,9 @@ const Feeds = () => {
 
                             <div className="intel-summary-col">
                                 <span className="intel-text">
-                                    <span className="highlight-white">{oppCount} {t('opportunities_count')}</span> • <span className="highlight-white">{riskCount} {t('risks_count')}</span>
+                                    <span className="highlight-white">{oppCount} {t('opportunitiesCount') || 'opportunities'}</span> • <span className="highlight-white">{riskCount} {t('risksCount') || 'risks'}</span>
                                 </span>
-                                <span className="intel-subtext">{t('aiMarketIntel')} {asset}</span>
+                                <span className="intel-subtext">{t('aiMarketIntelFor')} {asset}</span>
                             </div>
 
                             <div className="intel-badges-col">
