@@ -870,6 +870,8 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
       }
     };
 
+    // Missing logic for tags in merged step (Declarations merged above, removing duplicates here)
+
     return (
       <div className="step-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '16px' }}>
         <div className="step-header">
@@ -1190,18 +1192,27 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
 
                 {showTagsDropdown && (tagSearch || isCustomTag) && (
                   <div className="tags-dropdown" style={{
-                    position: 'absolute',
-                    top: '100%',
+                    position: 'fixed', // Fixed for mobile modal overlay issues
+                    top: 'auto',
+                    bottom: '0',
                     left: 0,
                     right: 0,
-                    marginTop: '4px',
+                    height: '50vh',
                     backgroundColor: '#1e293b',
-                    border: '1px solid #334155',
-                    borderRadius: '8px',
-                    zIndex: 20,
-                    maxHeight: '200px',
-                    overflowY: 'auto'
+                    borderTop: '1px solid #334155',
+                    zIndex: 99999, // High z-index
+                    borderTopLeftRadius: '16px',
+                    borderTopRightRadius: '16px',
+                    paddingBottom: '24px',
+                    overflowY: 'auto',
+                    boxShadow: '0 -4px 20px rgba(0,0,0,0.5)'
                   }}>
+                    {/* Header for mobile dropdown */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderBottom: '1px solid #334155' }}>
+                      <span style={{ fontWeight: 600 }}>Select Tags</span>
+                      <button onClick={() => setShowTagsDropdown(false)} style={{ background: 'none', border: 'none', color: '#94a3b8' }}><X size={20} /></button>
+                    </div>
+
                     {/* AI Generated Tags Section */}
                     {aiTags.length > 0 && (
                       <div style={{ padding: '8px 12px' }}>
@@ -1304,44 +1315,14 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
               backgroundColor: 'rgba(30, 41, 59, 0.3)',
               borderRadius: '12px',
               display: 'flex',
-              flexDirection: 'column',
-              gap: '16px'
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px dashed #334155',
+              color: '#94a3b8',
+              fontSize: '0.9rem'
             }}>
-              <div className="form-group">
-                <label className="form-label">Asset Group</label>
-                <select
-                  value={formData.selectedGroup}
-                  onChange={(e) => setFormData(prev => ({ ...prev, selectedGroup: e.target.value }))}
-                  className="form-input"
-                >
-                  <option value="">Default (Manual Entry)</option>
-                  {[...new Set(transactions.map(tx => tx.group || tx.asset).filter(n => n))].sort().map(g => (
-                    <option key={g} value={g}>{g}</option>
-                  ))}
-                  <option value="new">+ Add New Group...</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Chain</label>
-                <select
-                  value={formData.selectedChain}
-                  onChange={(e) => setFormData(prev => ({ ...prev, selectedChain: e.target.value }))}
-                  className="form-input"
-                >
-                  <option value="">N/A</option>
-                  <option value="Ethereum">Ethereum</option>
-                  <option value="Solana">Solana</option>
-                  <option value="Bitcoin">Bitcoin</option>
-                  <option value="Arbitrum">Arbitrum</option>
-                  <option value="Optimism">Optimism</option>
-                  <option value="Polygon">Polygon</option>
-                  <option value="Base">Base</option>
-                  <option value="Avalanche">Avalanche</option>
-                  <option value="BSC">BSC</option>
-                  <option value="new">+ Add Custom Chain...</option>
-                </select>
-              </div>
+              {/* Placeholder for Advanced Settings Content */}
+              Feature coming soon...
             </div>
           )}
         </div>
@@ -1354,7 +1335,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             style={{ width: '100%', justifyContent: 'center' }}
             onClick={() => setStep(formData.type === 'buy' ? 3 : 2)}
           >
-            Next: {formData.type === 'buy' ? 'Sell Signals' : 'Outcome & factors'} <ArrowRight size={18} />
+            {formData.type === 'buy' ? (t('nextSellSignals') || 'Next: Sell Signals') : (t('nextOutcome') || 'Next: Outcome & Factors')} <ArrowRight size={18} />
           </button>
         </div>
       </div>
@@ -2457,7 +2438,7 @@ const TransactionForm = ({ onClose, initialData = null, initialStep = 1, initial
             <button
               onClick={() => {
                 setIsAnalyzing(true);
-                runPreTradeReview(user?.uid || 'guest', formData.asset, formData, transactions)
+                runPreTradeReview(user?.uid || 'guest', formData.asset, formData, transactions, language)
                   .then(advice => setPreTradeReview(advice))
                   .catch(err => console.error("AI Coach Error:", err))
                   .finally(() => setIsAnalyzing(false));
