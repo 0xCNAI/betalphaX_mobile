@@ -1,6 +1,7 @@
 import { db } from './firebase';
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { generateGeminiContent } from './geminiService';
+import { translateText } from './translationService';
 
 const USERS_COLLECTION = 'users';
 const ASSET_SUMMARIES = 'asset_summaries';
@@ -73,7 +74,30 @@ ${isChinese ? 'Strictly output ONLY in Traditional Chinese (繁體中文). Do no
         if (!generatedText) return null;
 
         const jsonString = generatedText.replace(/```json\n?|\n?```/g, '').trim();
-        return JSON.parse(jsonString);
+        const result = JSON.parse(jsonString);
+
+        // --- Translation Layer ---
+        if (isChinese) {
+            console.log('[AI Coach] Applying translation layer...');
+            if (result.behavior_summary) {
+                const translatedSummary = await translateText(result.behavior_summary, 'zh-TW');
+                if (translatedSummary) result.behavior_summary = translatedSummary;
+            }
+            if (result.recommended_playbook && Array.isArray(result.recommended_playbook)) {
+                await Promise.all(result.recommended_playbook.map(async (item) => {
+                    if (item.rule) {
+                        const tRule = await translateText(item.rule, 'zh-TW');
+                        if (tRule) item.rule = tRule;
+                    }
+                    if (item.reasoning) {
+                        const tReason = await translateText(item.reasoning, 'zh-TW');
+                        if (tReason) item.reasoning = tReason;
+                    }
+                }));
+            }
+        }
+
+        return result;
 
     } catch (error) {
         console.error("AI Coach Generation Failed:", error);
