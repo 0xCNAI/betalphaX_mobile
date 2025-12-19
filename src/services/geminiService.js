@@ -382,3 +382,23 @@ export const generateFundamentalAnalysis = async (symbol, fundamentalData, socia
         };
     }
 };
+
+/**
+ * Summarizes a tweet for the Asset Details view.
+ */
+export const summarizeTweet = async (text) => {
+    if (!text) return '';
+
+    // We can just use the tweet text itself if it's short, or a simple truncation
+    // But if we want AI power, we can use Gemini
+    const prompt = `Summarize this tweet into one highly concise sentence (max 15 words).
+    Tweet: "${text}"`;
+
+    try {
+        const summary = await generateGeminiContent(prompt, GEMINI_MODELS.FLASH_LITE_2_5, 'tweet_summary', false);
+        return summary ? summary.trim() : text;
+    } catch (error) {
+        // Fallback to simple truncation
+        return text.length > 100 ? text.substring(0, 100) + '...' : text;
+    }
+};
