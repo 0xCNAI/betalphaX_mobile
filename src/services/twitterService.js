@@ -47,7 +47,7 @@ export async function searchCryptoTweets(ticker, limit = 10, handle = null, forc
     const tokenName = TOKEN_NAMES[upperTicker] || upperTicker;
 
     // Check cache first
-    const CACHE_KEY = `twitter_search_${upperTicker}`;
+    const CACHE_KEY = `twitter_search_${upperTicker}_v2`; // Bump version to force fresh fetch
     const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 
     try {
