@@ -83,22 +83,37 @@ export async function searchCryptoTweets(ticker, limit = 10, handle = null, forc
     // Build search query - use $TICKER format for better crypto results
     // User request: Focus on $TICKER for accuracy (removes noise from generic token names)
     // Increased min_faves to 20 to further reduce noise
-    let queryPart = `$${upperTicker}`;
+    let query = '';
 
-    // Add official handle if provided
-    if (handle) {
-        const cleanHandle = handle.replace('@', '');
-        queryPart += ` OR from:${cleanHandle}`;
+    // LOGIC CHANGE: If we have tracked accounts (or official handle), and the user has explicitly added accounts,
+    // we switch to "Curated Mode" -> Only show tweets from these sources about the ticker.
+    // If no tracked accounts, we use "Discovery Mode" -> Show all tweets about the ticker.
+
+    const hasTrackedAccounts = additionalAccounts && additionalAccounts.length > 0;
+    const sources = [];
+
+    if (handle) sources.push(`from:${handle.replace('@', '')}`);
+    if (hasTrackedAccounts) {
+        additionalAccounts.forEach(acc => sources.push(`from:${acc.replace('@', '')}`));
     }
 
-    // Add additional tracked accounts (KOLs) if provided
-    // These accounts are implicitly trusted by the user, so we include their tweets
-    if (additionalAccounts && additionalAccounts.length > 0) {
-        const accountsQuery = additionalAccounts.map(acc => `from:${acc.replace('@', '')}`).join(' OR ');
-        queryPart += ` OR ${accountsQuery}`;
-    }
+    // The core ticker part of the query
+    const tickerQueryPart = `$${upperTicker}`;
 
-    const query = `(${queryPart}) -filter:retweets -filter:replies`;
+    if (hasTrackedAccounts) {
+        // CURATED MODE: ($TICKER) AND (from:Source1 OR from:Source2...)
+        // We require the ticker AND the source.
+        const sourceQuery = sources.join(' OR ');
+        query = `(${tickerQueryPart}) (${sourceQuery}) -filter:retweets -filter:replies`;
+    } else {
+        // DISCOVERY MODE: Just the ticker (plus official handle if exists as a boost, but standard search handles the rest)
+        // Original logic: just ticker, maybe official handle OR'd
+        if (sources.length > 0) {
+            query = `(${tickerQueryPart} OR ${sources.join(' OR ')}) min_faves:20 lang:en -filter:retweets -filter:replies`;
+        } else {
+            query = `${tickerQueryPart} min_faves:20 lang:en -filter:retweets -filter:replies`;
+        }
+    }
 
     try {
         // Use the proxy endpoint
