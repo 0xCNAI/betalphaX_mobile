@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Settings, Plus, X, User, ExternalLink, RefreshCw, List, PlusCircle } from 'lucide-react';
-import { searchCryptoTweets } from '../services/twitterService';
+import { getTrackedFeed } from '../services/socialService';
 import { getUserTrackingList, updateUserTrackingList } from '../services/userService';
 import { getCoinMetadata } from '../services/coinGeckoApi';
 import { formatDistanceToNow } from 'date-fns';
@@ -48,18 +48,17 @@ const SocialNotificationWidget = ({ symbol, user, compact = false, onAddToThesis
             const userList = await getUserTrackingList(user.uid, symbol);
             setTrackedHandles(userList);
 
-            // 2. Search Tweets (Use Robust Twitter Service)
-            // This combines searches for the symbol ($TICKER) and tracked handles 
-            // Pass userList to include tracked accounts in validity query
-            const tweets = await searchCryptoTweets(symbol, 20, metadata?.twitter_screen_name, true, userList);
+            // 2. Search Tweets (Use Robust Social Service matching Web Logic)
+            // This aligns with the "Web Version" backend logic.
+            const tweets = await getTrackedFeed(symbol, userList, metadata?.twitter_screen_name, metadata?.name, true);
 
             // Format tweets to match widget expectation
             const formattedFeed = tweets.map(t => ({
                 id: t.id,
-                author: t.author,
+                author: t.author || t.authorName, // Handle variation in return object
                 timestamp: t.timestamp,
                 text: t.text,
-                url: t.link || t.url,
+                url: t.url || t.link,
                 likes: t.likes,
                 retweets: t.retweets
             }));
@@ -97,15 +96,16 @@ const SocialNotificationWidget = ({ symbol, user, compact = false, onAddToThesis
 
         try {
             await updateUserTrackingList(user.uid, symbol, newList);
+            await updateUserTrackingList(user.uid, symbol, newList);
             // Refresh feed using updated list and helper logic
             const metadata = await getCoinMetadata(symbol);
-            const tweets = await searchCryptoTweets(symbol, 20, metadata?.twitter_screen_name, true, newList);
+            const tweets = await getTrackedFeed(symbol, newList, metadata?.twitter_screen_name, metadata?.name, true);
             const formattedFeed = tweets.map(t => ({
                 id: t.id,
-                author: t.author,
+                author: t.author || t.authorName,
                 timestamp: t.timestamp,
                 text: t.text,
-                url: t.link || t.url,
+                url: t.url || t.link,
                 likes: t.likes,
                 retweets: t.retweets
             }));
@@ -126,13 +126,13 @@ const SocialNotificationWidget = ({ symbol, user, compact = false, onAddToThesis
             await updateUserTrackingList(user.uid, symbol, newList);
             // Refresh feed
             const metadata = await getCoinMetadata(symbol);
-            const tweets = await searchCryptoTweets(symbol, 20, metadata?.twitter_screen_name, true, newList);
+            const tweets = await getTrackedFeed(symbol, newList, metadata?.twitter_screen_name, metadata?.name, true);
             const formattedFeed = tweets.map(t => ({
                 id: t.id,
-                author: t.author,
+                author: t.author || t.authorName,
                 timestamp: t.timestamp,
                 text: t.text,
-                url: t.link || t.url,
+                url: t.url || t.link,
                 likes: t.likes,
                 retweets: t.retweets
             }));
