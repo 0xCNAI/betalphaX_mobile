@@ -120,7 +120,8 @@ export async function searchCryptoTweets(ticker, limit = 10, handle = null, forc
         // The proxy expects the path after /api/twitter to match the upstream API path
         // Upstream: https://api.twitterapi.io/twitter/tweet/advanced_search
         // Proxy: /api/twitter/twitter/tweet/advanced_search
-        const url = `/api/twitter/twitter/tweet/advanced_search?query=${encodeURIComponent(query)}&type=Top`;
+        // SWITCH TO 'Latest' TO GET FRESH DATA (User request)
+        const url = `/api/twitter/twitter/tweet/advanced_search?query=${encodeURIComponent(query)}&type=Latest`;
         console.log('[Twitter] 🌐 Fetching from API:', url);
         console.log('[Twitter] 🔍 Search query:', query);
 
