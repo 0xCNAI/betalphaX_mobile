@@ -167,6 +167,26 @@ export async function searchCryptoTweets(ticker, limit = 10, handle = null, forc
                 text.includes(upperTicker.toLowerCase()) ||
                 text.includes(tokenName.toLowerCase());
 
+            // CLIENT-SIDE ENFORCEMENT for Tracked Accounts
+            // If we are in "Curated Mode", we MUST reject any tweet that is NOT from the allowed list.
+            if (hasTrackedAccounts) {
+                const author = tweet.author?.userName || tweet.author || '';
+                const cleanAuthor = author.toLowerCase().replace('@', '');
+
+                // Allow official handle + tracked additional accounts
+                const allowedAuthors = new Set(sources.map(s => s.replace('from:', '').toLowerCase()));
+
+                // Check if author matches
+                const isAllowed = allowedAuthors.has(cleanAuthor);
+
+                if (!isAllowed) {
+                    // Check if it's a Retweet from an allowed author (ignoring for now as API returns original author usually)
+                    // Strict Mode: If author is not in our list, DELETE.
+                    // console.log(`[Filter] Dropping tweet from ${author} (Not in tracked list)`);
+                    return false;
+                }
+            }
+
             if (!mentionsTicker) return false;
 
             return true;
