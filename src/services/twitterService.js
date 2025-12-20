@@ -37,8 +37,8 @@ const TOKEN_NAMES = {
  * @param {number} limit - Max tweets to return (default: 10)
  * @returns {Promise<Array>} - Array of tweet objects
  */
-export async function searchCryptoTweets(ticker, limit = 10, handle = null, forceRefresh = false) {
-    console.log(`[Twitter] searchCryptoTweets called for ${ticker}, limit: ${limit}, forceRefresh: ${forceRefresh}`);
+export async function searchCryptoTweets(ticker, limit = 10, handle = null, forceRefresh = false, additionalAccounts = []) {
+    console.log(`[Twitter] searchCryptoTweets called for ${ticker}, limit: ${limit}, accounts: ${additionalAccounts?.length}`);
 
     // Note: We no longer check for API_KEY here as it's handled by the backend
     // But we can check if we are in a "mock mode" if needed, or just proceed to try the API
@@ -84,10 +84,21 @@ export async function searchCryptoTweets(ticker, limit = 10, handle = null, forc
     // User request: Focus on $TICKER for accuracy (removes noise from generic token names)
     // Increased min_faves to 20 to further reduce noise
     let queryPart = `$${upperTicker}`;
-    // Optional: if we had a handle, we could include it, but let's stick to ticker for broader sentiment
-    // if (handle) queryPart = `($${upperTicker} OR from:${handle})`;
 
-    const query = `${queryPart} min_faves:20 lang:en -filter:retweets -filter:replies`;
+    // Add official handle if provided
+    if (handle) {
+        const cleanHandle = handle.replace('@', '');
+        queryPart += ` OR from:${cleanHandle}`;
+    }
+
+    // Add additional tracked accounts (KOLs) if provided
+    // These accounts are implicitly trusted by the user, so we include their tweets
+    if (additionalAccounts && additionalAccounts.length > 0) {
+        const accountsQuery = additionalAccounts.map(acc => `from:${acc.replace('@', '')}`).join(' OR ');
+        queryPart += ` OR ${accountsQuery}`;
+    }
+
+    const query = `(${queryPart}) -filter:retweets -filter:replies`;
 
     try {
         // Use the proxy endpoint

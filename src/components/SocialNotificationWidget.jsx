@@ -50,7 +50,8 @@ const SocialNotificationWidget = ({ symbol, user, compact = false, onAddToThesis
 
             // 2. Search Tweets (Use Robust Twitter Service)
             // This combines searches for the symbol ($TICKER) and tracked handles 
-            const tweets = await searchCryptoTweets(symbol, 20, metadata?.twitter_screen_name, true);
+            // Pass userList to include tracked accounts in validity query
+            const tweets = await searchCryptoTweets(symbol, 20, metadata?.twitter_screen_name, true, userList);
 
             // Format tweets to match widget expectation
             const formattedFeed = tweets.map(t => ({
@@ -96,9 +97,19 @@ const SocialNotificationWidget = ({ symbol, user, compact = false, onAddToThesis
 
         try {
             await updateUserTrackingList(user.uid, symbol, newList);
-            // Refresh feed
-            const newFeed = await getTrackedFeed(symbol, newList);
-            setFeed(newFeed);
+            // Refresh feed using updated list and helper logic
+            const metadata = await getCoinMetadata(symbol);
+            const tweets = await searchCryptoTweets(symbol, 20, metadata?.twitter_screen_name, true, newList);
+            const formattedFeed = tweets.map(t => ({
+                id: t.id,
+                author: t.author,
+                timestamp: t.timestamp,
+                text: t.text,
+                url: t.link || t.url,
+                likes: t.likes,
+                retweets: t.retweets
+            }));
+            setFeed(formattedFeed);
         } catch (err) {
             console.error('Error updating tracking list:', err);
             // Revert on error
@@ -114,8 +125,18 @@ const SocialNotificationWidget = ({ symbol, user, compact = false, onAddToThesis
         try {
             await updateUserTrackingList(user.uid, symbol, newList);
             // Refresh feed
-            const newFeed = await getTrackedFeed(symbol, newList);
-            setFeed(newFeed);
+            const metadata = await getCoinMetadata(symbol);
+            const tweets = await searchCryptoTweets(symbol, 20, metadata?.twitter_screen_name, true, newList);
+            const formattedFeed = tweets.map(t => ({
+                id: t.id,
+                author: t.author,
+                timestamp: t.timestamp,
+                text: t.text,
+                url: t.link || t.url,
+                likes: t.likes,
+                retweets: t.retweets
+            }));
+            setFeed(formattedFeed);
         } catch (err) {
             console.error('Error updating tracking list:', err);
             setTrackedHandles(trackedHandles);
